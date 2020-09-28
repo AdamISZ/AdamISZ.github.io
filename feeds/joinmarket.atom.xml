@@ -5,7 +5,7 @@ only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this ar
 without saying that the details do matter, and reading the other
 sections will give you a much better overall picture.&lt;/p&gt;
 &lt;h2&gt;Contents&lt;/h2&gt;
-&lt;p&gt;&lt;a href="index.html#background"&gt;Background - what is the "gridchain case"?&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href="index.html#background"&gt;Background - what is the \"gridchain case\"?&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#change-peeling"&gt;Toxic change and peeling chains&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#change-joinmarket"&gt;Change outputs in a Joinmarket context&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#toxic-recall"&gt;The toxic recall attack&lt;/a&gt;&lt;/p&gt;
@@ -17,50 +17,50 @@ sections will give you a much better overall picture.&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#already"&gt;Already implemented improvements&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#still-needed"&gt;Still needed improvements&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;&lt;a href="index.html#recommendations"&gt;Recommendations for users&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id="background"&gt;Background - what is the "gridchain case"?&lt;/h2&gt;
+&lt;h2 id="background"&gt;Background - what is the \"gridchain case\"?&lt;/h2&gt;
 &lt;p&gt;This is a reflection on a case of reported theft as outlined
-&lt;a href="https://web.archive.org/web/20200713230834/https://old.reddit.com/r/Bitcoin/comments/69duq9/50_bounty_for_anybody_recovering_445_btc_stolen/"&gt;here&lt;/a&gt;
-on reddit in early 2017 by user 'gridchain'.&lt;/p&gt;
-&lt;p&gt;What I won't do here is discuss the practical details of the case;
+&lt;a href="https://old.reddit.com/r/Bitcoin/comments/69duq9/50_bounty_for_anybody_recovering_445_btc_stolen/"&gt;here&lt;/a&gt;
+on reddit in early 2017 by user \'gridchain\'.&lt;/p&gt;
+&lt;p&gt;What I won\'t do here is discuss the practical details of the case;
 things like, whether it was a hack or an inside job, nor anything like
 network level metadata, all of which is extremely important in an actual
-criminal investigation. But here I'm only focusing on the role played
+criminal investigation. But here I\'m only focusing on the role played
 by Joinmarket specifically and blockchain level activity of the coins,
 generally.&lt;/p&gt;
 &lt;p&gt;The reason for this blog post was
-&lt;a href="https://web.archive.org/web/20200713230834/https://research.oxt.me/the-cold-case-files/1"&gt;this&lt;/a&gt;
+&lt;a href="https://research.oxt.me/the-cold-case-files/1"&gt;this&lt;/a&gt;
 recent report by OXT Research - specifically by analyst
-&lt;a href="https://web.archive.org/web/20200713230834/https://bitcoinhackers.org/@ErgoBTC"&gt;ErgoBTC&lt;/a&gt;
+&lt;a href="https://bitcoinhackers.org/@ErgoBTC"&gt;ErgoBTC&lt;/a&gt;
 (they require an email for signup to read the full report, otherwise you
 only see the summary).&lt;/p&gt;
 &lt;p&gt;A short note of thanks here to ErgoBTC and LaurentMT and others
 involved, since this kind of detailed analysis is badly needed, I hope
 will we see more, specifically in public, over time (we cannot hope for
 such from the deeply unethical blockchain analysis companies).&lt;/p&gt;
-&lt;p&gt;I'm [not]{style="text-decoration: underline;"} going to assume here
-that you've read that report in full, but I am going to be referring to
+&lt;p&gt;I\'m [not]{style="text-decoration: underline;"} going to assume here
+that you\'ve read that report in full, but I am going to be referring to
 its main set of conclusions, and analyzing them. Obviously if you want
-to properly assess my statements, it's rather difficult - you'd need
-full knowledge of Joinmarket's operation &lt;em&gt;and&lt;/em&gt; full details of the OXT
+to properly assess my statements, it\'s rather difficult - you\'d need
+full knowledge of Joinmarket\'s operation &lt;em&gt;and&lt;/em&gt; full details of the OXT
 Research analysis - and even then, like me, you will still have some
 significant uncertainties.&lt;/p&gt;
-&lt;p&gt;So the case starts with the claimed theft in 2 parts: 45 BTC in &lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/tx/2f9bfc5f23b609f312faa60902022d6583136cc8e8a0aecf5213b41964963881"&gt;this
+&lt;p&gt;So the case starts with the claimed theft in 2 parts: 45 BTC in &lt;a href="https://blockstream.info/tx/2f9bfc5f23b609f312faa60902022d6583136cc8e8a0aecf5213b41964963881"&gt;this
 txn&lt;/a&gt;
 (note I will use blockstream.info for my tx links because I find their
-presentation easiest for single txs specifically; note that oxt.me 's
+presentation easiest for single txs specifically; note that oxt.me \'s
 research tool is of course a vastly superior way to see a large network
 of txs, which plays a crucial role in this analysis), and a
-consolidation of 400BTC in &lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/tx/136d7c862267204c13fec539a89c7b9b44a92538567e1ebbce7fc9dd04c5a7f0"&gt;this other
+consolidation of 400BTC in &lt;a href="https://blockstream.info/tx/136d7c862267204c13fec539a89c7b9b44a92538567e1ebbce7fc9dd04c5a7f0"&gt;this other
 txn&lt;/a&gt;
 .&lt;/p&gt;
-&lt;p&gt;We'll assume that both of these utxos are under the control of a single
+&lt;p&gt;We\'ll assume that both of these utxos are under the control of a single
 actor/thief, henceforth just &lt;em&gt;A&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;Setting aside the (in some ways remarkable) timing - that &lt;em&gt;A&lt;/em&gt; did not
-move the coins for about 2 years - let's outline roughly what happened,
+move the coins for about 2 years - let\'s outline roughly what happened,
 and what the report tells us:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;The 400BTC went into joinmarket as a maker, and did a bunch (11 to
-    be precise) of transactions that effectively "peeled down" (more
+    be precise) of transactions that effectively \"peeled down\" (more
     on this later) that 400 to perhaps 335 BTC (with the difference
     going into coinjoins).&lt;/li&gt;
 &lt;li&gt;&lt;em&gt;A&lt;/em&gt; then switched to a taker role for a while, focusing on higher
@@ -68,36 +68,36 @@ and what the report tells us:&lt;/p&gt;
     these coinjoins had very low counterparty numbers (say 3-5 being
     typical).&lt;/li&gt;
 &lt;li&gt;At some point some maker activity is seen again in this same
-    "peeling chain"; the report terms this phase as "alternating",
-    but it's hard to say for sure whether some particular script is
+    \"peeling chain\"; the report terms this phase as \"alternating\",
+    but it\'s hard to say for sure whether some particular script is
     running, whether &lt;em&gt;A&lt;/em&gt; is just randomly switching roles, or what.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Be aware that this simplified narrative suggests to the careless reader
 that one can easily trace all the coins through all the coinjoins, which
 of course is not true at all - each subsequent transaction moves some
-portion into a "mixed state", but (a) we'll see later that just
-"moved into mixed state" is not the end of the story for some of those
+portion into a \"mixed state\", but (a) we\'ll see later that just
+\"moved into mixed state\" is not the end of the story for some of those
 coins and (b) while this narrative is misleading for Joinmarket in
 general, it is not &lt;em&gt;as&lt;/em&gt; misleading in this particular case.&lt;/p&gt;
-&lt;p&gt;The distinction between the "second" and "third" phase as listed in
+&lt;p&gt;The distinction between the \"second\" and \"third\" phase as listed in
 those bullet points is pretty much arbitrary, but what is not in doubt
 as important is: that second phase marks a clear jump in coinjoin amount
-average size (this could be read as impatience on &lt;em&gt;A&lt;/em&gt;'s part - but
-that's just speculation), and this resulted in small anonymity sets in
-some txs - 4 and 3 in two txs, in particular. Let's continue:&lt;/p&gt;
+average size (this could be read as impatience on &lt;em&gt;A&lt;/em&gt;\'s part - but
+that\'s just speculation), and this resulted in small anonymity sets in
+some txs - 4 and 3 in two txs, in particular. Let\'s continue:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Within the second regime, the OXT analysis narrows in on those small
     anon set, large denomination txs - can they figure out which equal
-    sized output belongs to &lt;em&gt;A&lt;/em&gt; here? The "toxic replay attack"
+    sized output belongs to &lt;em&gt;A&lt;/em&gt; here? The \"toxic replay attack\"
     (explained below) allows them to identify one coinjoin output
     unambiguously  - but that goes into another coinjoin. But in a
     second case it allows them to reduce the anonymity set (of the equal
     sized coinjoin outputs) to 2, and they trace forwards both of those
     outputs.&lt;/li&gt;
-&lt;li&gt;One of those 2 coinjoin outputs (&lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/tx/2dc4e88685269795aafe7459087ab613878ce7d857dd35760eefeb9caf21371b"&gt;this
+&lt;li&gt;One of those 2 coinjoin outputs (&lt;a href="https://blockstream.info/tx/2dc4e88685269795aafe7459087ab613878ce7d857dd35760eefeb9caf21371b"&gt;this
     txn&lt;/a&gt;
     , output index 2) pays, after several hops, into a Poloniex deposit
-    address in &lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/tx/ab1e604cd959cc94b89ab02b691fe7d727d30637284e5e82908fb28b8db378f4"&gt;this
+    address in &lt;a href="https://blockstream.info/tx/ab1e604cd959cc94b89ab02b691fe7d727d30637284e5e82908fb28b8db378f4"&gt;this
     txn&lt;/a&gt;
     ). Although this is several hops, and although it does not deposit
     all of that \~58BTC into Poloniex (only about half of it),
@@ -105,11 +105,11 @@ some txs - 4 and 3 in two txs, in particular. Let's continue:&lt;/p&gt;
 &lt;li&gt;So the next step was to trace back from that specific Poloniex
     deposit address, which it turned out had a bunch of activity on it.
     See
-    &lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/address/16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1"&gt;16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1&lt;/a&gt;
+    &lt;a href="https://blockstream.info/address/16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1"&gt;16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1&lt;/a&gt;
     . Indeed several other deposits to that single address are connected
     to the same Joinmarket cluster, and specifically connected to those
     smaller-anon set taker-side coinjoins. In total around 270BTC is
-    eventually linked from &lt;em&gt;A&lt;/em&gt;'s joinmarket coinjoins to that deposit
+    eventually linked from &lt;em&gt;A&lt;/em&gt;\'s joinmarket coinjoins to that deposit
     address. Even though some of those connections are ambiguous, due to
     address reuse the evidence of co-ownership appears very strong.&lt;/li&gt;
 &lt;li&gt;Some further evidence is provided (though I am still fuzzy on the
@@ -117,20 +117,20 @@ some txs - 4 and 3 in two txs, in particular. Let's continue:&lt;/p&gt;
     all) linking more of the coins to final destinations, including some
     from the 45BTC original chunk. The claim is that 380BTC is linked at
     final destinations to the original 445BTC set. In the remainder
-    I'll focus on what is already seen with this 270BTC set and only
+    I\'ll focus on what is already seen with this 270BTC set and only
     peripherally mention the rest - there is already a lot to chew on!&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id="change-peeling"&gt;Toxic change and peeling chains&lt;/h2&gt;
-&lt;p&gt;The general idea of a "peeling chain" on the Bitcoin blockchain isn't
+&lt;p&gt;The general idea of a \"peeling chain\" on the Bitcoin blockchain isn\'t
 too hard to understand. Given 100 BTC in a single utxo, if I have to
 make a monthly payment of 1 BTC and never use my wallet otherwise, then
 clearly the tx sequence is (using (input1, input2..):(output1,
 output2..)) as a rudimentary format): ((100):(1,99), (99):(1, 98),
 (98:(1, 97)...). Ignoring fees of course. What matters here is that I
 just always have a single utxo and that on the blockchain &lt;em&gt;my&lt;/em&gt; utxos
-&lt;em&gt;may&lt;/em&gt; be linked as (100-99-88-97...) based on a &lt;a href="https://web.archive.org/web/20200713230834/https://en.bitcoin.it/wiki/Privacy#Change_address_detection"&gt;change
+&lt;em&gt;may&lt;/em&gt; be linked as (100-99-88-97...) based on a &lt;a href="https://en.bitcoin.it/wiki/Privacy#Change_address_detection"&gt;change
 heuristic&lt;/a&gt;
-such as "round amount for payment". To whatever extent change
+such as \"round amount for payment\". To whatever extent change
 heuristics work, then to that extent ownership can be traced through
 simple payments (especially and mostly if transactions have exactly two
 outputs, so that the very &lt;em&gt;idea&lt;/em&gt; of change, let alone a change
@@ -140,9 +140,9 @@ example" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.m
 height="296"}&lt;/p&gt;
 &lt;p&gt;In peeling chains, sometimes, the primary heuristic is the &lt;strong&gt;size&lt;/strong&gt; of
 the output. If you start with 1000 btc and you peel 0.1 btc hundreds of
-times, it's obvious from the "size pattern" what the change is (and
-indeed it's this case that gives rise to the name &lt;em&gt;peel chain&lt;/em&gt; because
-"peel" refers to taking off a &lt;em&gt;small&lt;/em&gt; part of something, usually its
+times, it\'s obvious from the \"size pattern\" what the change is (and
+indeed it\'s this case that gives rise to the name &lt;em&gt;peel chain&lt;/em&gt; because
+\"peel\" refers to taking off a &lt;em&gt;small&lt;/em&gt; part of something, usually its
 surface). The above diagram is more similar (but not the same, exactly)
 as the initial flow in the gridchain case, with one very large utxo
 gradually getting peeled off.&lt;/p&gt;
@@ -153,49 +153,49 @@ obfuscation out there. Notice how literally any, even the simplest,
 Bitcoin wallet, has to offer the feature required to carry this out -
 just make a vanilla payment, for which there is (almost always, but not
 always) a change output, back to your wallet.&lt;/p&gt;
-&lt;p&gt;So in Bitcoin's history, this technique has very often been seen used -
-by hackers/thieves moving coins "away" from the original site of the
-theft (I remember the &lt;a href="https://web.archive.org/web/20200713230834/http://www.techienews.co.uk/973470/silk-road-like-sheep-marketplace-scams-users-39k-bitcoins-worth-40-million-stolen/"&gt;case of Sheep
+&lt;p&gt;So in Bitcoin\'s history, this technique has very often been seen used -
+by hackers/thieves moving coins \"away\" from the original site of the
+theft (I remember the &lt;a href="http://www.techienews.co.uk/973470/silk-road-like-sheep-marketplace-scams-users-39k-bitcoins-worth-40-million-stolen/"&gt;case of Sheep
 Market&lt;/a&gt;
-for example). Each "peel" raises additional uncertainty; the
+for example). Each \"peel\" raises additional uncertainty; the
 non-change output is going somewhere, but who owns that? But the change
 outputs represent a link allowing someone, in theory, to keep tracing
 the activity of the original actor. Notice here how we talk about one
 branch (our ((100):(1,99), (99):(1, 98), (98:(1, 97)...) example
 illustrates it); but one could keep tracing the payment outputs (the
-'1's in that flow) and see if they themselves form other peel chains,
+\'1\'s in that flow) and see if they themselves form other peel chains,
 leading to a tree.&lt;/p&gt;
-&lt;p&gt;We mentioned a 'change heuristic' element to this - which is the
-"main branch" if we're not sure which output is the change?&lt;/p&gt;
+&lt;p&gt;We mentioned a \'change heuristic\' element to this - which is the
+\"main branch\" if we\'re not sure which output is the change?&lt;/p&gt;
 &lt;h3 id="change-joinmarket"&gt;Change outputs in a Joinmarket context&lt;/h3&gt;
 &lt;p&gt;A reader should from this point probably be familiar with the basics of
-Joinmarket's design. Apart from the
-&lt;a href="https://web.archive.org/web/20200713230834/https://github.com/Joinmarket-Org/joinmarket-clientserver"&gt;README&lt;/a&gt;
-and &lt;a href="https://web.archive.org/web/20200713230834/hhttps://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/USAGE.md"&gt;usage
+Joinmarket\'s design. Apart from the
+&lt;a href="https://github.com/Joinmarket-Org/joinmarket-clientserver"&gt;README&lt;/a&gt;
+and &lt;a href="hhttps://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/USAGE.md"&gt;usage
 guide&lt;/a&gt;
 of the main Joinmarket code repo, the diagrams showing the main
 Joinmarket transaction types
-&lt;a href="https://web.archive.org/web/20200713230834/https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-transaction-types"&gt;here&lt;/a&gt;
+&lt;a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-transaction-types"&gt;here&lt;/a&gt;
 may be useful as a refresher or a reference point for the following.&lt;/p&gt;
 &lt;p&gt;We have: \(N\) equal outputs and \(N\) or \(N-1\) non-equal change
-outputs, where \(N-1\) happens when the taker does a "sweep",
+outputs, where \(N-1\) happens when the taker does a \"sweep\",
 emptying the mixdepth (= account; joinmarket wallets have 5 accounts by
 default) without a change output. [This last feature is specific to
-Joinmarket, and specific to the taker role: there's no other coinjoin
+Joinmarket, and specific to the taker role: there\'s no other coinjoin
 out there that provides the facility to sweep an arbitrary amount of
 coins out to an equal-sized output, with no
 change.]{style="text-decoration: underline;"} (I am emphasizing this not
-for marketing, but because it's crucial to this topic, and not widely
+for marketing, but because it\'s crucial to this topic, and not widely
 understood I think).&lt;/p&gt;
-&lt;p&gt;As an example of why it's important, here is one line from the OXT
+&lt;p&gt;As an example of why it\'s important, here is one line from the OXT
 Research article:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;&lt;em&gt;Fees taken directly in a mix transaction result in deterministic
-links ("unmixed change").&lt;/em&gt;&lt;/p&gt;
+links (\"unmixed change\").&lt;/em&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;This is false as an absolute statement; fees can be paid by a taker,
 inside the transaction, with no unmixed change for the taker (this is
-the Joinmarket 'sweep'). Deterministic links between inputs and change
+the Joinmarket \'sweep\'). Deterministic links between inputs and change
 outputs &lt;em&gt;do&lt;/em&gt; result from change, and fees &lt;em&gt;do&lt;/em&gt; create an additional flag
 that can help make those linkages, in cases where there would be more
 ambiguity. But a zero fee coinjoin with change outputs still has
@@ -205,32 +205,32 @@ change&lt;/em&gt; as a concept and as a key weakness of such protocols as
 Joinmarket, and why do I disagree?&lt;/p&gt;
 &lt;p&gt;As we discussed peeling chains offer a low quality of obfuscation, and
 to unpack that: the problem is that if you have any relatively viable
-change heuristic (it doesn't &lt;em&gt;have&lt;/em&gt; to be large amounts as discussed),
+change heuristic (it doesn\'t &lt;em&gt;have&lt;/em&gt; to be large amounts as discussed),
 it can let you keep knowledge of ownership of a whole chain of
-transactions. That basically gives the blockchain analyst (we'll call
+transactions. That basically gives the blockchain analyst (we\'ll call
 &lt;em&gt;B&lt;/em&gt;) a very large attack surface. He can look at &lt;em&gt;all&lt;/em&gt; the information
 flowing out of, or associated with, a whole chain of transactions. Any
-later recombination of outputs from that "large attack surface" is
-either a coinjoin or a "smoking gun" that different outward paths were
+later recombination of outputs from that \"large attack surface\" is
+either a coinjoin or a \"smoking gun\" that different outward paths were
 actually under the control of one owner (this comes back to that central
 heuristic - common input ownership, and all the nuance around that).&lt;/p&gt;
 &lt;p&gt;In Joinmarket or any other coinjoin protocol that does allow change
-outputs, "change heuristic" doesn't really apply, it kind of morphs
-into something else: it's very obvious which outputs are change, but it
+outputs, \"change heuristic\" doesn\'t really apply, it kind of morphs
+into something else: it\'s very obvious which outputs are change, but it
 is only &lt;em&gt;in some cases&lt;/em&gt; easy to disentangle which change outputs are
-associated to which inputs, and that's actually what you need to know
-if you want to trace via the change (as per "peeling chains"
+associated to which inputs, and that\'s actually what you need to know
+if you want to trace via the change (as per \"peeling chains\"
 description above). In high anonymity sets, it starts to get difficult
-to do that disentangling, but more on that ("sudoku") later.&lt;/p&gt;
+to do that disentangling, but more on that (\"sudoku\") later.&lt;/p&gt;
 &lt;p&gt;The analysis done in the OXT Research report smartly combines a long
 peeling chain with other specific weaknesses in the way &lt;em&gt;A&lt;/em&gt; acted, which
 we will discuss in the next section.. So all this is very valid in my
 view.&lt;/p&gt;
-&lt;p&gt;[But I think going from the above to the conclusion "coinjoins which
+&lt;p&gt;[But I think going from the above to the conclusion \"coinjoins which
 have unmixed change are fundamentally inferior and not viable, compared
-to coinjoins without unmixed change" is just flat out
+to coinjoins without unmixed change\" is just flat out
 wrong]{style="text-decoration: underline;"}. Consider yourself in the
-position of &lt;em&gt;A&lt;/em&gt;. You have let's say 400BTC in a single utxo. If you run
+position of &lt;em&gt;A&lt;/em&gt;. You have let\'s say 400BTC in a single utxo. If you run
 a coinjoin protocol that insists on no change always, and without a
 market mechanism, you are forced to use a fixed denomination, say 0.1
 BTC (an example that seems common), now across thousands of
@@ -241,14 +241,14 @@ move the problem to an earlier step, you do not remove it.&lt;/p&gt;
 &lt;p&gt;Fixed denomination does not solve the problem of having an unusually
 large amount to mix compared to your peers.&lt;/p&gt;
 &lt;p&gt;Having said that, fixed denomination with no change at all, does create
-other advantages - I certainly don't mean to disparage that model!
+other advantages - I certainly don\'t mean to disparage that model!
 Without going into detail here, consider that a large set or network of
 all-equal-in all-equal-out coinjoins can create similar effects to a
 single, much larger, coinjoin (but this is a topic for another article).&lt;/p&gt;
 &lt;h2 id="toxic-recall"&gt;The toxic recall attack&lt;/h2&gt;
 &lt;p&gt;Earlier we explained that one of the steps of the OXT Research analysis
 was to identify a low liquidity regime where &lt;em&gt;A&lt;/em&gt; was acting as taker,
-and we mentioned the "toxic recall attack" was used to reduce the
+and we mentioned the \"toxic recall attack\" was used to reduce the
 anonymity sets of the coinjoin outputs, during this, to a level low
 enough that simple enumeration could find good candidates for final
 destinations of those coins.&lt;/p&gt;
@@ -258,16 +258,16 @@ a both excellent, and very important idea:&lt;/p&gt;
 &lt;li&gt;&lt;strong&gt;Joinmarket does not allow co-spending of utxos from different
     accounts&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;That means that if a coinjoin output &lt;em&gt;X&lt;/em&gt; is spent along with a utxo
-    from the "peeling chain" (i.e. they are both inputs to the same
+    from the \"peeling chain\" (i.e. they are both inputs to the same
     tx), then &lt;em&gt;X&lt;/em&gt; is not owned by &lt;em&gt;A&lt;/em&gt; (assuming correct identification
-    of &lt;em&gt;A&lt;/em&gt;'s peeling chain)&lt;/li&gt;
+    of &lt;em&gt;A&lt;/em&gt;\'s peeling chain)&lt;/li&gt;
 &lt;li&gt;Every time such an event occurs, that &lt;em&gt;X&lt;/em&gt; can be crossed off the
     list of coinjoin outputs that &lt;em&gt;A&lt;/em&gt; might own, thus reducing the
     anonymity set of that earlier coinjoin by 1.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;The reasoning is not perfectly watertight:&lt;/p&gt;
-&lt;p&gt;First, as the report observes: the first assumption behind it is "A
-user can only run one mixing client at a time." This is clearly not
+&lt;p&gt;First, as the report observes: the first assumption behind it is \"A
+user can only run one mixing client at a time.\" This is clearly not
 literally true, but like many things here, a good-enough guess is fine,
 if it eventually leads to outcomes that further strengthen the case. And
 that is definitely true here: while a smart operator probably would be
@@ -275,18 +275,18 @@ running more than one instance of Joinmarket code, it is not default
 behaviour and requires both a little coding and some careful thought.
 Most people would not do this.&lt;/p&gt;
 &lt;p&gt;(Second, nothing stops a user from making a coinjoin to an address in
-the same mixdepth (at least in the current software). It's just that
-(a) that is heavily discouraged and (b) it's not easy to see a good
+the same mixdepth (at least in the current software). It\'s just that
+(a) that is heavily discouraged and (b) it\'s not easy to see a good
 reason why someone would &lt;em&gt;try&lt;/em&gt; to do that. Still it is possible as a
-mistake. But I don't think this is a reason to doubt the effectiveness
-of the "toxic recall attack", just, it should be noted.)&lt;/p&gt;
-&lt;p&gt;So overall the bolded sentence is the most interesting - Joinmarket's
+mistake. But I don\'t think this is a reason to doubt the effectiveness
+of the \"toxic recall attack\", just, it should be noted.)&lt;/p&gt;
+&lt;p&gt;So overall the bolded sentence is the most interesting - Joinmarket\'s
 intention is to prevent co-spending outputs which would ruin the effect
 of any single coinjoin - i.e. it tries (caveat: above parenthetical) to
 prevent you using both a coinjoin output and the change output (or any
 other utxo in the same account as the change output and the original
-inputs) together. And this small element of 'rigidity' in how coins
-are selected for spending is actually another 'bit' of information
+inputs) together. And this small element of \'rigidity\' in how coins
+are selected for spending is actually another \'bit\' of information
 that &lt;em&gt;B&lt;/em&gt; can use to make deductions, at least some of the time.&lt;/p&gt;
 &lt;p&gt;The following diagram tries to illustrate how these conditions lead to
 the possibility of the attack, to reduce the anonymity set of coinjoin
@@ -294,12 +294,12 @@ outputs:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Toxic recall attack
 illustration" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/.thumbnails/ToxicRecall1.png/ToxicRecall1-692x490.png"&gt;{width="692"
 height="490"}&lt;/p&gt;
-&lt;p&gt;So in summary we see 4 really important factors leading to the attack's
+&lt;p&gt;So in summary we see 4 really important factors leading to the attack\'s
 viability:&lt;/p&gt;
 &lt;ol&gt;
-&lt;li&gt;Joinmarket's strict account separation&lt;/li&gt;
-&lt;li&gt;Linkability via change - as we'll describe in the next section
-    "Joinmarket sudoku", this is &lt;em&gt;usually&lt;/em&gt; but not always possible, so
+&lt;li&gt;Joinmarket\'s strict account separation&lt;/li&gt;
+&lt;li&gt;Linkability via change - as we\'ll describe in the next section
+    \"Joinmarket sudoku\", this is &lt;em&gt;usually&lt;/em&gt; but not always possible, so
     while (1) was 99% valid this is more like 75% valid (entirely vague
     figures of course).&lt;/li&gt;
 &lt;li&gt;Reusing the same peers in different coinjoin transactions&lt;/li&gt;
@@ -311,7 +311,7 @@ coinjoin sizes (to remind you, it was between 6 and 58 BTC, and the
 average was around 27, and there are/were few Joinmarket peers actually
 offering above say 10BTC).&lt;/p&gt;
 &lt;h2 id="size-factor"&gt;The size factor&lt;/h2&gt;
-&lt;p&gt;This is a thread that's run through the above, but let's be clear
+&lt;p&gt;This is a thread that\'s run through the above, but let\'s be clear
 about it: in practice, typical Joinmarket coinjoins run from 0.1 to 10
 BTC, which is unsurprising. There are a fair number of much smaller
 transactions, many just functioning as tests, while &lt;em&gt;really&lt;/em&gt; small
@@ -322,16 +322,16 @@ bitcoin network. Larger than 10 BTC are certainly seen, including up to
 by taking 4 x 100 BTC outputs and consolidating them into 1 output of
 400 BTC. This was not helpful, if anything the opposite should have been
 done.&lt;/p&gt;
-&lt;p&gt;Second, as a consequence, they placed the entirety of this (I'm
-ignoring the 45 BTC output for now as it's not that crucial) in one
+&lt;p&gt;Second, as a consequence, they placed the entirety of this (I\'m
+ignoring the 45 BTC output for now as it\'s not that crucial) in one
 mixdepth. For smaller amounts where a user is just casually offering
 coins for joining, one output is fine, and will rapidly be split up
 anyway, but here this very large size [led to most of the large-ish
 joining events forming part of one long peeling
-chain&lt;em&gt;.&lt;/em&gt;]{style="text-decoration: underline;"} This part probably isn't
+chain&lt;em&gt;.&lt;/em&gt;]{style="text-decoration: underline;"} This part probably isn\'t
 clear so let me illustrate. A yield generator/maker usually splits up
 its coins into random chunks pretty quickly, and while as a maker they
-do &lt;strong&gt;not&lt;/strong&gt; get the crucial "sweep, no change" type of transaction
+do &lt;strong&gt;not&lt;/strong&gt; get the crucial \"sweep, no change\" type of transaction
 mentioned above, they nevertheless do get fragmentation:&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;Initial deposit --&amp;gt; After 1 tx --&amp;gt; After 2 txs --&amp;gt; After many txs&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;0: 1BTC         --&amp;gt; 0.800 BTC  --&amp;gt; 0.800 BTC   --&amp;gt; 0.236 BTC&lt;/code&gt;&lt;/p&gt;
@@ -344,24 +344,24 @@ jumbled, with no ordering, is: each tx moves coinjoin output to &lt;em&gt;next&l
 mixdepth, mod 5 (ie it wraps), but when a new tx request comes in it
 might be for any arbitrary size, so the mixdepth used as &lt;em&gt;source&lt;/em&gt; of
 coins for that next transaction, could be any of them. This is
-illustrated in the 'after 2 txs' case: the second mixdepth was chosen
+illustrated in the \'after 2 txs\' case: the second mixdepth was chosen
 as input to the second tx, not the first mixdepth).&lt;/p&gt;
-&lt;p&gt;This dynamic does &lt;strong&gt;not&lt;/strong&gt; remove the "peeling chain" or "toxic
-change" dynamic emphasized in OXT Research's report - because every tx
+&lt;p&gt;This dynamic does &lt;strong&gt;not&lt;/strong&gt; remove the \"peeling chain\" or \"toxic
+change\" dynamic emphasized in OXT Research\'s report - because every tx
 done by the maker still has its change, [precisely because as maker you
-don't have the privilege of choosing the
+don\'t have the privilege of choosing the
 amount]{style="text-decoration: underline;"}.&lt;/p&gt;
-&lt;p&gt;But it does result in more so to speak "parallelisation" of the mixing
+&lt;p&gt;But it does result in more so to speak \"parallelisation\" of the mixing
 activity, instead of the largest chunk all being in one long chain.&lt;/p&gt;
 &lt;p&gt;A question remains, if we imagine that we use much smaller amounts - can
-the analyst always follow the "peeling chain of each mixdepth" (to
+the analyst always follow the \"peeling chain of each mixdepth\" (to
 coin a phrase which at this point hopefully makes sense)?&lt;/p&gt;
-&lt;p&gt;I think actually the answer is more 'no' than you might at first
+&lt;p&gt;I think actually the answer is more \'no\' than you might at first
 think. The next section will illustrate.&lt;/p&gt;
 &lt;h2 id="sudoku"&gt;Joinmarket sudoku.&lt;/h2&gt;
 &lt;p&gt;This concept including its origination is covered in some detail in my
 earlier article
-&lt;a href="https://web.archive.org/web/20200713230834/https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#jmsudoku-coinjoin-sudoku-for-jmtxs"&gt;here&lt;/a&gt;.
+&lt;a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#jmsudoku-coinjoin-sudoku-for-jmtxs"&gt;here&lt;/a&gt;.
 Essentially we are talking about making unambiguous linkages between
 change outputs and the corresponding inputs in any given Joinmarket
 coinjoin. I reproduce one transaction diagram from that article here to
@@ -369,26 +369,26 @@ help the reader keep the right idea in mind:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Coinjoin
 canonical" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/cjmtx.svg"&gt;{width="550"
 height="389"}&lt;/p&gt;
-&lt;p&gt;So to effect this "sudoku" or disentangling, let's suppose you don't
-have any sophistication. You're just going to iterate over every
-possible subset of the inputs (they're randomly ordered, of course) and
+&lt;p&gt;So to effect this \"sudoku\" or disentangling, let\'s suppose you don\'t
+have any sophistication. You\'re just going to iterate over every
+possible subset of the inputs (they\'re randomly ordered, of course) and
 see if it matches any particular change output (you assume that there is
-exactly one change output per participant). In case it wasn't obvious,
-"matches" here means "that change output, plus the coinjoin size (3
-btc in the diagram above), equals the sum of the subset of inputs".&lt;/p&gt;
+exactly one change output per participant). In case it wasn\'t obvious,
+\"matches\" here means \"that change output, plus the coinjoin size (3
+btc in the diagram above), equals the sum of the subset of inputs\".&lt;/p&gt;
 &lt;p&gt;Now none of them will &lt;em&gt;actually&lt;/em&gt; match because there are fees of two
 types being paid out of (and into) the change - the bitcoin network fees
 and the coinjoin fees (which add to most and subtract from one, at least
-usually). So since you don't know the exact values of those fees, only
-a general range, you have to include a "tolerance" parameter, which
+usually). So since you don\'t know the exact values of those fees, only
+a general range, you have to include a \"tolerance\" parameter, which
 really complicates the issue.&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://web.archive.org/web/20200713230834/https://gist.github.com/AdamISZ/15223a5eab940559e5cf55e898354978"&gt;This
+&lt;p&gt;&lt;a href="https://gist.github.com/AdamISZ/15223a5eab940559e5cf55e898354978"&gt;This
 gist&lt;/a&gt;
-is a quick and dirty (in the sense it's barely a 'program' since i
+is a quick and dirty (in the sense it\'s barely a \'program\' since i
 just hardcoded the values of the transaction) example of doing such a
 Joinmarket sudoku for one of the transactions in the OXT Research
 analysis of flows for this case. The pythonistas out there might find of
-interest particularly this code snippet for finding the "power set"
+interest particularly this code snippet for finding the \"power set\"
 (the set of all subsets):&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;def power_set(l):&lt;/code&gt;\
 &lt;code&gt;iil = range(len(l))&lt;/code&gt;\
@@ -397,42 +397,42 @@ interest particularly this code snippet for finding the "power set"
 of a set of size \(N\) is \(2\^{N}\) (every member of set is either
 in, or not in, each subset - think about it!). So this matters because
 it illustrates, crudely, how we have here an exponential blowup.&lt;/p&gt;
-&lt;p&gt;That particular transaction had 24 inputs, so the power set's
+&lt;p&gt;That particular transaction had 24 inputs, so the power set\'s
 cardinality would be \(2\^{24}\) - but the beginning of the analysis
 is to take a subset, of size 4, you already conclude to be linked, thus
-reducing the size of the search space by a factor of 16. Now, there's a
-lot more to it, but, here's what's interesting: &lt;strong&gt;depending on the
+reducing the size of the search space by a factor of 16. Now, there\'s a
+lot more to it, but, here\'s what\'s interesting: &lt;strong&gt;depending on the
 tolerance you choose, you will often find there are multiple sudoku
-solutions&lt;/strong&gt; if the size of the set of inputs is reasonably large (let's
-say 20 and up, but it isn't possible to fix a specific number of
+solutions&lt;/strong&gt; if the size of the set of inputs is reasonably large (let\'s
+say 20 and up, but it isn\'t possible to fix a specific number of
 course). In the first couple of attempts of finding the solution for
 that transaction, I found between 3 and 7 different possible ways the
 inputs and outputs could connect; some of them involve the pre-grouped 4
 inputs acting as taker (i.e. paying fees) and some involve them acting
 as maker.&lt;/p&gt;
-&lt;p&gt;Now, if this ambiguity isn't enough, there's another significant
+&lt;p&gt;Now, if this ambiguity isn\'t enough, there\'s another significant
 source of ambiguity in these sudokus: previous equal-sized coinjoin
-outputs. For example take &lt;a href="https://web.archive.org/web/20200713230834/https://blockstream.info/tx/5f8747a3837a56dd2f422d137b96b1420fd6885be6d1057f3c4dca102a3138b6?output:5"&gt;this
+outputs. For example take &lt;a href="https://blockstream.info/tx/5f8747a3837a56dd2f422d137b96b1420fd6885be6d1057f3c4dca102a3138b6?output:5"&gt;this
 txn&lt;/a&gt;:&lt;/p&gt;
 &lt;p&gt;&lt;img alt="un-sudoku-able
 tx" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/.thumbnails/tx5f8747.png/tx5f8747-849x617.png"&gt;{width="849"
 height="617"}&lt;/p&gt;
-&lt;p&gt;There are 21 inputs, which is already in the "problematic" zone for
+&lt;p&gt;There are 21 inputs, which is already in the \"problematic\" zone for
 sudoku-ing, as discussed, in that it will tend to lead to multiple
 possible solutions, with a reasonable tolerance parameter. But in this
 case a full sudoku is fundamentally impossible: notice that inputs index
 7 and 21 (counting from 0) both have amount 6.1212 . This means that any
 subset that includes the first is identical to a subset that includes
 the second. Those two outputs are, unsurprisingly, from the same
-previous Joinmarket coinjoin (they don't have to be, though).&lt;/p&gt;
-&lt;p&gt;In any long "peeling chain" these ambiguities will degrade, perhaps
+previous Joinmarket coinjoin (they don\'t have to be, though).&lt;/p&gt;
+&lt;p&gt;In any long \"peeling chain\" these ambiguities will degrade, perhaps
 destroy, the signal over time - unless there is some very strong
 watermark effect - such as huge size, which is precisely what we see
 with &lt;em&gt;A&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;To summarize, we these key points about the Sudoku concept for
 identifying chains of ownership:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;As long as you don't sweep, a Joinmarket account, thus not emptied,
+&lt;li&gt;As long as you don\'t sweep, a Joinmarket account, thus not emptied,
     will keep creating this chain of ownership via change - though the
     size of that linked amount dwindles over time.&lt;/li&gt;
 &lt;li&gt;Thus makers (who cannot sweep) have no guarantee of not having that
@@ -449,10 +449,10 @@ identifying chains of ownership:&lt;/p&gt;
     there will be increasing uncertainty over a long chain, including
     really fundamental ambiguities like the transaction above).&lt;/li&gt;
 &lt;li&gt;Whenever you &lt;em&gt;do&lt;/em&gt; sweep, you create what I called in the previous
-    article a &lt;a href="https://web.archive.org/web/20200713230834/https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-wallet-closures"&gt;"completed mixdepth
-    closure"&lt;/a&gt;;
+    article a &lt;a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-wallet-closures"&gt;\"completed mixdepth
+    closure\"&lt;/a&gt;;
     there is no change for you as taker, and so an end to that
-    "chain". This only exists for takers. (you can of course sweep
+    \"chain\". This only exists for takers. (you can of course sweep
     &lt;em&gt;without&lt;/em&gt; coinjoin at all, also).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id="maker-taker"&gt;Reminder on the maker-taker tradeoff&lt;/h3&gt;
@@ -462,50 +462,50 @@ these advantages:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;As coordinator, they do not reveal linkages to their counterparties.
     Makers must accept that the taker in each individual coinjoin &lt;em&gt;does&lt;/em&gt;
-    know &lt;em&gt;their&lt;/em&gt; linkages (the maker's), even if they're OK with that
-    over a long period because there are many disparate takers; that's
+    know &lt;em&gt;their&lt;/em&gt; linkages (the maker\'s), even if they\'re OK with that
+    over a long period because there are many disparate takers; that\'s
     a weakness.&lt;/li&gt;
 &lt;li&gt;They choose the time when the coinjoin happens (within a minute or
-    so, it's done, if all goes well)&lt;/li&gt;
+    so, it\'s done, if all goes well)&lt;/li&gt;
 &lt;li&gt;They choose the amount of the coinjoin, so can have a payment as a
     coinjoin outpoint.&lt;/li&gt;
 &lt;li&gt;Corollary of the above: they can control the size of their change,
-    in particular, reducing it to zero via a "sweep"&lt;/li&gt;
+    in particular, reducing it to zero via a \"sweep\"&lt;/li&gt;
 &lt;li&gt;Since they run only when they want to coinjoin, they have a smaller
-    time footprint for attackers (makers have an "always on hot
-    wallet" &lt;em&gt;which responds to requests rather than initiates them&lt;/em&gt; ,
-    so it's more like a server than a client, which is by definition
+    time footprint for attackers (makers have an \"always on hot
+    wallet\" &lt;em&gt;which responds to requests rather than initiates them&lt;/em&gt; ,
+    so it\'s more like a server than a client, which is by definition
     difficult to keep properly secure).&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;These 4+ advantages are what the Taker pays for, and it's interesting
+&lt;p&gt;These 4+ advantages are what the Taker pays for, and it\'s interesting
 that in practice that the &lt;em&gt;coinjoin&lt;/em&gt; fee has fallen to near-zero
 &lt;strong&gt;except for larger sizes&lt;/strong&gt; .I will point to my earlier thoughts on low
 fees
-&lt;a href="https://web.archive.org/web/20200713230834/https://x0f.org/web/statuses/104123055565241054"&gt;here&lt;/a&gt;
+&lt;a href="https://x0f.org/web/statuses/104123055565241054"&gt;here&lt;/a&gt;
 to avoid further sidetrack.&lt;/p&gt;
-&lt;p&gt;Therefore the cool sounding idea "oh I have this bunch of bitcoin
-sitting around, I'll just passively mix it for a while and actually get
-paid to do it!" (I have noticed people &lt;em&gt;mostly&lt;/em&gt; get interested in
+&lt;p&gt;Therefore the cool sounding idea \"oh I have this bunch of bitcoin
+sitting around, I\'ll just passively mix it for a while and actually get
+paid to do it!\" (I have noticed people &lt;em&gt;mostly&lt;/em&gt; get interested in
 Joinmarket from this perspective) is more limited than it seems.&lt;/p&gt;
 &lt;h2&gt;Address reuse&lt;/h2&gt;
-&lt;p&gt;This will probably be the shortest section because it's so obvious.&lt;/p&gt;
-&lt;p&gt;The fact that 270BTC of the 445 BTC going "into" Joinmarket ended up
+&lt;p&gt;This will probably be the shortest section because it\'s so obvious.&lt;/p&gt;
+&lt;p&gt;The fact that 270BTC of the 445 BTC going \"into\" Joinmarket ended up
 at &lt;code&gt;16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1&lt;/code&gt;is kind of a big facepalm moment;
-I don't think anyone reading this blog would have trouble understanding
+I don\'t think anyone reading this blog would have trouble understanding
 that.&lt;/p&gt;
-&lt;p&gt;I don't dismiss or ignore that such things happen for a reason, and
+&lt;p&gt;I don\'t dismiss or ignore that such things happen for a reason, and
 that reason is mainly actions of centralized exchanges to deliberately
-reduce the privacy of their customers ("KYC/AML"). Sometimes, of
-course, sheer incompetence is involved. But it's the exception rather
+reduce the privacy of their customers (\"KYC/AML\"). Sometimes, of
+course, sheer incompetence is involved. But it\'s the exception rather
 than the rule, since even the most basic consumer wallets do not
-generally reuse addresses nowadays. I'll consider these real world
+generally reuse addresses nowadays. I\'ll consider these real world
 factors out-of-scope of this article, although they will matter in your
 practical real life decisions about keeping your privacy (consider &lt;em&gt;not&lt;/em&gt;
 using such exchanges).&lt;/p&gt;
 &lt;p&gt;What has to be said though: 270 does not equal 445 (or 400); it is not
 impossible to imagine that such a set of deposits to one address may not
 be traced/connected to the original deposit of 400 (+) into Joinmarket
-(although it would really help if that total wasn't so very large that
+(although it would really help if that total wasn\'t so very large that
 there are only a few Joinmarket participants in that range anyway). And
 indeed, my own examination of the evidence tells me that the connections
 of each individual final deposit to
@@ -513,8 +513,8 @@ of each individual final deposit to
 unambiguous. The problem is of course the compounding effect of
 evidence, as we will discuss in the next, final section.&lt;/p&gt;
 &lt;h2 id="summary"&gt;Summary; lessons learned; advice to users&lt;/h2&gt;
-&lt;p&gt;So we've looked into details, can we summarize what went wrong for &lt;em&gt;A&lt;/em&gt;?
-Albeit we don't actually know with certainty how much of the
+&lt;p&gt;So we\'ve looked into details, can we summarize what went wrong for &lt;em&gt;A&lt;/em&gt;?
+Albeit we don\'t actually know with certainty how much of the
 attributions in the OXT Research are correct, they appear to be &lt;em&gt;broadly
 correct&lt;/em&gt;.&lt;/p&gt;
 &lt;ol&gt;
@@ -528,31 +528,31 @@ correct&lt;/em&gt;.&lt;/p&gt;
     more fees, but would have helped an awful lot.&lt;/li&gt;
 &lt;li&gt;Running passively as a maker proved too slow for &lt;em&gt;A&lt;/em&gt; (this is an
     assumption that the report makes and that I agree with, but not of
-    course a 'fact'). This is Joinmarket's failing if anything; there
+    course a \'fact\'). This is Joinmarket\'s failing if anything; there
     are just not enough people using it, which relates to the next
     point:&lt;/li&gt;
 &lt;li&gt;When switching to a taker mode (which in itself was a very good
     idea), &lt;em&gt;A&lt;/em&gt; decided to start doing much larger transaction sizes, but
     found themselves unable to get more than a few counterparties in
     some cases. This should have been a sign that the effect they were
-    looking for might not be strong enough, but it's very
-    understandable that they didn't grok the next point:&lt;/li&gt;
-&lt;li&gt;The "toxic replay attack" very heavily compounds the low anonymity
+    looking for might not be strong enough, but it\'s very
+    understandable that they didn\'t grok the next point:&lt;/li&gt;
+&lt;li&gt;The \"toxic replay attack\" very heavily compounds the low anonymity
     set problem mentioned above - reuse of the same counterparties in
-    successive transactions reduced the anonymity set from "bad" to
-    "disastrously low" (even down to 1 in one case).&lt;/li&gt;
-&lt;li&gt;Even with the above failings, all needn't really be lost; repeated
-    rounds are used and the '1' anonymity set mentioned output was
+    successive transactions reduced the anonymity set from \"bad\" to
+    \"disastrously low\" (even down to 1 in one case).&lt;/li&gt;
+&lt;li&gt;Even with the above failings, all needn\'t really be lost; repeated
+    rounds are used and the \'1\' anonymity set mentioned output was
     sent to another coinjoin anyway. The first chunk of coins identified
     to be sent to Poloniex address (first to be identified, not first in
     time) was in an amount of about 28 BTC via several hops, then part
     of the 76 BTC in &lt;a href="https://web.archive.org/web/20200713230834/https://joinmarket.me/blog/blog/the-445-btc-gridchain-case/%22https://blockstream.info/tx/ab1e604cd959cc94b89ab02b691fe7d727d30637284e5e82908fb28b8db378f4"&gt;this
     txn&lt;/a&gt;,
-    and even the first hop only had a 50% likelihood assigned. So it's
+    and even the first hop only had a 50% likelihood assigned. So it\'s
     a combination of (a) the address being marked as in the POLONIEX
     cluster, the size of the deposit and then the reuse allowing tracing
-    back to other transactions, that caused a "high-likelihood
-    assignment of ownership", which leads into ...&lt;/li&gt;
+    back to other transactions, that caused a \"high-likelihood
+    assignment of ownership\", which leads into ...&lt;/li&gt;
 &lt;li&gt;Address reuse as discussed in the previous section is the biggest
     failing here. If all the deposits here were to different exchange
     addresses, these heuristics would not have led to any clear
@@ -568,11 +568,11 @@ different things leads to a bad outcome for &lt;em&gt;A&lt;/em&gt; : large (much
 than typical JM volume) size not split up, heavy address reuse (on a
 centralized exchange) and a small anonymity set portion of the
 sequence.&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;This issue of "combination of factors" leading to a much worse than
+&lt;p&gt;This issue of \"combination of factors\" leading to a much worse than
 expected privacy loss is explained well on the bitcoin wiki Privacy page
-&lt;a href="https://web.archive.org/web/20200713230834/https://en.bitcoin.it/wiki/Privacy#Method_of_data_fusion"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="https://en.bitcoin.it/wiki/Privacy#Method_of_data_fusion"&gt;here&lt;/a&gt;.&lt;/p&gt;
 &lt;h3 id="already"&gt;Already implemented improvements&lt;/h3&gt;
-&lt;p&gt;When running as a taker and using the so-called &lt;a href="https://web.archive.org/web/20200713230834/https://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/tumblerguide.md"&gt;tumbler
+&lt;p&gt;When running as a taker and using the so-called &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/tumblerguide.md"&gt;tumbler
 algorithm&lt;/a&gt;
 users should note that in 2019 a fairly meaningful change to the
 algorithm was implemented - one part was to start each run with a sweep
@@ -583,8 +583,8 @@ to hop to next of course, with the concomitant difficulties).
 Additionally average requested anonymity sets are increased, which, as
 an important byproduct tends to create larger input sets which are
 harder to sudoku (and more likely to have substantial ambiguity). There
-are several other minor changes like rounding amounts, see &lt;a href="https://web.archive.org/web/20200713230834/https://gist.github.com/chris-belcher/7e92810f07328fdfdef2ce444aad0968"&gt;Chris
-Belcher's document on
+are several other minor changes like rounding amounts, see &lt;a href="https://gist.github.com/chris-belcher/7e92810f07328fdfdef2ce444aad0968"&gt;Chris
+Belcher\'s document on
 it&lt;/a&gt;
 for more details.&lt;/p&gt;
 &lt;h3 id="still-needed"&gt;Still needed improvements&lt;/h3&gt;
@@ -597,12 +597,12 @@ couple of ways that situation could be remediated:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;Reduce the number of coinjoin transactions within the same mixdepth
     closure - but this is not clear. If I do 1 coinjoin transaction with
-    10 counterparties and it's a sweep, closing the mixdepth closure,
+    10 counterparties and it\'s a sweep, closing the mixdepth closure,
     is that better than doing 2 coinjoin transactions from it, each of
     which has 6 counterparties, if there is a 10% chance of randomly
     choosing the same counterparty and thus reducing the anonymity set
     of the second coinjoin by 1? That is pretty profoundly unclear and
-    seems to just "depend". 1 transaction with 12 counterparties &lt;em&gt;is&lt;/em&gt;
+    seems to just \"depend\". 1 transaction with 12 counterparties &lt;em&gt;is&lt;/em&gt;
     clearly better, but very large sets like that are very difficult to
     achieve in Joinmarket today (particularly if your coinjoin amount is
     large).&lt;/li&gt;
@@ -613,7 +613,7 @@ couple of ways that situation could be remediated:&lt;/p&gt;
     simply for a taker to keep track of its earlier txs (especially
     within a tumbler run, say) and decide to not include makers when
     they provide utxos that are recognized as in that set. This is still
-    a bit tricky in practice; makers don't want their utxos queried all
+    a bit tricky in practice; makers don\'t want their utxos queried all
     the time, but takers for optimal outcomes would like full
     transparent vision into those utxo sets - see &lt;a href="https://web.archive.org/web/20200713230834/https://joinmarket.me/blog/blog/poodle/"&gt;earlier discussion of
     PoDLE&lt;/a&gt;
@@ -624,12 +624,12 @@ couple of ways that situation could be remediated:&lt;/p&gt;
 &lt;p&gt;(2) is an example of ideas that were discussed by Joinmarket
 developers years ago, but never really went anywhere. Takers probably
 &lt;em&gt;should&lt;/em&gt; expand the query power given them by the PoDLE tokens to have a
-larger set of options to choose from, to gauge the "quality" of what
-their counterparties propose as join inputs, but it's a delicate
+larger set of options to choose from, to gauge the \"quality\" of what
+their counterparties propose as join inputs, but it\'s a delicate
 balancing act, as mentioned.&lt;/p&gt;
 &lt;h3 id="recommendations"&gt;Recommendations for users&lt;/h3&gt;
 &lt;p&gt;For the final section, some practical advice. Joinmarket can be a
-powerful tool - but it's unfortunately not very easy to understand what
+powerful tool - but it\'s unfortunately not very easy to understand what
 you &lt;em&gt;should&lt;/em&gt; do, precisely because there is a lot of flexibility.&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;The taker role, and in particular the tumbler role, are designed to
@@ -639,37 +639,37 @@ you &lt;em&gt;should&lt;/em&gt; do, precisely because there is a lot of flexibil
     transaction numbers, and long waits - in fact, increase these
     factors above the defaults. Note that tumbles can be safely
     restarted, so do it for a day, shut it down and then restart it a
-    few days later - that's fine. See the docs for more on that. Be
+    few days later - that\'s fine. See the docs for more on that. Be
     sensitive to bitcoin network fees - these transactions are very
-    large so they'll be more palatable at times when the network is
+    large so they\'ll be more palatable at times when the network is
     clearing 1-5 sats/byte. However ...&lt;/li&gt;
 &lt;li&gt;... mixing roles definitely has advantages. The more people mix
     roles the more unsafe it is to make deductions about which coinjoin
     output belonged to the taker, after it gets spent (consider what you
     can deduce about a coinjoin output which is then spent via an
     ordinary wallet, say to a t-shirt merchant).&lt;/li&gt;
-&lt;li&gt;The maker role isn't useless for privacy, it's rather best to
+&lt;li&gt;The maker role isn\'t useless for privacy, it\'s rather best to
     think of it as (a) limited and (b) taking a long time to have an
-    effect. It's most suitable if your threat model is "I don't want
-    a clear history of my coins over the long term". It also costs
+    effect. It\'s most suitable if your threat model is \"I don\'t want
+    a clear history of my coins over the long term\". It also costs
     nothing monetarily and brings in some very small income if your size
-    is large (if small, it's likely not worth mentioning) - but in that
+    is large (if small, it\'s likely not worth mentioning) - but in that
     case, take your security seriously.&lt;/li&gt;
 &lt;li&gt;Consider sizing when acting as a taker. We as a project should
     perhaps create more transparency around this, but you can gauge from
-    your success in arranging big size coinjoins: if you can't easily
+    your success in arranging big size coinjoins: if you can\'t easily
     find 6+ counterparties to do a coinjoin at a particular size, it may
     not be a good idea to rely on the outcomes, as you may be mixing in
-    too small of a crowd (whether that's at 10 BTC or 20 BTC or 50+ BTC
+    too small of a crowd (whether that\'s at 10 BTC or 20 BTC or 50+ BTC
     just depends on market condition).&lt;/li&gt;
 &lt;li&gt;Make good use of (a) the accounts (mixdepths) feature, (b) the coin
     freeze feature and (c) the sweep feature (taker only). These three
     things allow you to better isolate coins going to different
     destinations - your cold wallet, your mobile spending wallet, an
     exchange etc etc. Accounts let you have the assurance that coins in
-    one aren't linked with coins in another; you can't accidentally
-    co-spend them. The freeze feature (see the "Coins" tab on Qt) lets
-    you spend individual utxos, where that's important to you for some
+    one aren\'t linked with coins in another; you can\'t accidentally
+    co-spend them. The freeze feature (see the \"Coins\" tab on Qt) lets
+    you spend individual utxos, where that\'s important to you for some
     reason, without connection to others. And the sweep feature lets you
     make a coinjoin without any change, breaking a link to future
     transactions.&lt;/li&gt;
