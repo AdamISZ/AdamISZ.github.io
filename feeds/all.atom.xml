@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>waxwing's blog</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2010-12-05T19:30:00+01:00</updated><entry><title>The 445BTC gridchain case</title><link href="/blog/blog/the-445-btc-gridchain-case" rel="alternate"></link><published>2010-12-03T10:20:00+01:00</published><updated>2010-12-05T19:30:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:None,2010-12-03:/blog/blog/the-445-btc-gridchain-case</id><summary type="html">&lt;p&gt;Short version for index and feeds&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2020-06-15T00:00:00+02:00</updated><entry><title>The 445BTC gridchain case</title><link href="/blog/blog/the-445-btc-gridchain-case" rel="alternate"></link><published>2020-06-15T00:00:00+02:00</published><updated>2020-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:None,2020-06-15:/blog/blog/the-445-btc-gridchain-case</id><summary type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
+&lt;p&gt;For those time-constrained or non-technical, it may make sense to read
+only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this article. It goes
+without saying that the details do matter, and reading the other
+sections will give you a much better overall picture.&lt;/p&gt;
+&lt;h2&gt;Contents&lt;/h2&gt;
+&lt;p&gt;&lt;a href="index.html#background"&gt;Background - what is the …&lt;/a&gt;&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
 &lt;p&gt;For those time-constrained or non-technical, it may make sense to read
 only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this article. It goes
 without saying that the details do matter, and reading the other
@@ -676,4 +682,4 @@ you &lt;em&gt;should&lt;/em&gt; do, precisely because there is a lot of flexibil
 &lt;/ol&gt;
 &lt;p&gt;We soon (in 0.7.0; the code is basically already done) hope to have more
 helpful features, in particular Payjoin as defined in BIP 78, along with
-very basic PSBT support.&lt;/p&gt;</content><category term="Joinmarket"></category><category term="coinjoin"></category></entry></feed>
+very basic PSBT support.&lt;/p&gt;</content><category term="waxwing's Blog"></category><category term="coinjoin"></category><category term="joinmarket"></category><category term="bitcoin"></category></entry></feed>
