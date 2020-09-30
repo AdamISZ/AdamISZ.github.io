@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <meta name="generator" content="Pelican" />
+        <title>Ring Signatures</title>
+        <link rel="stylesheet" href="/theme/css/main.css" />
+        <link href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Joinmarket.me archive Atom Feed" />
+        <meta name="description" content="Ring signatures Outline: Basic goal of 1-of-\(N\) ring signatures Recap: the \(\Sigma\)-protocol OR of \(\Sigma\)-protocols, CDS 1994..." />
+</head>
+
+<body id="index" class="home">
+        <header id="banner" class="body">
+                <h1><a href="/">Joinmarket.me archive</a></h1>
+                <nav><ul>
+                    <li><a href="/pages/about-me.html">About Me</a></li>
+                    <li><a href="/pages/main-page.html">Main Page</a></li>
+                    <li class="active"><a href="/category/waxwings-blog.html">waxwing's Blog</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="/blog/blog/ring-signatures" rel="bookmark"
+           title="Permalink to Ring Signatures">Ring Signatures</a></h1>
+    </header>
+
+    <div class="entry-content">
+<footer class="post-info">
+        <abbr class="published" title="2019-03-15T00:00:00+01:00">
+                Published: Fri 15 March 2019
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="/author/adam-gibson.html">Adam Gibson</a>
+        </address>
+<p>In <a href="/category/waxwings-blog.html">waxwing's Blog</a>.</p>
+<p>tags: <a href="/tag/cryptography.html">cryptography</a> <a href="/tag/bitcoin.html">bitcoin</a> </p>
+</footer><!-- /.post-info -->      <h3>Ring signatures</h3>
+<h2>Outline:</h2>
+<ul>
+<li>Basic goal of 1-of-\(N\) ring signatures</li>
+<li>Recap: the \(\Sigma\)-protocol</li>
+<li>OR of \(\Sigma\)-protocols, CDS 1994</li>
+<li>Abe-Ohkubo-Suzuki (AOS) 2002 (broken version)</li>
+<li>Security weaknesses</li>
+<li>Key prefixing</li>
+<li>Borromean, Maxwell-Poelstra 2015</li>
+<li>Linkability and exculpability</li>
+<li>AND of \(\Sigma\)-protocols, DLEQ</li>
+<li>Liu-Wei-Wong 2004</li>
+<li>Security arguments for the LWW LSAG</li>
+<li>Back 2015; compression, single-use</li>
+<li>Fujisaki-Suzuki 2007 and Cryptonote 2014</li>
+<li>Monero MLSAG</li>
+</ul>
+<h2>Basic goal of 1-of-\(N\) ring signatures</h2>
+<p>The idea of a <a href="https://en.wikipedia.org/wiki/Ring_signature">ring
+signature</a>
+(the term itself is a bit sloppy in context, but let's stick with it
+for now) is simple enough:</p>
+<p>An owner of a particular private key \(x\) signs a message \(m\) by
+taking, usually without setup or interaction, a whole set of public
+keys, one of which is his (\(P=xG\)), and forms a signature (exact
+form unspecified) such that there is proof that <strong>at least one</strong> of the
+private keys is known to the signer, but which one was responsible for
+the signature is not known by the verifier, and not calculatable.</p>
+<p>Obviously that's pretty vague but captures the central idea. We often
+use the term "ring" because the construction must have some symmetry
+over the entire set of \(n\) public keys, and a ring/circle represents
+symmetry of an arbitrarily high order (limit of an \(n\)-gon). Less
+abstractly it could be a good name because of some "loop"-ing aspect
+of the algorithm that constructs the signature, as we'll see.</p>
+<p>What properties do we want then, in summation?</p>
+<ul>
+<li>Unforgeability</li>
+<li>Signer ambiguity</li>
+</ul>
+<p>We may want additional properties for some ring signatures, as we'll
+see.</p>
+<p>In the following sections I want to cover some of the key conceptual
+steps to the kinds of ring signatures currently used in cryptocurrency
+protocols; most notably Monero, but also several others; and also in the
+Confidential Transactions construction (see: Borromean ring signatures,
+briefly discussed here). I will also discuss security of such
+constructions, in much less detail than the <a href="https://web.archive.org/web/20200713230948/https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/">previous
+blog</a>
+(on the security of Schnorr signatures), but showing how there are
+several tricky issues to be dealt with, here.</p>
+<h2>Recap: the \(\Sigma\)-protocol</h2>
+<p>We consider a prover \(\mathbb{P}\) and a verifier \(\mathbb{V}\).</p>
+<p>A \(\Sigma\)-protocol is a three step game, in which the prover
+convinces the verifier of something (it can be \(\mathbb{P}\)'s
+knowledge of a secret, but it can also be something more complicated),
+in zero knowledge. Readers interested in a much more detailed discussion
+of the logic behind this and several applications of the idea can read
+Sections 3 and 4 of my <a href="https://github.com/AdamISZ/from0k2bp">From Zero (Knowledge) to
+Bulletproofs</a>
+writeup, especially section 4.1.</p>
+<p>In brief, the three step game is:</p>
+<p>\(\mathbb{P} \rightarrow \mathbb{V}\): <strong>commitment</strong></p>
+<p>\(\mathbb{V} \rightarrow \mathbb{P}\): <strong>challenge</strong></p>
+<p>\(\mathbb{P} \rightarrow \mathbb{V}\): <strong>response</strong></p>
+<p>A few minor notes on this: obviously the game is not literally over with
+the response step; the verifier will examine the response to establish
+whether it is valid or invalid.</p>
+<p>The <strong>commitment</strong> will usually in this document be written \(R\) and
+will here always be a point on an elliptic curve, which the prover may
+(or may not! in these protocols) know the corresponding scalar multiple
+(private key or nonce) \(k\) such that \(R=kG\).</p>
+<p>The <strong>challenge</strong> will usually be written \(e\) and will usually be
+formed as the hash of some transcript of data; the subtleties around
+exactly <em>what</em> is hashed can be vitally important, as we'll see. (This
+is in the "Fiat-Shamir transform" case; we discussed the pure
+interactive challenge case a bit in the previous blog and many other
+places!)</p>
+<p>The <strong>response</strong> will usually be a single scalar which will usually be
+denoted \(s\).</p>
+<p>We will be playing with this structure a lot: forging transcripts \(R,
+e, s\); running multiple instances of a \(\Sigma\)-protocol in
+parallel and performing logical operations on them. All of this will
+play out <em>mostly</em> in the form of a Schnorr signature; again, refer to
+previous blog posts or elementary explanations (including those written
+by me) for more on that.</p>
+<h2>OR of \(\Sigma\)-protocols, CDS 1994</h2>
+<p>Let's start with the OR of \(\Sigma\)-protocols. I <em>believe</em> this
+solution is due to <a href="https://link.springer.com/content/pdf/10.1007%2F3-540-48658-5_19.pdf">Cramer, Damgård and Schoenmakers
+'94</a></p>
+<p>(Historical note: the "believe" is because I've seen it cited to that
+paper (which is famous for good reason, I guess); but in the paper they
+actually attribute <em>this specific idea</em> to "M. Ito, A. Saito, and T.
+Nishizeki: Secret Sharing Scheme realizing any Access Structure, Proc.
+Glob.Com. (1987)" ; unfortunately I can't find that on the 'net).</p>
+<p>It is also described, with a brief discussion of its security proof, in
+<a href="https://crypto.stanford.edu/~dabo/cryptobook/BonehShoup_0_4.pdf">Boneh-Shoup</a>
+Sec 19.7.2.</p>
+<p>This is not, as far as I know, used at all(?) nor that widely discussed,
+but it is in some sense the most simple and logical way to get a 1 out
+of \(N\) ring signature; use the XOR (\(\oplus\)) operation:</p>
+<p>We have in advance a set of public keys \(P_i\). We only know one
+private key for index \(j\), \(x_j\).</p>
+<p>We'll now use a standard three move \(\Sigma\)-protocol to prove
+knowledge of <strong>at least one key</strong> without revealing which index is
+\(j\).</p>
+<p>We're going to fake the non-\(j\)-index signatures in advance. Choose
+\(s_i \stackrel{\$}{\leftarrow} \mathbb{Z}_N\ ,\ e_i
+\stackrel{\$}{\leftarrow} \mathbb{Z}_N \quad \forall i \neq j\).</p>
+<p>Calculate \(R_i = s_iG - e_iP_i \quad \forall i \neq j\).</p>
+<p>For the real signing index, \(k_j \stackrel{\$}{\leftarrow}
+\mathbb{Z}_N\ ,\quad R_j = k_jG\).</p>
+<p>We now have the full set of commitments: \((R_i \ \forall i)\)</p>
+<p>Now for the clever part. In an interactive \(\Sigma\)-protocol, we
+would at this point receive a random challenge \(e \in
+\mathbb{Z}_N\). For the Fiat Shamir transformed case,
+noninteractively (as for  a signature), we use the constructed
+\(R\)-values as input to a hash function, i.e. \(e = H(m||R_i
+\ldots)\). We have already set the non-signing index \(e\)-values,
+for the signing index we set \(e_j = e \oplus (\bigoplus_{i \ne
+j}{e_i})\).</p>
+<p>This allows us to calculate \(s_j = k_j + e_j x_j\), and we now have
+the full set of 'responses' for all the \(\Sigma\)-protocols:
+\(s_i \ \forall i\). (but here we are using Fiat Shamir, so it's
+not actually a response).</p>
+<p>By working this way we have ensured that the signature verifier can
+verify that the logical XOR of the three \(e\)-values is equal to the
+Fiat Shamir based hash-challenge, e.g. for the case of three
+"signatures", we will have:</p>
+<p>\(e = e_1 \oplus e_2 \oplus e_3 \stackrel{?}{=}
+H(m||R_0||R_1||...)\)</p>
+<p>where the verifier would calculate each \(R_i\) as \(s_iG -
+e_iP_i\).</p>
+<p>The excellent feature of this of course is that it is perfectly hidden
+which of the three indexes was genuine. But the bad news is that the
+protocol as stated, used let's say as a signature scheme, requires
+about twice as many field elements as members of the group of signers.
+The verifier needs to be given \((s_1, \ldots s_n),(e_1 \ldots
+e_n)\).</p>
+<p>Another excellent feature: this is not restricted to the Schnorr ID
+protocol. It can work with another identity protocol, and even better,
+it could work with a <em>mix</em> of them; they only have to share the one
+challenge \(e\).</p>
+<h2>Abe-Ohkubo-Suzuki (AOS) 2002 (broken version)</h2>
+<p>This is an excellent
+<a href="https://www.iacr.org/cryptodb/archive/2002/ASIACRYPT/50/50.pdf">paper</a>
+generally, but its stand-out contribution, in this context, is a <strong>more
+compact</strong> version of the 1 of n ring signature above. To clarify here,
+both this and the previous are \(O(n)\) where \(n\) is the group
+size, so "much more compact" is about the constant factor (scale not
+scaling!); we reduce it from roughly 2 to roughly 1.</p>
+<p>"Broken version" - here I'll present a slightly simpler form than the
+one in the paper, and then explain the serious problem with it - which I
+hope will be productive. <strong>Please don't mistake this as meaning that
+the AOS design was broken, it was never presented like this in the
+paper!</strong></p>
+<p>Anyway, I think the best explanation for what's going on here
+conceptually is due to A. Poelstra in the <a href="https://github.com/Blockstream/borromean_paper">Borromean ring signatures
+paper</a>,
+particularly Section 2 ; the reference to time travel may seem whimsical
+but it gets to the heart of what's going on here; it's about having a
+simulated form of causality with one way functions, and then violating
+that.</p>
+<p>In short: creating an ordinary Schnorr sig without the key (i.e.
+forging) is impossible because, working at the curve point level of the
+equation (\(sG = R + H(m||R)P\)), you need to know the hash value
+before you can calculate \(R\), but you need to know the value of
+\(R\) before you can calculate the hash. So we see that two one way
+functions are designed to conflict with one another; only by removing
+one of them (going from curve points to scalar eqn: (\(s = k +
+H(m||kG)x\)), can we now create a valid \(s, R, m\) set.</p>
+<p>To achieve that goal over a set of keys, we can make that "simulated
+causality enforcement" be based on the same principle, but over a set
+of equations instead of one. The idea is to make the commitment
+\(H(m||R)\) use the \(R\) value from the "previous"
+signer/key/equation, where "previous" is modulo \(N\), i.e. there is
+a loop of dependencies (a ring, in fact).</p>
+<p>[Quick description:]{style="text-decoration: underline;"}</p>
+<p>Our goal is a list of \(N\) correctly verifying Schnorr signature
+equations, with the tweak as mentioned that each hash-value refers to
+the "previous" commitment. We will work with \(N=4\) and index from
+zero for concreteness. Our goal is:</p>
+<p>\(s_0 G = R_0 + H(m||R_3)P_0\)</p>
+<p>\(s_1 G = R_1 + H(m||R_0)P_1\)</p>
+<p>\(s_2 G = R_2 + H(m||R_1)P_2\)</p>
+<p>\(s_3 G = R_3 + H(m||R_2)P_3\)</p>
+<p>Again for concreteness, we imagine knowing specifically the private key
+\(x_2\) for index 2, only. We can successfully construct the above,
+but only in a certain sequence:</p>
+<p>Choose \(k_2 \stackrel{\$}{\leftarrow} \mathbb{Z}_N,\ R_2 =
+k_2G\), choose \(s_3 \stackrel{\$}{\leftarrow} \mathbb{Z}_N\).</p>
+<p>\(\Rightarrow R_3 = s_3 G - H(m||R_2)P_3\). Now choose \(s_0
+\stackrel{\$}{\leftarrow} \mathbb{Z}_N\).</p>
+<p>\(\Rightarrow R_0 = s_0 G - H(m||R_3)P_0\). Now choose \(s_1
+\stackrel{\$}{\leftarrow} \mathbb{Z}_N\).</p>
+<p>\(\Rightarrow R_1 = s_1 G - H(m||R_0)P_1\).</p>
+<p>Last, do not choose but <strong>calculate</strong> \(s_2\): it must be \(s_2 = k_2
++ H(m||R_1)x_2\).</p>
+<p>After this set of steps, the set of data: \(e_0, s_0, s_1, s_2, s_3\)
+can be verified without exposing which private key was known. Here is
+the verification:</p>
+<p>Given \(e_0, s_0\), reconstruct \(R_0 = s_0G -e_0P_0\).</p>
+<p>\(\Rightarrow e_1 =H(m||R_0)\ ,\ R_1 = s_1 G - e_1P_1\)</p>
+<p>\(\Rightarrow e_2 =H(m||R_1)\ ,\ R_2 = s_2 G - e_2P_2\)</p>
+<p>\(\Rightarrow e_3 =H(m||R_2)\ ,\ R_3 = s_3 G - e_3P_3\)</p>
+<p><strong>Check</strong>: \(e_0 \stackrel{?}{=} H(m||R_3)\).</p>
+<h3>Security weaknesses</h3>
+<p>The description above can't be described as secure.</p>
+<p>To give a hint as to what I mean: is there something <strong>not completely
+fixed</strong> in the above construction? Maybe an issue that's not even
+specific to the "ring" construction, but even for any one of the
+signature equations?</p>
+<p>....</p>
+<p>The answer is the keys, \(P_i\). We can in the most general case
+consider three scenarios, although there may be some gray areas between
+them:</p>
+<ul>
+<li>Key(s) fixed in advance: \(P_1 \ldots P_N\) are all specified
+    before doing anything, and not allowed to change by the verifier.
+    Every signature must be on that set of keys.</li>
+<li>The <em>set</em> <em>of possible keys</em> is fixed in advance exactly as
+    described above, but the <em>set of keys used in the ring</em> is chosen by
+    the signer, dynamically, in signing oracle queries or forgery
+    attempts.</li>
+<li>Even the set of possible keys is dynamic. That is to say, any valid
+    curve point (for EC case) is a valid potential key in (ring)
+    signature.</li>
+</ul>
+<p>This is not a full taxonomy of possible attack scenarios, either. Not
+only must we consider the difference between EUF-CMA and SUF-CMA as was
+discussed in the previous blog (a reminder: with SUF, a forger should
+not be able to even create a second signature on the same message -
+ECDSA doesn't have this in naive form), but much more: we must also
+consider which of the above three key settings applies.</p>
+<p>Even outside of ring signature settings, just considering a large scale
+deployment of a signature scheme across millions or billions of keys,
+could mean that the difference between these cases really matters. In
+<a href="https://eprint.iacr.org/2015/996">this</a>
+paper by Dan Bernstein the term MU-UF-CMA is used to refer to the
+"multi-user" setting for this, where only single-key signatures are
+used but one must consider whether having billions of other keys and
+signing oracles for them might impact the security of <strong>any one</strong> key
+(notice the huge difference between "I want to forge on \(P\)" and
+"I want to forge on any existing key" is, in this scenario).</p>
+<p>So enough about settings, what exactly constitutes a security problem
+with the above version of the AOS ring sig?</p>
+<p>Consider any one element in the ring like:</p>
+<p>\(s_0 = R_0 + H(m||R_3)P_0\)</p>
+<p>where, for concreteness, I choose \(n=4\) and look at the first of 4
+signature equations. Because of Schnorr's linearity (see <a href="https://web.archive.org/web/20200713230948/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">this earlier
+blog
+post</a>
+for some elucidations on the <em>advantage</em> of this linearity, although it
+was also noted there that it had concomitant dangers (worse,
+actually!)), there are two obvious ways we could tweak this equation:</p>
+<p>(1) Tweaked \(s\) values on fixed message and tweaked keys:</p>
+<p>Choose \(\alpha \in \mathbb{Z}_N\) and set \(s' = s_0
++\alpha\). We will not alter \(R=kG\), but we alter \(P_0
+\rightarrow P_0 + e_0\^{-1}\alpha G\). This makes the verification
+still work <strong>without altering the fixing of the nonce in the hash value
+\(e_0\):</strong></p>
+<p>\(s_0 G + \alpha G = R_0 + e_0 P_0 + \alpha G = R_0 + e_0\left(P_0 +
+e_0\^{-1}\alpha G\right)\)</p>
+<p>So it's really not clear how bad this failing is; it's <em>kinda</em> a
+failure of strong unforgeability, but that notion doesn't precisely
+capture it: we created a new, valid signature against a
+[new]{style="text-decoration: underline;"} key, but with two severe
+limitations: we weren't able to alter the message, and also, we
+weren't able to <em>choose</em> the new key \(P'\). That last is slightly
+unobvious, but crucial : if I have a pre-prepared \(P\^{*}\), I
+cannot choose \(\alpha\) to get \(P' = P\^{*}\) as that would
+require a discrete logarithm break.</p>
+<p>A final statement, hopefully obvious: the above can apply to any and all
+of the elements of the ring, so the forgery could consist of an entirely
+different and random set of keys, not related to the starting set; but
+the message would be the same, as would the \(R\) values.</p>
+<p>(2) Completely different messages on tweaked keys, with the same
+signature</p>
+<p>This one is almost certainly more important. Algebraically, we here
+allow alterations to the \(e\) values, using multiplication rather
+than addition:</p>
+<p>Given the same starting \(s_0\) as in (1), we take a chosen new
+message \(m\^{*}\) and calculate the new \(e\^{*} =
+H(m\^{*}||R_3)\). If we likewise tweak the public key we get that
+\(s_0, R_0\) is a valid signature on the new message, with the tweaked
+key:</p>
+<p>\(s_0 G = R_0 + e_0\^{*}\left(\frac{e_0}{e_0\^{*}} P_0\right)\)</p>
+<p>We can see here that this produces a forgery with the same signature
+values (but different hash values) on the new keys.</p>
+<p>Most definitions of security against forgery require the attacker to
+create a signature on a not-previously-queried message - so this <em>is</em> a
+successful attack, by most measures.</p>
+<p>However it does share the same limitation with (1) mentioned above -
+that you cannot "control" the keys on which you get a signature,
+unless you know a relative discrete log between one of the existing keys
+and your new key, which implies you knew the secret key of the first (in
+which case all this is pointless; whenever you have a private key, there
+is no forgery on it).</p>
+<p><strong>All of this should make very clear the reason why the real AOS (see
+Section 5.1 of the paper) discrete-log ring signature fixes the entire
+set of keys inside the hash, i.e. \(e_i = H(m || R_{(i-1)\%n}||
+P_0 \ldots P_{n-1})\).</strong></p>
+<h3>Key Prefixing</h3>
+<p>The method in the previous bolded sentence is sometimes called
+"key-prefixing". One way of looking at it: the Fiat-Shamir transform
+that takes the Identity Protocol into a signature scheme, should hash
+the conversation transcript between the prover and verifier, previous to
+the challenge step; by including the public keys in this hash, we are
+treating the keyset as part of the conversation transcript, rather than
+something ex-protocol-run.</p>
+<p>Also, the discussion above (both cases (1) and (2)) show clearly that
+the same weakness exists for a single (\(n=1\)) key case.</p>
+<p>[And yet, for the single key case, it was not a done deal historically -
+this caused real world arguments!]{style="text-decoration: underline;"}.
+After all, there are many use cases where the key <em>is</em> a given
+ex-protocol-run, plus there may be some practical disadvantage to doing
+the key-prefixing.</p>
+<p>In
+<a href="https://rd.springer.com/chapter/10.1007%2F978-3-662-53008-5_2">this</a>
+paper from CRYPTO-2016, the controversy arising out of this is
+elucidated, showing that these theoretical concerns had very substantial
+impact on arguably the largest real world crypto usage (TLS):</p>
+<blockquote>
+<p>"Key-prefixing comes with the disadvantage that the entire public-key
+has to\
+be available at the time of signing. Specifically, in a CFRG message
+from Sep-\
+tember 2015 Hamburg [32] argues "having to hold the public key along
+with\
+the private key can be annoying" and "can matter for constrained
+devices".\
+Independent of efficiency, we believe that a cryptographic protocol
+should be\
+as light as possible and prefixing (just as any other component)
+should only\
+be included if its presence is justified. Naturally, in light of the
+GMLS proof,\
+Hamburg [32] and Struik [44] (among others) recommended against
+key prefixing\
+for Schnorr. Shortly after, Bernstein [10] identifies the error in
+the GMLS theo-\
+rem and posts a tight security proof for the key-prefixed variant of
+Schnorr signa-\
+tures. In what happens next, the participant of the CFRG mailing list
+switched\
+their minds and mutually agree that key-prefixing should be preferred,
+despite of\
+its previously discussed disadvantages. Specifically, Brown writes
+about Schnorr\
+signatures that "this justifies a MUST for inclusion of the public key
+in the mes-\
+sage of the classic signature" [16]. As a consequence, key-prefixing
+is contained in\
+the current draft for EdDSA [33]..."</p>
+</blockquote>
+<p><em>Technical note: the "GMLS proof" mentioned in the above is the proof
+given in
+<a href="https://www.researchgate.net/publication/256720499_Public_key_signatures_in_the_multi-user_setting">this</a>
+paper, that was intended to reduce the security of the multi-user
+setting to that of the single-user setting, and that Dan Bernstein's
+<a href="https://eprint.iacr.org/2015/996">paper</a>
+previously mentioned proved to be invalid.</em></p>
+<p>What's the TLDR? Fix the keys in any group/ring/multisignature. And
+even that may not be enough, see
+<a href="https://eprint.iacr.org/2018/068">MuSig</a>
+for details of why it really isn't, in the scenario of Bitcoin
+aggregated multisig.</p>
+<h2>Borromean, Maxwell-Poelstra 2015</h2>
+<p>I covered this extensively (including description of AOS as above) in my
+<a href="https://github.com/AdamISZ/ConfidentialTransactionsDoc/">CT
+writeup</a>
+section 3.2</p>
+<p>The idea of the construction as outlined in <a href="https://github.com/Blockstream/borromean_paper">the paper by Maxwell,
+Poelstra</a>
+is to increase the space-efficiency of the published proof even more. By
+having several ring signatures joined at a single index we get a
+reduction in the number of \(e\) values we publish. This is basically
+the same idea as the "AND of \(\Sigma\)-protocols" discussed a
+little later in this document (although here we will only be using it
+for achieving a specific goal, "Linkability", see more on this next).</p>
+<p>For the real world context - Borromean ring signatures are used in
+certain implementations of Confidential Transactions (e.g. Liquid by
+Blockstream) today, and were previously used also in Monero for the same
+goal of CT. They are a radically different use-case of ring signatures
+to the one mostly described in the below; instead of using a ring
+signature to hide the identity of a signer, they are used to hide which
+exponent contains values in the encoding of a value committed to in a
+Pedersen commitment. This allows arithmetic to be done on the
+Pedersen-committed amount without worrying about overflow into negative
+values modulo \(N\).</p>
+<h2>Linkability and Exculpability</h2>
+<p>In this section we'll briefly describe certain key features that turn
+out to be useful in some real-world applications of a ring signature,
+before in the following sections laying out how these features are, or
+are not, achieved.</p>
+<h3>Linkability (and spontaneity)</h3>
+<p>At first glance, the idea "linkability" with a ring signature seems to
+be a contradiction. Since we are trying to achieve signer
+ambiguity/anonymity, we don't really want any "linking" being done.
+But the idea is rather clever, and proves to be very interesting for
+digital cash.</p>
+<p>In a <strong>linkable</strong> ring signature, a participant with key \(P \in L\)
+(i.e. \(L\) is a particular set of public keys), should be able to
+produce one ring signature on a given message, but should not be able to
+do so again without the two ring signatures being linked. Thus,
+functionally, each participant can only make such a signature once
+(note: they can still retain anonymity if double-signing).</p>
+<p>This restriction-to-one-signature-while-keeping-anonymity is easily seen
+to be valuable in cases like electronic voting or digital cash, as well
+as the oft-cited example explained in the next paragraph.</p>
+<p>The <strong>spontaneity</strong> property should be a lot more obvious. Consider the
+example of a whistleblower. We would want individuals in some large
+group (e.g. government bureaucrats) to attest to a statement, while only
+revealing group membership and not individual identity. Clearly this is
+not workable if it requires cooperation of other members of the group
+(even in any setup phase), so it's necessary that the individual can
+create the ring signature "spontaneously", knowing only the public key
+of other participants.</p>
+<p>The paper uses the abbreviation LSAG for this type of signature:
+"Linkable Spontaneous Anonymous Group" signature.</p>
+<p>Note that the previous two constructions (CDS, AOS) can also have this
+spontaneity property; but not the linkability property.</p>
+<h3>Culpability, Exculpability and Claimability</h3>
+<p>A ring signature can be described as exculpable if, even given knowledge
+of the signing private key, an adversary cannot deduce that that signing
+key was the one used to create the ring signature.</p>
+<p>Notice that such a property may be immensely important in a range of
+scenarios where a ring sig is useful - e.g. for a whistleblower whose
+cryptographic keys were stolen or extracted by force, he could still
+plausibly deny being the origin of a leak.</p>
+<p>The reader can easily verify that the AOS construction, for example, has
+this exculpability. The fact that a particular key is released e.g.
+\(x_2\) in our concrete example, does not allow inference of it having
+been used to create that signature. Any other key could have created the
+signature, using the same signing algorithm.</p>
+<p>The LWW LSAG, which we'll describe shortly, is on the other hand
+<strong>culpable</strong>, i.e. the opposite - because the key image can be verified
+to be tied to one particular key.</p>
+<p>It's easy to see that the two properties <strong>exculpability</strong> and
+<strong>linkability</strong> are somewhat in conflict, although I'm not aware of a
+theorem that <em>absolutely requires</em> linkability to somehow tag one key in
+case it is leaked.</p>
+<p>Lastly, I'll mention <strong>claimability</strong>, which is briefly described also
+in the LWW paper (see below). It may be possible for the owner of a key
+to independently/voluntarily prove that they were the source of a given
+ring signature, which doesn't logically require culpability.
+Claimability is generally easy to achieve with some proof of knowledge
+technique.</p>
+<h2>AND of \(\Sigma\)-protocols, DLEQ</h2>
+<p>The thoughtful reader probably won't have much trouble in imagining
+what it would mean to do the logical AND of 2 \(\Sigma\)-protocols.</p>
+<p>"AND" here just means you need to prove to the Verifier that you know
+both secrets / both conditions are true. So this only requires that you
+can answer both challenges (second step) with correct responses. Using
+the standard notation, that means generating two transcripts:</p>
+<p>\((R_1, e, s_1) \quad (R_2, e, s_2)\)</p>
+<p>i.e. the same \(e\)-value is given to both protocol runs after
+receiving the initial commitments from each. Fiat-Shamir-ising this
+protocol will work the same as the usual logic; if considering a
+signature scheme, we'll be hashing something like
+\(H(m||R_1||R_2||P_1||P_2)\), if we include, as we have learnt
+to, key-prefixing.</p>
+<p>As we already mentioned, the Borromean ring signature design uses this
+idea to compactify a set of ring signatures, since only one
+\(e\)-value is being published, rather than \(M\) for \(M\) ring
+signatures.</p>
+<p>This much is not super-interesting; but we can tighten this up a bit and
+only use <strong>one</strong> commitment and response in a special case:</p>
+<h3>Proof of Discrete Log Equivalence (DLEQ, PoDLE)</h3>
+<p>See one of the first posts on this
+<a href="https://web.archive.org/web/20200713230948/https://joinmarket.me/blog/blog/poodle">blog</a>
+for a description of this technique; here we're giving a slightly
+deeper look at the meaning.</p>
+<p>If you are proving not only knowledge of a secret \(x\), but also that
+two curve points have the same discrete log \(x\) w.r.t. different
+bases \(G\) and \(J\) (whose relative discrete log must not be
+known; see earlier blog post etc.), you can condense the above AND by
+reusing the commitment and challenge for the two bases:</p>
+<p>\(\mathbb{P} \rightarrow \mathbb{V}\): \(R_1= kG,R_2=kJ\)</p>
+<p>\(\mathbb{V} \rightarrow \mathbb{P}\): \(e =
+H(m||R_1||R_2||P_1||P_2)\)</p>
+<p>\(\mathbb{P} \rightarrow \mathbb{V}\): \(s\),  (in secret:
+\(=k+ex\))</p>
+<p>Now, if the prover acted honestly, his construction of \(s\) will
+correctly pass verification <strong>twice</strong>:</p>
+<p>\(sG \stackrel{?}{=}R_1 +e P_1 \quad sJ \stackrel{?}{=} R_2 +
+eP_2\)</p>
+<p>... and notice that it would be impossible to make that work for
+different \(x\)-values on the two bases \(G\) and \(J\) because
+you would need to find \(k_1, k_2 \in \mathbb{Z}_N, x_1, x_2 \in
+\mathbb{Z}_N\) such that, <strong>without knowing \(e\) in advance,</strong>
+\(s = k_1 + ex_1 =k_2 + ex_2\), which is clearly impossible.</p>
+<p>Proof of soundness is easy to see using the standard rewinding technique
+(see e.g. previous blog post amongst many other places); after the two
+upfront commitments are fixed and the \(e\)-values are "forked", we
+will get two \(s\) values as usual and extract \(x\).</p>
+<h2>Liu-Wei-Wong 2004 LSAG</h2>
+<p>Shortly after the AOS paper, Liu, Wei and Wong published a
+<a href="https://www.researchgate.net/publication/220798466_Linkable_Spontaneous_Anonymous_Group_Signature_for_Ad_Hoc_Groups_Extended_Abstract">paper</a>
+outlining how the same basic idea could be extended to a slightly more
+complex context of requiring <strong>linkability</strong>, as earlier mentioned. It
+uses a combination of the above: DLEQ via AND of
+\(\Sigma\)-protocols, and OR of \(\Sigma\)-protocols for the ring
+signature hiding effect. Detailed algorithm with commentary follows.</p>
+<h3>Liu-Wei-Wong's LSAG algorithm</h3>
+<p>We start with a keyset \(L = \{P_0 \ldots P_{n-1}\}\) chosen by
+the signer, whose index will be \(\pi\) (note the ambiguities about
+"what is the set of valid keys?" as was discussed under "Key
+Prefixing"). We then form a special new kind of curve point that we'll
+name from now on as the <strong>key image</strong> (for reasons that'll become
+clear):</p>
+<p>\(I =x_{\pi} \mathbb{H}(L)\)</p>
+<p>Here \(\mathbb{H}\) is a hash function whose output space is points
+on the curve, rather than scalar numbers. (<em>The mechanical operation for
+doing this is sometimes described as "coerce to point"; for example,
+take the 256 bit number output by SHA256 and interpret it as an
+\(x-\)coordinate on secp256k1, find the "next" valid point
+\(x,y\), incrementing \(x\) if necessary, or whatever; just has to
+be deterministic</em>). \(\mathbb{H}(L)\) is therefore going to play the
+same role as \(J\) in the previous section, and we assume
+intractability of relative discrete log due to the hashing.</p>
+<h3>Signing LWW LSAG</h3>
+<p>The following steps are very similar "in spirit" to AOS; we still
+"extend the causality loop" (bastardising Poelstra's description)
+over the whole set of signatures instead of just one, but this time we
+also "lift" the loop onto a base of \(\mathbb{H}(L)\) and replicate
+the signatures there, too:</p>
+<ul>
+<li>Set \(k_{\pi} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\)</li>
+<li>Form the hash-challenge at the next index: \(e_{\pi+1} =
+    H(m||L||k_{\pi}G||k_{\pi}\mathbb{H}(L)||I)\)</li>
+<li>Note to the above: \(k_{\pi}G\) was previously called
+    \(R_{\pi}\) in AOS; we are trying to preserve here, the same
+    notation where possible; and of course it's the \(R\) value, not
+    the \(k\)-value that will be known/calculated by the verifier. The
+    same applies to the "lifted" nonce-point which follows it in the
+    concatenation. With respect to the key image, note that it <em>will</em> be
+    published and known to the verifier; but he won't know which index
+    it corresponds to.</li>
+<li>Pick \(s_{\pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\);
+    then we do as in AOS, but duplicated; we set:</li>
+<li>\(R_{\pi+1} = s_{\pi+1}G - e_{\pi+1}P_{\pi+1}\) and
+    \(R\^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(L) - e_{\pi+1}I\)</li>
+<li>I realise the last line is pretty dense, so let's clarify: the
+    first half is exactly as for AOS; calculate \(R\) given the random
+    \(s\) and the just-calculated hash value \(e\). The <em>second</em>
+    half is <strong>the same thing with the base point \(G\) replaced with
+    \(\mathbb{H}(L)\), and the pubkey replaced with \(I\) at every
+    index</strong>. We used a shorthand \(R\^{*}\) to mean
+    \(k_{\pi+1}\mathbb{H}(L)\), because of course we don't
+    actually <em>know</em> the value \(k_{\pi+1}\).</li>
+<li>Calculate the next hash-challenge as \(e_{pi+2} =
+    H(m||L||R_{\pi+1}||R\^{*}_{\pi+1}||I)\)</li>
+<li>Etc...</li>
+<li>As with AOS, we can now forge all the remaining indices, wrapping
+    around the loop, by repeating the above operation, generating a new
+    random \(s\) at each step, until we get back to the signing index
+    \(\pi\), when we must calculate \(s_{\pi}\) as: \(s_{\pi}
+    = k_{\pi} + e_{\pi}x_{\pi}\).</li>
+<li>Signature is published as \(\sigma_{L}(m) = (s_0 \ldots
+    s_{n-1}, e_0, I)\). (As before, if the keyset \(L\) is not
+    specified in advance, it will have to be published for the
+    verifier).</li>
+</ul>
+<p>So what we're doing here is OR(DLEQ(0), DLEQ(1),.... DLEQ(n-1)). And
+as observed, each DLEQ is actually an AND: "AND(I know x for P, x for P
+is same as x for P2)". Hence this represents a clever combination of
+AND- and OR- of \(\Sigma\)-protocols.</p>
+<p><em>On a personal note, when I first saw something of this type (I think it
+was Cryptonote, see below), I found it quite bewildering, and I'm sure
+I'm not alone! But what partially saved me is having already studied
+PoDLE/DLEQ as well as AOS ring sigs, so I could intuit that something
+combining the two ideas was going on. I hope the previous painstaking
+introductions make it all a lot clearer!</em></p>
+<p>Note the key similarities and difference(s) in the published signature,
+to the AOS case: you still only need to publish one hash \(e_0\) since
+the others are determined by it, but you <strong>must</strong> publish also the key
+image \(I\); if another LWW LSAG is published using the same private
+key, it will perforce have the same key image, and be recognized as
+having come from the same key [without revealing which
+key]{style="text-decoration: underline;"}.</p>
+<p>The protocol using the LSAG can thus reject a "double-sign", if
+desired.</p>
+<p>Let's sanity check that we understand the verification algorithm, since
+it is slightly different than AOS:</p>
+<h3>Verifying LWW LSAG</h3>
+<p>Start with the given keyset \(L\), the message \(m\) and the
+signature \((s_0 \ldots s_{n-1}, e_0, I)\)</p>
+<ul>
+<li>Construct \(e_{1} = H(m||L||R_{0}||R\^{*}_{0}||I)\)
+    using \(R_0 = s_0G - e_0 P_0\) and \(R\^{*}_{0} = s_0
+    \mathbb{H}(L) - e_0 I \)</li>
+<li>Repeat at each index using the new \(e_j\) until \(e_0\) is
+    calculated at the last step and verify it matches: \(e_0
+    \stackrel{?}{=} H(m||L||R_{n-1}||R\^{*}_{n-1}||I)\).
+    Accept if so, reject if not.</li>
+</ul>
+<p>(with the additional point mentioned: the protocol using the sig scheme
+may also reject this as valid if \(I\) has already been used; this
+additional protocol step is usually described as "LINK" in the
+literature).</p>
+<h3>A brief note on the key image</h3>
+<p>Make sure you get the difference between this \(\mathbb{H}(L)\) and
+the previous \(J\) as per the general DLEQ. In the latter case we can
+(and should) choose an arbitrary globally-agreed NUMS point, for example
+hashing the standard curve base point \(G\) (with the
+"coerce-to-point" technique mentioned). In this case, we have chosen
+something that both signer and verifier agree on, as part of the
+<strong>setting</strong> of this particular run of the protocol - it's
+deterministically tied to the keyset \(L\). The key image\(I\) is
+analogous to \(P_2\) in my PoDLE blog post; it's the signer's
+"hidden", one-time key.</p>
+<p>This changes in the next construction, Back 2015. But first, a few words
+on security.</p>
+<h2>Security arguments for the LWW LSAG</h2>
+<p>The general approach to proving <strong>unforgeability</strong> of this ring
+signature is the same as that for the basic Schnorr signature as
+described in the previous blog post.</p>
+<p>A wrapper around an attacker \(\mathbb{A}\) who we posit to have the
+ability to construct a forgery without knowing any private key
+\(x_i\), will, as before, have to guess which random oracle query
+corresponds to the forgery, and will want to provide two different
+"patched" answers to the RO query at that point. As before, there will
+be some reduced probability of success due to having to make this kind
+of guess, and so the reduction will be even less tight than before.</p>
+<p>Also as before, in the EUF-CMA model, we must allow for an arbitrary
+number of signing oracle as well as RO queries, which complicates the
+statistical analysis considerably, but the basic principles remain the
+same. If at some point forgery is successfully achieved twice at the
+same index, we will have something like:</p>
+<p>\(x_{\pi} =
+\frac{s\^{*}_{\pi}-s_{\pi}}{e\^{*}_{\pi}-e_{\pi}}\)</p>
+<p>where the * superscripts indicate the second run, and the
+\(e\)-values being the patched RO responses.</p>
+<p>And as usual, with appropriate statistical arguments, one can generate a
+reduction such that forgery ability with a certain probability \(p\)
+implies thus ability to solve ECDLP with a related probability
+\(p'\).</p>
+<p>For proving <strong>signer ambiguity</strong> - for simplicity, we break this into
+two parts. If <em>all</em> of the private keys are known to the attacker (e.g.
+by subpoena), then this property completely fails. This is what we
+called <strong>culpability</strong>. It's easy to see why - we have the key image as
+part of the signature, and that is deterministically reproducible given
+the private key. If <em>none</em> of the private keys are known to the
+attacker, the problem is reduced to the <strong>solution of the <a href="https://en.wikipedia.org/wiki/Decisional_Diffie%E2%80%93Hellman_assumption">Decisional
+Diffie Hellman
+Problem</a></strong>,
+which is considered computationally hard. The reduction is quite
+complicated, but as in a standard zero knowledgeness proof, the idea is
+that a Simulator can generate a transcript that's statistically
+indistinguishable from a genuine transcript.</p>
+<p>For proving <strong>linkability </strong> - in the LWW paper an argument is made that
+this reduces to ECDLP in more or less the same was as for the
+unforgeability argument, using two pairs of transcripts for two
+different signatures which are posited to be based on the same private
+key but having different key images. Examination of the two pairs of
+transcripts allows one to deduce that the private key in the two cases
+are the same, else ECDLP is broken.</p>
+<p>Notice that these security arguments are [much more complicated than for
+the single Schnorr signature case]{style="text-decoration: underline;"}
+and perhaps for two distinct reasons: one, because the ring signature is
+a more complex algebraic construction, with more degrees of freedom, but
+also, because we are asking for a significantly richer set of properties
+to hold. In particular notice that even for unforgeability, the EUF-CMA
+description is not good enough (we've already discussed this a bit); we
+need to consider what happens when creating multiple signatures on
+different keysets and how they overlap. Signer anonymity/ambiguity is
+especially difficult for LWW and its postdecessors (see below), because
+by design it has been weakened (culpability).</p>
+<h2>Back 2015; compression, single-use</h2>
+<p><em>This is a good place to note that the constructions starting with LWW
+are described in some detail in the useful document
+<a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf">Zero-To-Monero</a></em>.</p>
+<p>Adam Back
+<a href="https://bitcointalk.org/index.php?topic=972541.msg10619684#msg10619684">posted</a>
+in 2015 on bitcointalk about a potential space saving over the
+cryptonote ring signature, based on using AOS and tweaking it to include
+a key image.</p>
+<p>As was noted above, it's a space saving of asymptotically about 50% to
+use a scheme like AOS that only requires publication of one hash
+challenge as opposed to one for each index (like the CDS for example).</p>
+<p>He then followed up noting that a very similar algorithm had already
+been published, namely the LWW we've just described in the above, and
+moreover it was published three years before Fujisaki-Suzuki that was
+the basis of cryptonote (see below). So it was <em>somewhat</em> of an
+independent re-discovery, but there is a significant tweak. I'll
+outline the algorithm below; it'll look very similar to LWW LSAG, but
+there's a difference.</p>
+<h3>Signing Back-LSAG</h3>
+<ul>
+<li>Define key image \(I =x_{\pi}\mathbb{H}(P_{\pi})\);</li>
+<li>Set \(k_{\pi} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\)</li>
+<li>Form the hash-challenge at the next index: \(e_{\pi+1} =
+    H(m||k_{\pi}G||k_{\pi}\mathbb{H}(P_{\pi}))\)</li>
+<li>Pick \(s_{\pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\);
+    then:</li>
+<li>\(R_{\pi+1} = s_{\pi+1}G - e_{\pi+1}P_{\pi+1}\) and
+    \(R\^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(P_{\pi+1}) -
+    e_{\pi+1}I\)</li>
+<li>Calculate the next hash-challenge as \(e_{pi+2} =
+    H(m||R_{\pi+1}||R\^{*}_{\pi+1})\)</li>
+<li>Etc...</li>
+<li>As with AOS and LWW, we can now forge all the remaining indices,
+    wrapping around the loop, by repeating the above operation,
+    generating a new random \(s\) at each step, until we get back to
+    the signing index \(\pi\), when we must calculate \(s_{\pi}\)
+    as: \(s_{\pi} = k_{\pi} + e_{\pi}x_{\pi}\).</li>
+<li>Signature is published as \(\sigma_{L}(m) = (s_0 \ldots
+    s_{n-1}, e_0, I)\), as in LWW (\(L\) being the set of \(P\)s).</li>
+</ul>
+<p>Verification for this is near-identical as for LWW, so is left as an
+exercise for the reader.</p>
+<h3>What's the difference, and what's the purpose?</h3>
+<p>The tweak - which is very similar to Cryptonote (makes sense as it was
+an attempt to improve that) - is basically this: by making each of the
+signatures in the shifted base point version symmetrical (example:
+\(s_2 \mathbb{H}(P_2) = k_2 \mathbb{H}(P_2) + e_2 I\)), it means
+that a key image will be valid <em>independent of the set of public keys,
+\(L\).</em> This is crucial in a cryptocurrency application - we need the
+key image to be a unique double spend signifier across many different
+ring signatures with different keysets - the keys are ephemeral and
+change between transactions.</p>
+<p>So it's a blend of the LWW LSAG, which has the advantage of space
+compaction for the same reason as AOS - only one hash must be published,
+the others can be deduced from the ring structure - with the
+F-S-2007/Cryptonote design, which fixes the key image to the key and not
+just the specific ring.</p>
+<p>However I have to here leave open whether the security arguments of LWW
+carry across to this case. I note that the original description did
+<em>not</em> include the keyset in the hash challenge (notice absence of
+\(L\)); but see the note on MLSAG below.</p>
+<h2>Fujisaki-Suzuki 2007 and Cryptonote</h2>
+<p><a href="https://cryptonote.org/whitepaper.pdf">Cryptonote</a>
+was adapted from a paper of <a href="https://eprint.iacr.org/2006/389.pdf">Fujisaki and
+Suzuki</a>
+describing an alternate version of a linkable (here "traceable") ring
+signature, in 2007. We won't dwell on these constructions here (except
+inasmuch as we referred to them above), as they provide the same
+linkability function as the above LSAG, but are less compact. Instead,
+in the final section, I'll describe how Monero has applied LWW LSAG and
+the Back LSAG to their specific requirements.</p>
+<h2>Monero MLSAG</h2>
+<p>For anyone paying close attention all the way through, there will be
+nothing surprising here!</p>
+<p>For a cryptocurrency, we build transactions consisting of multiple
+inputs. Each input in Monero's case uses a ring signature, rather than
+a single signature, to authenticate the transfer, referring back to
+multiple pubkeys possessing coins as outputs of earlier transactions.</p>
+<p>So here we need <strong>one ring signature per input</strong>. Moreover, per normal
+transaction logic, we obviously need <em>all</em> of those ring signatures to
+successfully verify. So this is another case for the "AND of
+\(\Sigma\)-protocols". We just run \(M\) cases of Back's LSAG and
+combine them with a single \(e\) hash challenge at each key index (so
+the hash challenge kind of "spans over the inputs"). Additionally,
+note that the hash challenge here is assumed to include the keyset with
+a generic \(L\) (limiting tiresome subscripting to a minimum...).</p>
+<p>To sign \(M\) inputs each of which have \(n\) keys:</p>
+<ul>
+<li>For each input, define key image \(I_i
+    =x_{i,\pi}\mathbb{H}(P_{i,\pi}) \ \forall i \in 0 \ldots
+    M-1\);</li>
+<li>Set \(k_{i, \pi} \stackrel{\$}{\leftarrow} \mathbb{Z}_N \
+    \forall i \in 0 \ldots M-1\)</li>
+<li>Form the hash-challenge at the next index: \(e_{\pi+1} =
+    H(m||L||k_{0, \pi}G||k_{0,
+    \pi}\mathbb{H}(P_{0,\pi})||k_{1, \pi}G||k_{1,
+    \pi}\mathbb{H}(P_{1,\pi}) ...)\)</li>
+<li>Pick \(s_{i, \pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\
+    \forall i \in 0 \ldots M-1\); then:</li>
+<li>\(R_{i, \pi+1} = s_{i, \pi+1}G - e_{\pi+1}P_{i, \pi+1}\)
+    and \(R\^{*}_{i, \pi+1} = s_{i, \pi+1}\mathbb{H}(P_{i,
+    \pi+1}) - e_{\pi+1}I_i \ \forall i \in 0 \ldots M-1\)</li>
+<li>Calculate the next hash-challenge as \(e_{\pi+2} =
+    H(m||L||R_{0, \pi+1}||R\^{*}_{0,\pi+1}||R_{1,
+    \pi+1}||R\^{*}_{2,\pi+1} ...)\)</li>
+<li>Etc...</li>
+<li>Logic as for AOS, LWW but duplicated at every input with single
+    \(e\)-challenge, and at signing index for all inputs (\(\pi\)):
+    \(s_{i, \pi} = k_{i, \pi} + e_{i, \pi}x_{i, \pi}\ \forall
+    i \in 0 \ldots M-1\).</li>
+<li>Signature is published as \(\sigma_{L}(m) = (s_{0,0} \ldots
+    s_{0,M-1}, \ldots, s_{n-1,0}, \ldots s_{n-1,M-1}, e_0, I_0
+    \ldots I_{M-1})\).</li>
+</ul>
+<p>Note:</p>
+<p>(1)  This algorithm as described requires each input to have the genuine
+signer at the same key-index in the set of pubkeys for each input, which
+is a limitation.</p>
+<p>(2) Monero has implemented Confidential Transactions, and this is
+folded in with the above into a new design which seems to have two
+variants "RingCTFull" and "RingCTSimple". This can be investigate
+further in the documents on RingCT as referenced in the previously
+mentioned
+<a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf">ZeroToMonero</a>.</p>
+    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>links</h2>
+                        <ul>
+                            <li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+</body>
+</html>
