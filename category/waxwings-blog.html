@@ -1,781 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-        <meta charset="utf-8" />
-        <meta name="generator" content="Pelican" />
-        <title>Joinmarket.me archive - waxwing's Blog</title>
-        <link rel="stylesheet" href="https://joinmarket.me/theme/css/main.css" />
-        <link href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Joinmarket.me archive Atom Feed" />
+	<meta charset="utf-8">
+	<title>waxwing's Blog — Joinmarket.me archive</title>
+	<meta name="description" content="All posts which refer to category waxwing's Blog">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
 </head>
-
-<body id="index" class="home">
-        <header id="banner" class="body">
-                <h1><a href="https://joinmarket.me/">Joinmarket.me archive</a></h1>
-                <nav><ul>
-                    <li><a href="https://joinmarket.me/pages/about-me.html">About Me</a></li>
-                    <li><a href="https://joinmarket.me/pages/main-page.html">Main Page</a></li>
-                    <li class="active"><a href="https://joinmarket.me/category/waxwings-blog.html">waxwing's Blog</a></li>
-                </ul></nav>
-        </header><!-- /#banner -->
-
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="https://joinmarket.me/blog/blog/the-445-btc-gridchain-case">The 445BTC gridchain case</a></h1>
-<footer class="post-info">
-        <abbr class="published" title="2020-06-15T00:00:00+02:00">
-                Published: Mon 15 June 2020
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="https://joinmarket.me/author/adam-gibson.html">Adam Gibson</a>
-        </address>
-<p>In <a href="https://joinmarket.me/category/waxwings-blog.html">waxwing's Blog</a>.</p>
-<p>tags: <a href="https://joinmarket.me/tag/coinjoin.html">coinjoin</a> <a href="https://joinmarket.me/tag/joinmarket.html">joinmarket</a> <a href="https://joinmarket.me/tag/bitcoin.html">bitcoin</a> </p>
-</footer><!-- /.post-info --><h3>The 445 BTC gridchain case</h3>
-<p>For those time-constrained or non-technical, it may make sense to read
-only the <a href="index.html#summary">Summary</a> section of this article. It goes
-without saying that the details do matter, and reading the other
-sections will give you a much better overall picture.</p>
-<h2>Contents</h2>
-<p><a href="index.html#background">Background - what is the "gridchain case"?</a></p>
-<p><a href="index.html#change-peeling">Toxic change and peeling chains</a></p>
-<p><a href="index.html#change-joinmarket">Change outputs in a Joinmarket context</a></p>
-<p><a href="index.html#toxic-recall">The toxic recall attack</a></p>
-<p><a href="index.html#size-factor">The size factor</a></p>
-<p><a href="index.html#sudoku">Joinmarket sudoku</a></p>
-<p><a href="index.html#maker-taker">Reminder on the maker-taker tradeoff</a></p>
-<p><a href="index.html#address-reuse">Address reuse</a></p>
-<p><a href="index.html#summary">Summary; lessons learned; advice to users</a></p>
-<p><a href="index.html#already">Already implemented improvements</a></p>
-<p><a href="index.html#still-needed">Still needed improvements</a></p>
-<p><a href="index.html#recommendations">Recommendations for users</a></p>
-<h2 id="background">Background - what is the "gridchain case"?</h2>
-<p>This is a reflection on a case of reported theft as outlined
-<a href="https://old.reddit.com/r/Bitcoin/comments/69duq9/50_bounty_for_anybody_recovering_445_btc_stolen/">here</a>
-on reddit in early 2017 by user 'gridchain'.</p>
-<p>What I won't do here is discuss the practical details of the case;
-things like, whether it was a hack or an inside job, nor anything like
-network level metadata, all of which is extremely important in an actual
-criminal investigation. But here I'm only focusing on the role played
-by Joinmarket specifically and blockchain level activity of the coins,
-generally.</p>
-<p>The reason for this blog post was
-<a href="https://research.oxt.me/the-cold-case-files/1">this</a>
-recent report by OXT Research - specifically by analyst
-<a href="https://bitcoinhackers.org/@ErgoBTC">ErgoBTC</a>
-(they require an email for signup to read the full report, otherwise you
-only see the summary).</p>
-<p>A short note of thanks here to ErgoBTC and LaurentMT and others
-involved, since this kind of detailed analysis is badly needed, I hope
-will we see more, specifically in public, over time (we cannot hope for
-such from the deeply unethical blockchain analysis companies).</p>
-<p>I'm [not]{style="text-decoration: underline;"} going to assume here
-that you've read that report in full, but I am going to be referring to
-its main set of conclusions, and analyzing them. Obviously if you want
-to properly assess my statements, it's rather difficult - you'd need
-full knowledge of Joinmarket's operation <em>and</em> full details of the OXT
-Research analysis - and even then, like me, you will still have some
-significant uncertainties.</p>
-<p>So the case starts with the claimed theft in 2 parts: 45 BTC in <a href="https://blockstream.info/tx/2f9bfc5f23b609f312faa60902022d6583136cc8e8a0aecf5213b41964963881">this
-txn</a>
-(note I will use blockstream.info for my tx links because I find their
-presentation easiest for single txs specifically; note that oxt.me 's
-research tool is of course a vastly superior way to see a large network
-of txs, which plays a crucial role in this analysis), and a
-consolidation of 400BTC in <a href="https://blockstream.info/tx/136d7c862267204c13fec539a89c7b9b44a92538567e1ebbce7fc9dd04c5a7f0">this other
-txn</a>
-.</p>
-<p>We'll assume that both of these utxos are under the control of a single
-actor/thief, henceforth just <em>A</em>.</p>
-<p>Setting aside the (in some ways remarkable) timing - that <em>A</em> did not
-move the coins for about 2 years - let's outline roughly what happened,
-and what the report tells us:</p>
-<ul>
-<li>The 400BTC went into joinmarket as a maker, and did a bunch (11 to
-    be precise) of transactions that effectively "peeled down" (more
-    on this later) that 400 to perhaps 335 BTC (with the difference
-    going into coinjoins).</li>
-<li><em>A</em> then switched to a taker role for a while, focusing on higher
-    denominations, ranging from \~ 6BTC to as high as \~58BTC. Many of
-    these coinjoins had very low counterparty numbers (say 3-5 being
-    typical).</li>
-<li>At some point some maker activity is seen again in this same
-    "peeling chain"; the report terms this phase as "alternating",
-    but it's hard to say for sure whether some particular script is
-    running, whether <em>A</em> is just randomly switching roles, or what.</li>
-</ul>
-<p>Be aware that this simplified narrative suggests to the careless reader
-that one can easily trace all the coins through all the coinjoins, which
-of course is not true at all - each subsequent transaction moves some
-portion into a "mixed state", but (a) we'll see later that just
-"moved into mixed state" is not the end of the story for some of those
-coins and (b) while this narrative is misleading for Joinmarket in
-general, it is not <em>as</em> misleading in this particular case.</p>
-<p>The distinction between the "second" and "third" phase as listed in
-those bullet points is pretty much arbitrary, but what is not in doubt
-as important is: that second phase marks a clear jump in coinjoin amount
-average size (this could be read as impatience on <em>A</em>'s part - but
-that's just speculation), and this resulted in small anonymity sets in
-some txs - 4 and 3 in two txs, in particular. Let's continue:</p>
-<ul>
-<li>Within the second regime, the OXT analysis narrows in on those small
-    anon set, large denomination txs - can they figure out which equal
-    sized output belongs to <em>A</em> here? The "toxic replay attack"
-    (explained below) allows them to identify one coinjoin output
-    unambiguously  - but that goes into another coinjoin. But in a
-    second case it allows them to reduce the anonymity set (of the equal
-    sized coinjoin outputs) to 2, and they trace forwards both of those
-    outputs.</li>
-<li>One of those 2 coinjoin outputs (<a href="https://blockstream.info/tx/2dc4e88685269795aafe7459087ab613878ce7d857dd35760eefeb9caf21371b">this
-    txn</a>
-    , output index 2) pays, after several hops, into a Poloniex deposit
-    address in <a href="https://blockstream.info/tx/ab1e604cd959cc94b89ab02b691fe7d727d30637284e5e82908fb28b8db378f4">this
-    txn</a>
-    ). Although this is several hops, and although it does not deposit
-    all of that \~58BTC into Poloniex (only about half of it),
-    nevertheless this can be (and is) treated as a significant lead.</li>
-<li>So the next step was to trace back from that specific Poloniex
-    deposit address, which it turned out had a bunch of activity on it.
-    See
-    <a href="https://blockstream.info/address/16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1">16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1</a>
-    . Indeed several other deposits to that single address are connected
-    to the same Joinmarket cluster, and specifically connected to those
-    smaller-anon set taker-side coinjoins. In total around 270BTC is
-    eventually linked from <em>A</em>'s joinmarket coinjoins to that deposit
-    address. Even though some of those connections are ambiguous, due to
-    address reuse the evidence of co-ownership appears very strong.</li>
-<li>Some further evidence is provided (though I am still fuzzy on the
-    details, largely just because of the time needed to go through it
-    all) linking more of the coins to final destinations, including some
-    from the 45BTC original chunk. The claim is that 380BTC is linked at
-    final destinations to the original 445BTC set. In the remainder
-    I'll focus on what is already seen with this 270BTC set and only
-    peripherally mention the rest - there is already a lot to chew on!</li>
-</ul>
-<h2 id="change-peeling">Toxic change and peeling chains</h2>
-<p>The general idea of a "peeling chain" on the Bitcoin blockchain isn't
-too hard to understand. Given 100 BTC in a single utxo, if I have to
-make a monthly payment of 1 BTC and never use my wallet otherwise, then
-clearly the tx sequence is (using (input1, input2..):(output1,
-output2..)) as a rudimentary format): ((100):(1,99), (99):(1, 98),
-(98:(1, 97)...). Ignoring fees of course. What matters here is that I
-just always have a single utxo and that on the blockchain <em>my</em> utxos
-<em>may</em> be linked as (100-99-88-97...) based on a <a href="https://en.bitcoin.it/wiki/Privacy#Change_address_detection">change
-heuristic</a>
-such as "round amount for payment". To whatever extent change
-heuristics work, then to that extent ownership can be traced through
-simple payments (especially and mostly if transactions have exactly two
-outputs, so that the very <em>idea</em> of change, let alone a change
-heuristic, applies straightforwardly).</p>
-<p><img alt="peeling chain simple
-example" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/.thumbnails/PeelingChain1.png/PeelingChain1-418x296.png">{width="418"
-height="296"}</p>
-<p>In peeling chains, sometimes, the primary heuristic is the <strong>size</strong> of
-the output. If you start with 1000 btc and you peel 0.1 btc hundreds of
-times, it's obvious from the "size pattern" what the change is (and
-indeed it's this case that gives rise to the name <em>peel chain</em> because
-"peel" refers to taking off a <em>small</em> part of something, usually its
-surface). The above diagram is more similar (but not the same, exactly)
-as the initial flow in the gridchain case, with one very large utxo
-gradually getting peeled off.</p>
-<p>In some cases timing may factor in; sometimes hackers will do hundreds
-of such peels off a main originating utxo in a short time.</p>
-<p>You can think of a peeling chain as the lowest effort ownership
-obfuscation out there. Notice how literally any, even the simplest,
-Bitcoin wallet, has to offer the feature required to carry this out -
-just make a vanilla payment, for which there is (almost always, but not
-always) a change output, back to your wallet.</p>
-<p>So in Bitcoin's history, this technique has very often been seen used -
-by hackers/thieves moving coins "away" from the original site of the
-theft (I remember the <a href="http://www.techienews.co.uk/973470/silk-road-like-sheep-marketplace-scams-users-39k-bitcoins-worth-40-million-stolen/">case of Sheep
-Market</a>
-for example). Each "peel" raises additional uncertainty; the
-non-change output is going somewhere, but who owns that? But the change
-outputs represent a link allowing someone, in theory, to keep tracing
-the activity of the original actor. Notice here how we talk about one
-branch (our ((100):(1,99), (99):(1, 98), (98:(1, 97)...) example
-illustrates it); but one could keep tracing the payment outputs (the
-'1's in that flow) and see if they themselves form other peel chains,
-leading to a tree.</p>
-<p>We mentioned a 'change heuristic' element to this - which is the
-"main branch" if we're not sure which output is the change?</p>
-<h3 id="change-joinmarket">Change outputs in a Joinmarket context</h3>
-<p>A reader should from this point probably be familiar with the basics of
-Joinmarket's design. Apart from the
-<a href="https://github.com/Joinmarket-Org/joinmarket-clientserver">README</a>
-and <a href="hhttps://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/USAGE.md">usage
-guide</a>
-of the main Joinmarket code repo, the diagrams showing the main
-Joinmarket transaction types
-<a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-transaction-types">here</a>
-may be useful as a refresher or a reference point for the following.</p>
-<p>We have: \(N\) equal outputs and \(N\) or \(N-1\) non-equal change
-outputs, where \(N-1\) happens when the taker does a "sweep",
-emptying the mixdepth (= account; joinmarket wallets have 5 accounts by
-default) without a change output. [This last feature is specific to
-Joinmarket, and specific to the taker role: there's no other coinjoin
-out there that provides the facility to sweep an arbitrary amount of
-coins out to an equal-sized output, with no
-change.]{style="text-decoration: underline;"} (I am emphasizing this not
-for marketing, but because it's crucial to this topic, and not widely
-understood I think).</p>
-<p>As an example of why it's important, here is one line from the OXT
-Research article:</p>
-<blockquote>
-<p><em>Fees taken directly in a mix transaction result in deterministic
-links ("unmixed change").</em></p>
-</blockquote>
-<p>This is false as an absolute statement; fees can be paid by a taker,
-inside the transaction, with no unmixed change for the taker (this is
-the Joinmarket 'sweep'). Deterministic links between inputs and change
-outputs <em>do</em> result from change, and fees <em>do</em> create an additional flag
-that can help make those linkages, in cases where there would be more
-ambiguity. But a zero fee coinjoin with change outputs still has
-deterministic links, usually.</p>
-<p>Why does the OXT Research article heavily focus on <em>toxic unmixed
-change</em> as a concept and as a key weakness of such protocols as
-Joinmarket, and why do I disagree?</p>
-<p>As we discussed peeling chains offer a low quality of obfuscation, and
-to unpack that: the problem is that if you have any relatively viable
-change heuristic (it doesn't <em>have</em> to be large amounts as discussed),
-it can let you keep knowledge of ownership of a whole chain of
-transactions. That basically gives the blockchain analyst (we'll call
-<em>B</em>) a very large attack surface. He can look at <em>all</em> the information
-flowing out of, or associated with, a whole chain of transactions. Any
-later recombination of outputs from that "large attack surface" is
-either a coinjoin or a "smoking gun" that different outward paths were
-actually under the control of one owner (this comes back to that central
-heuristic - common input ownership, and all the nuance around that).</p>
-<p>In Joinmarket or any other coinjoin protocol that does allow change
-outputs, "change heuristic" doesn't really apply, it kind of morphs
-into something else: it's very obvious which outputs are change, but it
-is only <em>in some cases</em> easy to disentangle which change outputs are
-associated to which inputs, and that's actually what you need to know
-if you want to trace via the change (as per "peeling chains"
-description above). In high anonymity sets, it starts to get difficult
-to do that disentangling, but more on that ("sudoku") later.</p>
-<p>The analysis done in the OXT Research report smartly combines a long
-peeling chain with other specific weaknesses in the way <em>A</em> acted, which
-we will discuss in the next section.. So all this is very valid in my
-view.</p>
-<p>[But I think going from the above to the conclusion "coinjoins which
-have unmixed change are fundamentally inferior and not viable, compared
-to coinjoins without unmixed change" is just flat out
-wrong]{style="text-decoration: underline;"}. Consider yourself in the
-position of <em>A</em>. You have let's say 400BTC in a single utxo. If you run
-a coinjoin protocol that insists on no change always, and without a
-market mechanism, you are forced to use a fixed denomination, say 0.1
-BTC (an example that seems common), now across thousands of
-transactions. In order to create these fixed denomination utxos you are
-faced with the same problem of trying to avoid a trivial peeling chain.
-By insisting on no deterministic links within the coinjoin, you simply
-move the problem to an earlier step, you do not remove it.</p>
-<p>Fixed denomination does not solve the problem of having an unusually
-large amount to mix compared to your peers.</p>
-<p>Having said that, fixed denomination with no change at all, does create
-other advantages - I certainly don't mean to disparage that model!
-Without going into detail here, consider that a large set or network of
-all-equal-in all-equal-out coinjoins can create similar effects to a
-single, much larger, coinjoin (but this is a topic for another article).</p>
-<h2 id="toxic-recall">The toxic recall attack</h2>
-<p>Earlier we explained that one of the steps of the OXT Research analysis
-was to identify a low liquidity regime where <em>A</em> was acting as taker,
-and we mentioned the "toxic recall attack" was used to reduce the
-anonymity sets of the coinjoin outputs, during this, to a level low
-enough that simple enumeration could find good candidates for final
-destinations of those coins.</p>
-<p>Embedded in this was a crucial piece of reasoning, and I think this was
-a both excellent, and very important idea:</p>
-<ul>
-<li><strong>Joinmarket does not allow co-spending of utxos from different
-    accounts</strong></li>
-<li>That means that if a coinjoin output <em>X</em> is spent along with a utxo
-    from the "peeling chain" (i.e. they are both inputs to the same
-    tx), then <em>X</em> is not owned by <em>A</em> (assuming correct identification
-    of <em>A</em>'s peeling chain)</li>
-<li>Every time such an event occurs, that <em>X</em> can be crossed off the
-    list of coinjoin outputs that <em>A</em> might own, thus reducing the
-    anonymity set of that earlier coinjoin by 1.</li>
-</ul>
-<p>The reasoning is not perfectly watertight:</p>
-<p>First, as the report observes: the first assumption behind it is "A
-user can only run one mixing client at a time." This is clearly not
-literally true, but like many things here, a good-enough guess is fine,
-if it eventually leads to outcomes that further strengthen the case. And
-that is definitely true here: while a smart operator probably would be
-running more than one instance of Joinmarket code, it is not default
-behaviour and requires both a little coding and some careful thought.
-Most people would not do this.</p>
-<p>(Second, nothing stops a user from making a coinjoin to an address in
-the same mixdepth (at least in the current software). It's just that
-(a) that is heavily discouraged and (b) it's not easy to see a good
-reason why someone would <em>try</em> to do that. Still it is possible as a
-mistake. But I don't think this is a reason to doubt the effectiveness
-of the "toxic recall attack", just, it should be noted.)</p>
-<p>So overall the bolded sentence is the most interesting - Joinmarket's
-intention is to prevent co-spending outputs which would ruin the effect
-of any single coinjoin - i.e. it tries (caveat: above parenthetical) to
-prevent you using both a coinjoin output and the change output (or any
-other utxo in the same account as the change output and the original
-inputs) together. And this small element of 'rigidity' in how coins
-are selected for spending is actually another 'bit' of information
-that <em>B</em> can use to make deductions, at least some of the time.</p>
-<p>The following diagram tries to illustrate how these conditions lead to
-the possibility of the attack, to reduce the anonymity set of coinjoin
-outputs:</p>
-<p><img alt="Toxic recall attack
-illustration" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/.thumbnails/ToxicRecall1.png/ToxicRecall1-692x490.png">{width="692"
-height="490"}</p>
-<p>So in summary we see 4 really important factors leading to the attack's
-viability:</p>
-<ol>
-<li>Joinmarket's strict account separation</li>
-<li>Linkability via change - as we'll describe in the next section
-    "Joinmarket sudoku", this is <em>usually</em> but not always possible, so
-    while (1) was 99% valid this is more like 75% valid (entirely vague
-    figures of course).</li>
-<li>Reusing the same peers in different coinjoin transactions</li>
-<li>Low number of peers</li>
-</ol>
-<p>Of course, 3 and 4 are closely tied together; reuse of peers happened a
-lot precisely because there were so few peers available for large
-coinjoin sizes (to remind you, it was between 6 and 58 BTC, and the
-average was around 27, and there are/were few Joinmarket peers actually
-offering above say 10BTC).</p>
-<h2 id="size-factor">The size factor</h2>
-<p>This is a thread that's run through the above, but let's be clear
-about it: in practice, typical Joinmarket coinjoins run from 0.1 to 10
-BTC, which is unsurprising. There are a fair number of much smaller
-transactions, many just functioning as tests, while <em>really</em> small
-amounts are not very viable due to the fees paid by the taker to the
-bitcoin network. Larger than 10 BTC are certainly seen, including up to
-50 BTC and even beyond, but they appear to be quite rare.</p>
-<p>The actions of <em>A</em> in this regard were clearly suboptimal. They started
-by taking 4 x 100 BTC outputs and consolidating them into 1 output of
-400 BTC. This was not helpful, if anything the opposite should have been
-done.</p>
-<p>Second, as a consequence, they placed the entirety of this (I'm
-ignoring the 45 BTC output for now as it's not that crucial) in one
-mixdepth. For smaller amounts where a user is just casually offering
-coins for joining, one output is fine, and will rapidly be split up
-anyway, but here this very large size [led to most of the large-ish
-joining events forming part of one long peeling
-chain<em>.</em>]{style="text-decoration: underline;"} This part probably isn't
-clear so let me illustrate. A yield generator/maker usually splits up
-its coins into random chunks pretty quickly, and while as a maker they
-do <strong>not</strong> get the crucial "sweep, no change" type of transaction
-mentioned above, they nevertheless do get fragmentation:</p>
-<p><code>Initial deposit --&gt; After 1 tx --&gt; After 2 txs --&gt; After many txs</code></p>
-<p><code>0: 1BTC         --&gt; 0.800 BTC  --&gt; 0.800 BTC   --&gt; 0.236 BTC</code></p>
-<p><code>1: 0 BTC        --&gt; 0.205 BTC  --&gt; 0.110 BTC   --&gt; 0.001 BTC</code></p>
-<p><code>2: 0 BTC        --&gt; 0.000 BTC  --&gt; 0.100 BTC   --&gt; 0.555 BTC</code></p>
-<p><code>3: 0 BTC        --&gt; 0.000 BTC  --&gt; 0.000 BTC   --&gt; 0.129 BTC</code></p>
-<p><code>4: 0 BTC        --&gt; 0.000 BTC  --&gt; 0.000 BTC   --&gt; 0.107 BTC</code></p>
-<p>(Final total is a bit more than 1BTC due to fees; the reason it gets
-jumbled, with no ordering, is: each tx moves coinjoin output to <em>next</em>
-mixdepth, mod 5 (ie it wraps), but when a new tx request comes in it
-might be for any arbitrary size, so the mixdepth used as <em>source</em> of
-coins for that next transaction, could be any of them. This is
-illustrated in the 'after 2 txs' case: the second mixdepth was chosen
-as input to the second tx, not the first mixdepth).</p>
-<p>This dynamic does <strong>not</strong> remove the "peeling chain" or "toxic
-change" dynamic emphasized in OXT Research's report - because every tx
-done by the maker still has its change, [precisely because as maker you
-don't have the privilege of choosing the
-amount]{style="text-decoration: underline;"}.</p>
-<p>But it does result in more so to speak "parallelisation" of the mixing
-activity, instead of the largest chunk all being in one long chain.</p>
-<p>A question remains, if we imagine that we use much smaller amounts - can
-the analyst always follow the "peeling chain of each mixdepth" (to
-coin a phrase which at this point hopefully makes sense)?</p>
-<p>I think actually the answer is more 'no' than you might at first
-think. The next section will illustrate.</p>
-<h2 id="sudoku">Joinmarket sudoku.</h2>
-<p>This concept including its origination is covered in some detail in my
-earlier article
-<a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#jmsudoku-coinjoin-sudoku-for-jmtxs">here</a>.
-Essentially we are talking about making unambiguous linkages between
-change outputs and the corresponding inputs in any given Joinmarket
-coinjoin. I reproduce one transaction diagram from that article here to
-help the reader keep the right idea in mind:</p>
-<p><img alt="Coinjoin
-canonical" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/cjmtx.svg">{width="550"
-height="389"}</p>
-<p>So to effect this "sudoku" or disentangling, let's suppose you don't
-have any sophistication. You're just going to iterate over every
-possible subset of the inputs (they're randomly ordered, of course) and
-see if it matches any particular change output (you assume that there is
-exactly one change output per participant). In case it wasn't obvious,
-"matches" here means "that change output, plus the coinjoin size (3
-btc in the diagram above), equals the sum of the subset of inputs".</p>
-<p>Now none of them will <em>actually</em> match because there are fees of two
-types being paid out of (and into) the change - the bitcoin network fees
-and the coinjoin fees (which add to most and subtract from one, at least
-usually). So since you don't know the exact values of those fees, only
-a general range, you have to include a "tolerance" parameter, which
-really complicates the issue.</p>
-<p><a href="https://gist.github.com/AdamISZ/15223a5eab940559e5cf55e898354978">This
-gist</a>
-is a quick and dirty (in the sense it's barely a 'program' since i
-just hardcoded the values of the transaction) example of doing such a
-Joinmarket sudoku for one of the transactions in the OXT Research
-analysis of flows for this case. The pythonistas out there might find of
-interest particularly this code snippet for finding the "power set"
-(the set of all subsets):</p>
-<p><code>def power_set(l):</code>\
-<code>iil = range(len(l))</code>\
-<code>return list(chain.from_iterable(combinations(iil, r) for r in range(len(iil)+1)))</code></p>
-<p>As per a very beautiful piece of mathematical reasoning, the power set
-of a set of size \(N\) is \(2\^{N}\) (every member of set is either
-in, or not in, each subset - think about it!). So this matters because
-it illustrates, crudely, how we have here an exponential blowup.</p>
-<p>That particular transaction had 24 inputs, so the power set's
-cardinality would be \(2\^{24}\) - but the beginning of the analysis
-is to take a subset, of size 4, you already conclude to be linked, thus
-reducing the size of the search space by a factor of 16. Now, there's a
-lot more to it, but, here's what's interesting: <strong>depending on the
-tolerance you choose, you will often find there are multiple sudoku
-solutions</strong> if the size of the set of inputs is reasonably large (let's
-say 20 and up, but it isn't possible to fix a specific number of
-course). In the first couple of attempts of finding the solution for
-that transaction, I found between 3 and 7 different possible ways the
-inputs and outputs could connect; some of them involve the pre-grouped 4
-inputs acting as taker (i.e. paying fees) and some involve them acting
-as maker.</p>
-<p>Now, if this ambiguity isn't enough, there's another significant
-source of ambiguity in these sudokus: previous equal-sized coinjoin
-outputs. For example take <a href="https://blockstream.info/tx/5f8747a3837a56dd2f422d137b96b1420fd6885be6d1057f3c4dca102a3138b6?output:5">this
-txn</a>:</p>
-<p><img alt="un-sudoku-able
-tx" src="https://web.archive.org/web/20200713230834im_/https://joinmarket.me/static/media/uploads/.thumbnails/tx5f8747.png/tx5f8747-849x617.png">{width="849"
-height="617"}</p>
-<p>There are 21 inputs, which is already in the "problematic" zone for
-sudoku-ing, as discussed, in that it will tend to lead to multiple
-possible solutions, with a reasonable tolerance parameter. But in this
-case a full sudoku is fundamentally impossible: notice that inputs index
-7 and 21 (counting from 0) both have amount 6.1212 . This means that any
-subset that includes the first is identical to a subset that includes
-the second. Those two outputs are, unsurprisingly, from the same
-previous Joinmarket coinjoin (they don't have to be, though).</p>
-<p>In any long "peeling chain" these ambiguities will degrade, perhaps
-destroy, the signal over time - unless there is some very strong
-watermark effect - such as huge size, which is precisely what we see
-with <em>A</em>.</p>
-<p>To summarize, we these key points about the Sudoku concept for
-identifying chains of ownership:</p>
-<ul>
-<li>As long as you don't sweep, a Joinmarket account, thus not emptied,
-    will keep creating this chain of ownership via change - though the
-    size of that linked amount dwindles over time.</li>
-<li>Thus makers (who cannot sweep) have no guarantee of not having that
-    specific ownership trace persist, for each of their 5 accounts (but
-    <em>not</em> across them - the 5 accounts will not be connected on chain,
-    at least not in a trivial way).</li>
-<li>If you use a very large size then this acts as a strong enough
-    watermark that such tracing is pretty much guaranteed to work (i.e
-    the Sudoku works much more reliably if you put in a 400BTC utxo and
-    everyone else in the coinjoin only uses 10BTC at max).</li>
-<li>Otherwise, and in general, such tracing is a bit unreliable, and
-    over a long series of transactions it becomes very unreliable (but
-    again - this is no kind of privacy guarantee! - we just observe that
-    there will be increasing uncertainty over a long chain, including
-    really fundamental ambiguities like the transaction above).</li>
-<li>Whenever you <em>do</em> sweep, you create what I called in the previous
-    article a <a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#joinmarket-wallet-closures">"completed mixdepth
-    closure"</a>;
-    there is no change for you as taker, and so an end to that
-    "chain". This only exists for takers. (you can of course sweep
-    <em>without</em> coinjoin at all, also).</li>
-</ul>
-<h3 id="maker-taker">Reminder on the maker-taker tradeoff</h3>
-<p>This illustrates another aspect of the more general phenomenon -
-Joinmarket almost by definition exists to serve takers. They pay for
-these advantages:</p>
-<ul>
-<li>As coordinator, they do not reveal linkages to their counterparties.
-    Makers must accept that the taker in each individual coinjoin <em>does</em>
-    know <em>their</em> linkages (the maker's), even if they're OK with that
-    over a long period because there are many disparate takers; that's
-    a weakness.</li>
-<li>They choose the time when the coinjoin happens (within a minute or
-    so, it's done, if all goes well)</li>
-<li>They choose the amount of the coinjoin, so can have a payment as a
-    coinjoin outpoint.</li>
-<li>Corollary of the above: they can control the size of their change,
-    in particular, reducing it to zero via a "sweep"</li>
-<li>Since they run only when they want to coinjoin, they have a smaller
-    time footprint for attackers (makers have an "always on hot
-    wallet" <em>which responds to requests rather than initiates them</em> ,
-    so it's more like a server than a client, which is by definition
-    difficult to keep properly secure).</li>
-</ul>
-<p>These 4+ advantages are what the Taker pays for, and it's interesting
-that in practice that the <em>coinjoin</em> fee has fallen to near-zero
-<strong>except for larger sizes</strong> .I will point to my earlier thoughts on low
-fees
-<a href="https://x0f.org/web/statuses/104123055565241054">here</a>
-to avoid further sidetrack.</p>
-<p>Therefore the cool sounding idea "oh I have this bunch of bitcoin
-sitting around, I'll just passively mix it for a while and actually get
-paid to do it!" (I have noticed people <em>mostly</em> get interested in
-Joinmarket from this perspective) is more limited than it seems.</p>
-<h2>Address reuse</h2>
-<p>This will probably be the shortest section because it's so obvious.</p>
-<p>The fact that 270BTC of the 445 BTC going "into" Joinmarket ended up
-at <code>16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1</code>is kind of a big facepalm moment;
-I don't think anyone reading this blog would have trouble understanding
-that.</p>
-<p>I don't dismiss or ignore that such things happen for a reason, and
-that reason is mainly actions of centralized exchanges to deliberately
-reduce the privacy of their customers ("KYC/AML"). Sometimes, of
-course, sheer incompetence is involved. But it's the exception rather
-than the rule, since even the most basic consumer wallets do not
-generally reuse addresses nowadays. I'll consider these real world
-factors out-of-scope of this article, although they will matter in your
-practical real life decisions about keeping your privacy (consider <em>not</em>
-using such exchanges).</p>
-<p>What has to be said though: 270 does not equal 445 (or 400); it is not
-impossible to imagine that such a set of deposits to one address may not
-be traced/connected to the original deposit of 400 (+) into Joinmarket
-(although it would really help if that total wasn't so very large that
-there are only a few Joinmarket participants in that range anyway). And
-indeed, my own examination of the evidence tells me that the connections
-of each individual final deposit to
-`16vBEuZD54NzqnnSStPYxFF2aktGhhuaf1```back to that original 445 is <em>not</em>
-unambiguous. The problem is of course the compounding effect of
-evidence, as we will discuss in the next, final section.</p>
-<h2 id="summary">Summary; lessons learned; advice to users</h2>
-<p>So we've looked into details, can we summarize what went wrong for <em>A</em>?
-Albeit we don't actually know with certainty how much of the
-attributions in the OXT Research are correct, they appear to be <em>broadly
-correct</em>.</p>
-<ol>
-<li>400 BTC is a very large amount to move through a system of perhaps
-    at best a couple hundred users (100 makers on the offer at once is
-    typical), most of whom are not operating with more than 10 BTC.</li>
-<li>One large chunk of 400 is therefore a way worse idea than say 10
-    chunks of 40 across 10 Joinmarket wallets (just common sense really,
-    although starting with 400 is not in itself a disaster, it just
-    makes it harder, and slower). This would have been more hassle, and
-    more fees, but would have helped an awful lot.</li>
-<li>Running passively as a maker proved too slow for <em>A</em> (this is an
-    assumption that the report makes and that I agree with, but not of
-    course a 'fact'). This is Joinmarket's failing if anything; there
-    are just not enough people using it, which relates to the next
-    point:</li>
-<li>When switching to a taker mode (which in itself was a very good
-    idea), <em>A</em> decided to start doing much larger transaction sizes, but
-    found themselves unable to get more than a few counterparties in
-    some cases. This should have been a sign that the effect they were
-    looking for might not be strong enough, but it's very
-    understandable that they didn't grok the next point:</li>
-<li>The "toxic replay attack" very heavily compounds the low anonymity
-    set problem mentioned above - reuse of the same counterparties in
-    successive transactions reduced the anonymity set from "bad" to
-    "disastrously low" (even down to 1 in one case).</li>
-<li>Even with the above failings, all needn't really be lost; repeated
-    rounds are used and the '1' anonymity set mentioned output was
-    sent to another coinjoin anyway. The first chunk of coins identified
-    to be sent to Poloniex address (first to be identified, not first in
-    time) was in an amount of about 28 BTC via several hops, then part
-    of the 76 BTC in <a href="https://web.archive.org/web/20200713230834/https://joinmarket.me/blog/blog/the-445-btc-gridchain-case/%22https://blockstream.info/tx/ab1e604cd959cc94b89ab02b691fe7d727d30637284e5e82908fb28b8db378f4">this
-    txn</a>,
-    and even the first hop only had a 50% likelihood assigned. So it's
-    a combination of (a) the address being marked as in the POLONIEX
-    cluster, the size of the deposit and then the reuse allowing tracing
-    back to other transactions, that caused a "high-likelihood
-    assignment of ownership", which leads into ...</li>
-<li>Address reuse as discussed in the previous section is the biggest
-    failing here. If all the deposits here were to different exchange
-    addresses, these heuristics would not have led to any clear
-    outcomes. A few guesses here and there would exist, but they would
-    remain guesses, with other possibilities also being reasonable.</li>
-<li>Circling back to the beginning, notice how making educated guesses
-    about deposits on exchanges a few hops away from Joinmarket might
-    already be enough to get some decent guesses at ownership, if the
-    sizes are large enough compared to the rest of the Joinmarket usage.</li>
-</ol>
-<p>So overall the post mortem is: <strong>a combination of at least three
-different things leads to a bad outcome for <em>A</em> : large (much bigger
-than typical JM volume) size not split up, heavy address reuse (on a
-centralized exchange) and a small anonymity set portion of the
-sequence.</strong></p>
-<p>This issue of "combination of factors" leading to a much worse than
-expected privacy loss is explained well on the bitcoin wiki Privacy page
-<a href="https://en.bitcoin.it/wiki/Privacy#Method_of_data_fusion">here</a>.</p>
-<h3 id="already">Already implemented improvements</h3>
-<p>When running as a taker and using the so-called <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/blob/master/docs/tumblerguide.md">tumbler
-algorithm</a>
-users should note that in 2019 a fairly meaningful change to the
-algorithm was implemented - one part was to start each run with a sweep
-transaction out of each mixdepth containing coins as the first step
-(with longer randomized waits). This makes a peeling chain direct from a
-deposit not possible (you can always try to guess which coinjoin output
-to hop to next of course, with the concomitant difficulties).
-Additionally average requested anonymity sets are increased, which, as
-an important byproduct tends to create larger input sets which are
-harder to sudoku (and more likely to have substantial ambiguity). There
-are several other minor changes like rounding amounts, see <a href="https://gist.github.com/chris-belcher/7e92810f07328fdfdef2ce444aad0968">Chris
-Belcher's document on
-it</a>
-for more details.</p>
-<h3 id="still-needed">Still needed improvements</h3>
-<p>Clearly the toxic recall attack concept matters - it is going to matter
-more, statistically, as the anonymity set (i.e. the number of coinjoin
-counterparties) is reduced, but it matters per se in any context -
-reusing the same counterparties <strong><em>in a sequence of coinjoins from the
-same mixdepth closure</em></strong> reduces the anonymity set. Notice there are a
-couple of ways that situation could be remediated:</p>
-<ol>
-<li>Reduce the number of coinjoin transactions within the same mixdepth
-    closure - but this is not clear. If I do 1 coinjoin transaction with
-    10 counterparties and it's a sweep, closing the mixdepth closure,
-    is that better than doing 2 coinjoin transactions from it, each of
-    which has 6 counterparties, if there is a 10% chance of randomly
-    choosing the same counterparty and thus reducing the anonymity set
-    of the second coinjoin by 1? That is pretty profoundly unclear and
-    seems to just "depend". 1 transaction with 12 counterparties <em>is</em>
-    clearly better, but very large sets like that are very difficult to
-    achieve in Joinmarket today (particularly if your coinjoin amount is
-    large).</li>
-<li>Actively try to prevent reusing the same counterparty for multiple
-    transactions in the same mixdepth closure (obviously this is for
-    takers; makers are not choosing, they are offering). Identification
-    of bots is problematic, so probably the best way to do this is
-    simply for a taker to keep track of its earlier txs (especially
-    within a tumbler run, say) and decide to not include makers when
-    they provide utxos that are recognized as in that set. This is still
-    a bit tricky in practice; makers don't want their utxos queried all
-    the time, but takers for optimal outcomes would like full
-    transparent vision into those utxo sets - see <a href="https://web.archive.org/web/20200713230834/https://joinmarket.me/blog/blog/poodle/">earlier discussion of
-    PoDLE</a>
-    and
-    <a href="https://web.archive.org/web/20200713230834/https://joinmarket.me/blog/blog/racing-against-snoopers-in-joinmarket-02/">here</a>
-    on this blog for the tricky points around this.</li>
-</ol>
-<p>(2) is an example of ideas that were discussed by Joinmarket
-developers years ago, but never really went anywhere. Takers probably
-<em>should</em> expand the query power given them by the PoDLE tokens to have a
-larger set of options to choose from, to gauge the "quality" of what
-their counterparties propose as join inputs, but it's a delicate
-balancing act, as mentioned.</p>
-<h3 id="recommendations">Recommendations for users</h3>
-<p>For the final section, some practical advice. Joinmarket can be a
-powerful tool - but it's unfortunately not very easy to understand what
-you <em>should</em> do, precisely because there is a lot of flexibility.</p>
-<ol>
-<li>The taker role, and in particular the tumbler role, are designed to
-    be used to actively improve your privacy. We explain above that it
-    gives certain advantages over the maker role. So: <strong>use it!</strong> - with
-    at least the default settings for counterparty numbers and
-    transaction numbers, and long waits - in fact, increase these
-    factors above the defaults. Note that tumbles can be safely
-    restarted, so do it for a day, shut it down and then restart it a
-    few days later - that's fine. See the docs for more on that. Be
-    sensitive to bitcoin network fees - these transactions are very
-    large so they'll be more palatable at times when the network is
-    clearing 1-5 sats/byte. However ...</li>
-<li>... mixing roles definitely has advantages. The more people mix
-    roles the more unsafe it is to make deductions about which coinjoin
-    output belonged to the taker, after it gets spent (consider what you
-    can deduce about a coinjoin output which is then spent via an
-    ordinary wallet, say to a t-shirt merchant).</li>
-<li>The maker role isn't useless for privacy, it's rather best to
-    think of it as (a) limited and (b) taking a long time to have an
-    effect. It's most suitable if your threat model is "I don't want
-    a clear history of my coins over the long term". It also costs
-    nothing monetarily and brings in some very small income if your size
-    is large (if small, it's likely not worth mentioning) - but in that
-    case, take your security seriously.</li>
-<li>Consider sizing when acting as a taker. We as a project should
-    perhaps create more transparency around this, but you can gauge from
-    your success in arranging big size coinjoins: if you can't easily
-    find 6+ counterparties to do a coinjoin at a particular size, it may
-    not be a good idea to rely on the outcomes, as you may be mixing in
-    too small of a crowd (whether that's at 10 BTC or 20 BTC or 50+ BTC
-    just depends on market condition).</li>
-<li>Make good use of (a) the accounts (mixdepths) feature, (b) the coin
-    freeze feature and (c) the sweep feature (taker only). These three
-    things allow you to better isolate coins going to different
-    destinations - your cold wallet, your mobile spending wallet, an
-    exchange etc etc. Accounts let you have the assurance that coins in
-    one aren't linked with coins in another; you can't accidentally
-    co-spend them. The freeze feature (see the "Coins" tab on Qt) lets
-    you spend individual utxos, where that's important to you for some
-    reason, without connection to others. And the sweep feature lets you
-    make a coinjoin without any change, breaking a link to future
-    transactions.</li>
-</ol>
-<p>We soon (in 0.7.0; the code is basically already done) hope to have more
-helpful features, in particular Payjoin as defined in BIP 78, along with
-very basic PSBT support.</p>                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
-
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="https://joinmarket.me/blog/blog/ring-signatures" rel="bookmark"
-                           title="Permalink to Ring Signatures">Ring Signatures</a></h1>
-                </header>
-
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2019-03-15T00:00:00+01:00">
-                Published: Fri 15 March 2019
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="https://joinmarket.me/author/adam-gibson.html">Adam Gibson</a>
-        </address>
-<p>In <a href="https://joinmarket.me/category/waxwings-blog.html">waxwing's Blog</a>.</p>
-<p>tags: <a href="https://joinmarket.me/tag/cryptography.html">cryptography</a> <a href="https://joinmarket.me/tag/bitcoin.html">bitcoin</a> </p>
-</footer><!-- /.post-info -->                <h3>Ring signatures</h3>
-<h2>Outline:</h2>
-<ul>
-<li>Basic goal of 1-of-\(N\) ring signatures</li>
-<li>Recap: the \(\Sigma\)-protocol</li>
-<li>OR of \(\Sigma\)-protocols, CDS 1994</li>
-<li>Abe-Ohkubo-Suzuki (AOS) 2002 (broken version)</li>
-<li>Security weaknesses</li>
-<li>Key prefixing</li>
-<li>Borromean, Maxwell-Poelstra 2015</li>
-<li>Linkability and exculpability</li>
-<li>AND of \(\Sigma\)-protocols, DLEQ</li>
-<li>Liu-Wei-Wong 2004</li>
-<li>Security arguments for the LWW LSAG</li>
-<li>Back 2015 …</li></ul>
-                <a class="readmore" href="https://joinmarket.me/blog/blog/ring-signatures">read more</a>
-                </div><!-- /.entry-content -->
-            </article></li>
-                </ol><!-- /#posts-list -->
-                </section><!-- /#content -->
-        <section id="extras" class="body">
-                <div class="blogroll">
-                        <h2>links</h2>
-                        <ul>
-                            <li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
-                        </ul>
-                </div><!-- /.blogroll -->
-                <div class="social">
-                        <h2>social</h2>
-                        <ul>
-                            <li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
-
-                            <li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
-                        </ul>
-                </div><!-- /.social -->
-        </section><!-- /#extras -->
-
-        <footer id="contentinfo" class="body">
-                <address id="about" class="vcard body">
-                Proudly powered by <a href="https://getpelican.com/">Pelican</a>, which takes great advantage of <a href="https://www.python.org/">Python</a>.
-                </address><!-- /#about -->
-
-                <p>The theme is by <a href="https://www.smashingmagazine.com/2009/08/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
-        </footer><!-- /#contentinfo -->
-
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<h1>Category <small>waxwing's Blog</small></h1>
+<table class="table">
+    <tbody>
+        <tr>
+        <td>15 Jun 2020</td>
+        <td><a href='https://joinmarket.me/blog/blog/the-445-btc-gridchain-case'>The 445BTC gridchain case</a></td>
+        </tr>
+        <tr>
+        <td>15 Mar 2019</td>
+        <td><a href='https://joinmarket.me/blog/blog/ring-signatures'>Ring Signatures</a></td>
+        </tr>
+    </tbody>
+</table>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/pages/about-me.html"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/pages/main-page.html"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwing's-blog.html">waxwing's Blog (2)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
 </body>
 </html>
