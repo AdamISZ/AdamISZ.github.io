@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/all.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2020-06-15T00:00:00+02:00</updated><entry><title>The 445BTC gridchain case</title><link href="https://joinmarket.me/blog/blog/the-445-btc-gridchain-case/" rel="alternate"></link><published>2020-06-15T00:00:00+02:00</published><updated>2020-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-06-15:/blog/blog/the-445-btc-gridchain-case/</id><summary type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
-&lt;p&gt;For those time-constrained or non-technical, it may make sense to read
-only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this article. It goes
-without saying that the details do matter, and reading the other
-sections will give you a much better overall picture.&lt;/p&gt;
-&lt;h2&gt;Contents&lt;/h2&gt;
-&lt;p&gt;&lt;a href="index.html#background"&gt;Background - what is the …&lt;/a&gt;&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive</title><link href="/" rel="alternate"></link><link href="/feeds/all.atom.xml" rel="self"></link><id>/</id><updated>2020-06-15T00:00:00+02:00</updated><entry><title>The 445BTC gridchain case</title><link href="/blog/blog/the-445-btc-gridchain-case/" rel="alternate"></link><published>2020-06-15T00:00:00+02:00</published><updated>2020-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:None,2020-06-15:/blog/blog/the-445-btc-gridchain-case/</id><summary type="html">&lt;p&gt;analysis of gridchain blockchain analysis and implications for Joinmarket usage.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
 &lt;p&gt;For those time-constrained or non-technical, it may make sense to read
 only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this article. It goes
 without saying that the details do matter, and reading the other
@@ -682,21 +676,7 @@ you &lt;em&gt;should&lt;/em&gt; do, precisely because there is a lot of flexibil
 &lt;/ol&gt;
 &lt;p&gt;We soon (in 0.7.0; the code is basically already done) hope to have more
 helpful features, in particular Payjoin as defined in BIP 78, along with
-very basic PSBT support.&lt;/p&gt;</content><category term="waxwing's Blog"></category><category term="coinjoin"></category><category term="joinmarket"></category><category term="bitcoin"></category></entry><entry><title>Ring Signatures</title><link href="https://joinmarket.me/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-03-15T00:00:00+01:00</published><updated>2019-03-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-03-15:/blog/blog/ring-signatures/</id><summary type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
-&lt;h2&gt;Outline:&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;Basic goal of 1-of-\(N\) ring signatures&lt;/li&gt;
-&lt;li&gt;Recap: the \(\Sigma\)-protocol&lt;/li&gt;
-&lt;li&gt;OR of \(\Sigma\)-protocols, CDS 1994&lt;/li&gt;
-&lt;li&gt;Abe-Ohkubo-Suzuki (AOS) 2002 (broken version)&lt;/li&gt;
-&lt;li&gt;Security weaknesses&lt;/li&gt;
-&lt;li&gt;Key prefixing&lt;/li&gt;
-&lt;li&gt;Borromean, Maxwell-Poelstra 2015&lt;/li&gt;
-&lt;li&gt;Linkability and exculpability&lt;/li&gt;
-&lt;li&gt;AND of \(\Sigma\)-protocols, DLEQ&lt;/li&gt;
-&lt;li&gt;Liu-Wei-Wong 2004&lt;/li&gt;
-&lt;li&gt;Security arguments for the LWW LSAG&lt;/li&gt;
-&lt;li&gt;Back 2015 …&lt;/li&gt;&lt;/ul&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
+very basic PSBT support.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="joinmarket"></category><category term="bitcoin"></category></entry><entry><title>Ring Signatures</title><link href="/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-03-15T00:00:00+01:00</published><updated>2019-03-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:None,2019-03-15:/blog/blog/ring-signatures/</id><summary type="html">&lt;p&gt;construction of several different ring signatures relevant to Bitcoin.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
 &lt;h2&gt;Outline:&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Basic goal of 1-of-\(N\) ring signatures&lt;/li&gt;
@@ -1489,4 +1469,4 @@ folded in with the above into a new design which seems to have two
 variants "RingCTFull" and "RingCTSimple". This can be investigate
 further in the documents on RingCT as referenced in the previously
 mentioned
-&lt;a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf"&gt;ZeroToMonero&lt;/a&gt;.&lt;/p&gt;</content><category term="waxwing's Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry></feed>
+&lt;a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf"&gt;ZeroToMonero&lt;/a&gt;.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry></feed>
