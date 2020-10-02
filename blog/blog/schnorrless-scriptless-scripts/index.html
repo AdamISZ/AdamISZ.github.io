@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Schnorrless Scriptless Scripts — Joinmarket.me archive</title>
+	<meta name="description" content="Title: Schnorrless Scriptless Scripts; Date: 2020-04-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="/theme/html5.js"></script>
+		<![endif]-->
+	<link href="/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="/theme/css/local.css" rel="stylesheet">
+	<link href="/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">Schnorrless Scriptless Scripts</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2020-04-15T00:00:00+02:00" itemprop="datePublished">Wed 15 April 2020</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="/tag/cryptography.html" rel="tag">cryptography</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>Schnorrless Scriptless Scripts</h3>
+<h2>Introduction</h2>
+<p>The weekend of April 4th-5th 2020 we had a remote "Lightning
+Hacksprint" organized by the ever-excellent Fulmo, one Challenge was
+related to "Payment Points" (see
+<a href="https://wiki.fulmo.org/index.php?title=Challenges#Point_Time_Locked_Contracts_.28PTLC.29">here</a>;
+see lots more info about the hacksprint at that wiki) and was based
+around a new innovation recently seen in the world of adaptor
+signatures. Work was led by Nadav Kohen of Suredbits and Jonas Nick of
+Blockstream; the latter's API for the tech described below can be seen
+currently as a PR to the secp256k1 project
+<a href="https://github.com/jonasnick/secp256k1/pull/14">here</a>.
+The output from Suredbits was a demo as show
+<a href="https://www.youtube.com/watch?v=w9o4v7Idjno&amp;feature=youtu.be">here</a>
+on their youtube, a PTLC (point time locked contract, see their
+<a href="https://suredbits.com/payment-points-part-1/">blog</a>
+for more details on that).</p>
+<p>I will not focus here on either the proof of concept code, nor the
+potential applications of this tech (which are actually many, not only
+LN, but also Discreet Log contracts, various design of tumbler and
+others), but entirely on the cryptography.</p>
+<h2>What you can do with Schnorr adaptors</h2>
+<p>Previous blog posts have covered in some detail the concept of adaptor
+signatures, how they are simply realizable using the Schnorr signature
+primitive. Also noted here and elsewhere is that there are techniques to
+create the same effect using ECDSA signature, but involving considerable
+additional crypto machinery (Paillier homomorphic encryption and certain
+zero knowledge (range) proofs). This technique is laid out in
+<a href="https://lists.linuxfoundation.org/pipermail/lightning-dev/attachments/20180426/fe978423/attachment-0001.pdf">this</a>
+brief note, fleshed out fully in
+<a href="https://eprint.iacr.org/2017/552">this</a>
+cryptographic construction from Lindell, paired with
+<a href="https://eprint.iacr.org/2018/472">this</a>
+paper on multihop locks (which represents a very important theoretical
+step forward for Lightning channel construction). The problem with that
+"tech stack" is the complexity in the Lindell construction, as
+mentioned.</p>
+<p>A recent
+<a href="https://github.com/LLFourn/one-time-VES/blob/master/main.pdf">paper</a>
+by Lloyd Fournier represents a very interesting step forward, at least
+in a certain direction: it allows "single signer" ECDSA adaptor
+signatures. The scare quotes in the previous sentence represent the fact
+that the use of such adaptor signatures would not literally be single
+signer - it would be in the context of Bitcoin's <code>OP_CHECKMULTISIG</code>,
+most typically 2 of 2 multisig, so the same as the current
+implementation of the Lightning network, in which a contract is enforced
+by having funds controlled by both parties in the contract. Here, what
+is envisaged is not a cooperative process to construct a single
+signature (aggregated), but each party can individually create adaptor
+signatures with signing keys they completely control. That this is
+possible was a big surprise to me, and I think others will be unclear on
+it too, hence this blog post after a week or so of study on my part.</p>
+<p>Let's remember that the Schnorr adaptor signature construction is:</p>
+<p>\(\sigma'(T, m, x) = k + H(kG+T||xG||m)x\)</p>
+<p>where \(k\) is the nonce, \(x\) is the private (signing) key and
+\(T\) is the 'adaptor point' or just adaptor. The left-hand-side
+parentheses are important: notice that <strong>you don't need the discrete
+log of the point T to construct the adaptor signature</strong>. But you <em>do</em>
+need the signing key \(x\). Or wait .. do you?</p>
+<p>As I explained last year
+<a href="https://x0f.org/web/statuses/102897691888130818">here</a>
+it's technically not the case: you can construct an adaptor signature
+for signing pubkey \(P\) for which you don't know \(x\) s.t.
+\(P=xG\), with a fly in the ointment: you won't be able to predict
+the adaptor \(T\) or know its discrete log either (this makes it
+un-dangerous, but still an important insight; I was calling this
+"forgeability" but more on that later).</p>
+<p>How you ask? To summarize the mastodon post:</p>
+<p>\(\stackrel{\$}{\leftarrow} q, Q=qG, \quad \mathrm{assume}\quad
+R+T =Q\)</p>
+<p>\(\Rightarrow \sigma' G= R + H(P,Q,m)P\)</p>
+<p>\(\stackrel{\$}{\leftarrow} \sigma' \quad \implies R = s'G -
+H(P,Q,m)P \implies T = Q-R\)</p>
+<p>Thus anyone can publish an adaptor signature \((T, \sigma')\) on any
+message \(m\) for any pubkey \(P\) at any time. It <em>really</em> isn't a
+signature.</p>
+<p>And equally obvious is that this does not allow the "forger" to
+complete the adaptor into a full signature (\(\sigma = \sigma' +
+t\)) - because if he could, this would be a way to forge arbitrary
+Schnorr signatures!</p>
+<p>With the caveat in the above little mathematical vignette aside, we note
+that the bolded phrase above is the crucial point: adaptors can be
+created by non-secret owners, for secret owners to complete.</p>
+<h2>Adaptors in ECDSA with less wizardry</h2>
+<p>I was alerted to this trick via <a href="https://lists.linuxfoundation.org/pipermail/lightning-dev/2019-November/002316.html">this mailing list
+post</a>
+and the work of the Suredbits guys, in particular Nadav Kohen, who blogs
+on payment points, DLCs and related topics
+<a href="https://suredbits.com/payment-points-part-1/">here</a>.
+The idea can be summarised as "tweak the nonce multiplicatively instead
+of linearly". Take the following notation for the base (complete) ECDSA
+signature:</p>
+<p>\(\sigma = k^{-1}\left(\mathbb{H}(m) + R_{\mathrm{x}}x\right)
+\)</p>
+<p>Here we're using the most common, if sometimes confusing notation. As
+usual \(k\) is the nonce (generated deterministically usually),
+\(R=kG\), \(m\) is the message and \(x\) is the private signing
+key whose public key by convention is \(P\). Meanwhile
+\(R_{\mathrm{x}}\) indicates the x-coordinate of the curve point
+\(R\), with the usual caveats about the difference between the curve
+order and the order of the finite field from which the coordinates are
+drawn (feel free to ignore that last part if it's not your thing!).</p>
+<p>Now clearly you cannot just add a secret value \(t\) to the nonce and
+expect the signature \(\sigma\) to be shifted by some simple factor.
+Multiplication looks to make more sense, since after all the nonce is a
+multiplicative factor on the RHS. But it's not so simple, because the
+nonce-<em>point</em> appears as the term \(R_{\mathrm{x}}\) inside the
+multiplied factor. The clever idea is how to get around this problem. We
+start by defining a sort-of "pre-tweaked" nonce:</p>
+<p>\(R' = kG\)</p>
+<p>and then the real nonce that will be used will be multiplied by the
+adaptor secret \(t\):</p>
+<p>\(R = kT = ktG\)</p>
+<p>Then the adaptor signature will be published as:</p>
+<p>\(\sigma' = k^{-1}\left(\mathbb{H}(m) + R_{\mathrm{x}}x\right)
+\)</p>
+<p>... which may look strange as here the RHS is identical to what we
+previously had for the <em>complete</em> signature \(\sigma\). The
+difference of course is that here, the terms \(k\) and \(R\) don't
+match up; \(R\) has private key \(kt\) not \(k\). And hence we can
+easily see that:</p>
+<p>\(\sigma = t^{-1} \sigma'\)</p>
+<p><em>will</em> be a valid signature, whose nonce is \(kt\).</p>
+<p>However, we do not operate in a world without adversaries, so to be sure
+of the statement "if I get given the discrete log of \(T\), I will be
+able to construct a fully valid \(\sigma\)", we need a proof of that
+claim. This is the key innovation, because this can be done <em>very</em>
+simply with a proof-of-discrete-log, or a "PoDLE" as was described in
+one of the first <a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/poodle/">blog
+posts</a>
+here. To prove that \(R'/G = R/T = k\), where we somewhat abuse / to
+mean "elliptic curve discrete log", you just create an AND of two
+\(\Sigma\)-protocols, using the same commitment (i.e., nonce), let's
+call it \(k_2\) and output a schnorr style response \(s = k_2 +
+ek\), where the hash e covers both points \(k_2 G\ ,\ k_2 T\) as
+has been explained in the just-mentioned PoDLE blog post and also in a
+bit more generality in the <a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/ring-signatures/">post on ring
+signatures</a>.</p>
+<p>It's thus intuitive, though not entirely obvious, that an "adaptor
+signature" in this context is really a combination of the same idea as
+in Schnorr, but with additionally a PoDLE tacked-on:</p>
+<p>Input:</p>
+<p>an adaptor point \(T\), a message \(m\), a signing key \(x\)</p>
+<p>Output:</p>
+<p>adaptor signature \((\sigma', R, R')\), adaptor signature PoDLE:
+\((s, e)\)</p>
+<p>Verification for non-owner of adaptor secret \(T\):</p>
+<p>1. Verify the PoDLE - proves that \(R, R'\) have same (unknown)
+discrete log w.r.t. \(T, G\) respectively.</p>
+<p>2. Verify \(\sigma' R' \stackrel{?}{=} \mathbb{H}(m) +
+R_{\mathrm{x}} P\)</p>
+<h2>Swapping ECDSA coins with this method</h2>
+<p>Fundamentally, if not exclusively, adaptor signatures as originally
+conceived, and still here, allow the swap of a coin for a secret (in
+that broadcast of a spending transaction necessarily implies broadcast
+of a signature which can be combined with a pre-existing adaptor
+signature to reveal a secret), and the crudest example of how that can
+be used is the coinswap or atomic swap, see
+<a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/coinswaps/">these</a>
+<a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">previous</a>
+blog posts for a lot of detail on pre-existing schemes to do this, both
+with and without the Schnorr signature primitive that was previously
+thought to be near-required to do adaptor signatures.</p>
+<p>The ECDSA scheme above can be used in a slightly different way than I
+had originally described for Schnorr adaptor signatures, but it appears
+that was partly just oversight on my part: the technique described below
+<em>can</em> be used with Schnorr too. So the advantage here is principally
+that we can do it right now.</p>
+<p>1. Alice spends into a 2/2 A1 B1 after first negotiating a timelocked
+refund transaction with Bob, so she doesn't risk losing funds.</p>
+<p>2. Bob does the same, spending into a 2/2 A2 B2 after negotiating a a
+timelocked refund tranasction with Alice, so he also doesn't risk, but
+his timelock is closer.</p>
+<p>3. Alice creates an adaptor \(\sigma_{1}^{'}\) spending with key
+A1 to Bob's destination and adaptor point \(T\) for which she knows
+discrete log \(t\).</p>
+<p>4. Bob verifies \(\sigma_{1}^{'}\) and the associated data
+mentioned above, including crucially the PoDLE provided.</p>
+<p>5. Bob creates an adaptor \(\sigma_{2}^{'}\) spending with key B2
+to Alice's destination and adaptor point \(T\) for which he does
+<strong>not</strong> know the \(t\).</p>
+<p>6. Alice can now safely complete the adaptor she receives: \(\sigma_2
+= t^{-1}\sigma_{2}^{'}\) and co-sign with A2 and broadcast,
+receiving her funds.</p>
+<p>7. Bob can see on the blockchain (or communicated directly for
+convenience): \(t = \sigma_{2}^{'}\sigma_{2}^{-1}\) and use it
+to complete: \(\sigma_{1} = t^{-1}\sigma_{1}^{'}\), and co-sign
+with B1 and broadcast, receiving his funds.</p>
+<h3>Comparisons to other coinswaps:</h3>
+<p>This requires 2/2 P1 P2 type scriptPubKeys; these can be p2sh multisig
+or p2wsh multisig using, as mentioned, <code>OP_CHECKMULTISIG</code>. Notice that
+in a future Taproot/Schnorr world, this will still be possible, using
+the linear style adaptor signatures previously described. However in
+that case a musig-style combination of keys will almost certainly be
+preferred, as it will create transaction styles that look
+indistinguishable from single or any other script types. For now, the
+system above does share one very valuable anonymity set: the set of
+Lightning channel opens/closes, but doesn't share an anonymity set with
+the full set of general single-owner ECDSA coins (which includes both
+legacy and segwit).</p>
+<p>For now, this method has the principal advantage that the only failure
+mode is the timelocked backout, which can be a transaction that looks
+entirely normal - having a non-zero <code>nLockTime</code> somewhere around the
+current block is actually very normal. While the atomic enforcement part
+is, just like Schnorr adaptors, entirely invisible. So apart from the
+smaller anonymity set (2-2, so mostly LN), it has excellent privacy
+properties.</p>
+<h2>Reframing adaptors \(\rightarrow\) otVES</h2>
+<p>The aforementioned
+<a href="https://github.com/LLFourn/one-time-VES/blob/master/main.pdf">paper</a>
+of 2019 by Lloyd Fournier is titled "<em>One Time Verifiably Encrypted
+Signatures A.K.A. Adaptor Signatures</em>" - at first this new name
+(henceforth otVES) seemed a bit strange, but after reading the paper I
+came away pretty convinced. Both the conceptual framework is very clean,
+but also, this links back to earlier work on the general concept of
+Verifiably Encrypted Signatures. Most particularly the work of the same
+guys that brought us BLS signatures from bilinear pairing crypto, in
+<a href="http://crypto.stanford.edu/~dabo/papers/aggreg.pdf">this
+paper</a>
+(namely, Boneh, Lynn, Shacham but also Gentry of FHE fame). The context
+considered there was wildly different, as Fournier helpfully explains:
+this earlier work imagined that Alice and Bob wanted to fairly exchange
+signatures that might be useful as authorization for some purpose. To
+achieve that goal, they imagined trusted third party acting between
+them, and that an encrypted-to-third-party-adjudicator but still
+<em>verifiable</em> signature could serve as the first step of a fair protocol,
+assuming honesty of that third party. However what makes the Bitcoin
+use-case special is that signatures <strong>are useable if and only if
+broadcast</strong><em>. </em>All of this coinswap/HTLC/second layer stuff relies on
+that property. In this scenario, having not only a VES but an otVES is
+exactly desirable.</p>
+<p>Why is one-time desirable here? It's a little obtuse. For those
+familiar with cryptography 101 it'll make sense to think about the <a href="https://en.wikipedia.org/wiki/One-time_pad">one
+time
+pad</a>.
+The absolutely most basic concept of encryption (which also happens to
+be perfectly secure, when considered in the most <a href="https://en.wikipedia.org/wiki/Spherical_cow">spherical
+cow</a>
+kind of way): take a plaintext \(p\) and a key \(k\), bitstrings of
+the exact same length. Then make the ciphertext \(c\):</p>
+<p>\(c = p \oplus k\)</p>
+<p>and the thing about this that makes it perfect is exactly also something
+that can be considered a "bug": the symmetry of the \(\oplus\)
+(xor) operation is such that, given both the plaintext and the
+ciphertext, the key can be derived: \(k = c \oplus p\). So any
+broadcast of \(p\), after an earlier transfer of \(c\) (to Bob,
+let's say), means that the secret key is revealed.</p>
+<p>The same is true in our adaptor signature or VES scenario: the adaptor
+signature \(\sigma'\) is an "encrypted signature", and is
+verifiable using the verification algorithm already discussed, by anyone
+who has that encrypted signature and the adaptor "public key" which we
+called \(T\). Notice how this is analogous to <em>public</em> key encryption,
+in that you only need a public key to encrypt; but also notice that the
+one-time pad is <em>secret key </em>encryption, which is why the plaintext and
+ciphertext are enough to reveal the key (note: more developed secret key
+algorithms than OTP handle this problem). This is some kind of hybrid of
+those cases. Once the "plaintext" signature \(\sigma\) is revealed,
+the holder of the "encrypted" signature \(\sigma'\) can derive the
+private key: \(t\).</p>
+<p>So hopefully this makes clear why "one-time-ness" is not so much in
+itself desirable, as what is implied by it: that the "private key"
+(the <em>encryption</em> key, not the <em>signing</em> key, note!) is revealed on one
+usage.</p>
+<h2>Security properties - deniability, forgeability, validity, recoverability ...</h2>
+<p>At a high level, what security properties do we want from these
+"encrypted signatures''? I think there's a strong argument to focus
+on two properties:</p>
+<ul>
+<li>Handing over such encrypted signatures should not leak any
+    information to any adversary, including the recipient (it may or may
+    not be needed to keep the transfer private, that is not considered
+    in the model).</li>
+<li>Given an encrypted signature for a message and key, I should be able
+    to convince myself that when the plaintext signature is revealed, I
+    will get the secret key \(t\), or complementary: when the secret
+    key \(t\) is revealed, I should be able to recover the plaintext
+    signature.</li>
+</ul>
+<p>We'll deal with both of these points in the following subsections.</p>
+<h3>Deniability</h3>
+<p>The Schnorr version of the otVES is deniable in the specific sense that
+given an unencrypted signature, a corresponding encrypted signature for
+any chosen key (\(t\)) can be claimed, as was explained
+<a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">here</a>
+("Deniability" subsection). For anyone familiar with the basic
+construction of zero knowledge proofs, this will be immediately
+recognized as being the definition of a "Simulator", and therefore
+proves that such an adaptor signature/encrypted signature leaks zero
+information to recipients.</p>
+<p>It is interesting to observe that the same trick does <strong>not</strong> work with
+the ECDSA variant explained above:</p>
+<p>Given \(\sigma, R\) satisfying \(\sigma R = \mathbb{H}(m)G +
+R_{\mathrm{x}}P\) for the verifying pubkey \(P\), you can try to
+assert that \(k = tk_2\) but <strong>you have no way to generate a PoDLE for
+\(R, R'\) if you don't know k</strong> - this means that such a
+"retrofitted" encrypted signature (which by definition <em>includes</em> the
+PoDLE) is not possible for a party not knowing the original secret
+nonce, and thus the simulator argument (the argument that an external
+observer <em>not knowing the secret</em> can create fake transcripts with a
+distribution indistinguishable from the real transcripts) is not
+available, hence we cannot claim that such encrypted signatures are
+fully zero knowledge. More on this shortly.</p>
+<h3>Forgeability</h3>
+<p>I am abusing terms here, because unforgeability is the central property
+of a valid signature scheme, but here let's talk about the forgeability
+of an <em>encrypted</em> signature, so perhaps "adaptor forgeability". Here I
+mean the ability to create arbitrary encrypted signatures <em>without</em> the
+signing key. This was demonstrated as possible for Schnorr in the first
+section of this blog post (noting the obvious caveat!). For ECDSA, we
+hit the same snag as for 'Deniability'. Without possessing the signing
+key \(x\), you want to make the verification \(\sigma' R' =
+\mathbb{H}(m)G + R_{\mathrm{x}}P\) pass for some \(R, R', T, R =
+tR'\) such that you can prove DLOG equivalence w.r.t. \(G, T\). You
+can do this by "back-solving" the same way as for Schnorr:</p>
+<p>\(\stackrel{\$}{\leftarrow} k^{*}, R=k^{*}G, \quad Q =
+\mathbb{H}(m)G + R_{\mathrm{x}}P\)</p>
+<p>\(\stackrel{\$}{\leftarrow} \sigma', \quad \Rightarrow \sigma'
+R' = Q \Rightarrow R' = (\sigma')^{-1}Q\)</p>
+<p>But since this process did <em>not</em> allow you to deduce the scalar \(q\)
+s.t. \(Q = qG\), it did not allow you to deduce the corresponding
+scalar for \(R'\). Thus you can output a set \(\sigma', R, R'\)
+but you cannot also know, and thus prove equivalence of, the discrete
+logs of \(R\) and \(R'\).</p>
+<p>The previous two sections demonstrate clearly that the otVES
+construction for ECDSA is fundamentally different from that for Schnorr
+in that it requires providing, and proving a relationship between two
+nonces, and this also impacts quite significantly the security arguments
+that follow.</p>
+<h3>Validity, Recoverability</h3>
+<p>These are aspects of the same thing, so grouped together, and they talk
+about the most central and unique property for an otVES scheme, but
+fortunately it is almost tautological to see that they hold for these
+schemes.</p>
+<p>The concern it addresses: what if Alice gave Bob an encrypted signature
+to a key \(T\) but it turned out that when decrypted with the
+corresponding key \(t\), a valid signature wasn't actually revealed.
+That this is impossible is called <strong>validity</strong>. The flip side is
+<strong>recoverability</strong>: if Alice gave Bob an encrypted signature and then
+published the corresponding decrypted signature ("plaintext"), the
+secret key for the encryption (\(t\)) must be revealed.</p>
+<p>The Schnorr case illustrates the point clearly, see Lemma 4.1 in
+Fournier's paper; \(\sigma' = \sigma -t\) in our notation and we
+can see by the definition of Schnorr signature verification that this
+must hold, given there cannot be another \(t' \ne t\) s.t. \(t'G =
+T\) (there is a one-one mapping between scalars mod n and group
+points). Recoverability is also unconditionally true in the same way.</p>
+<p>For the ECDSA case, it is nearly the same, except: we rely on the PoDLE
+between \(R, R'\), which has the same properties itself as a Schnorr
+signature, and so the properties hold conditional on the inability to
+break ECDLP (because that would allow Schnorr forgery, and thus PoDLE
+forgery).</p>
+<p>Note how a ECDLP break can obviously destroy the usefulness of all these
+schemes, in particular the underlying signature schemes, but even that
+does not alter the fact that the Schnorr encrypted signature is valid
+and recoverable (though it becomes a mere technicality in that case).</p>
+<h3>EUF-CMA for otVES using Schnorr</h3>
+<p>EUF-CMA was discussed in the previous blogs on the Schnorr signature and
+on ring signatures, in brief it is a technical term for "this signature
+scheme is secure in that signatures cannot be forged by
+non-secret-key-owners under this specific set of (fairly general)
+assumptions".</p>
+<p>Proving this for the Schnorr otVES turns out to be a fairly standard
+handle-cranking exercise. This is essentially what I have focused on in
+previous work as "proving soundness by running an extractor",
+including patching up the random oracle. See the above linked post on
+the Schnorr signature for more detail.</p>
+<p>Note that unforgeability referred to here <strong>is not the same as "adaptor
+forgeability" discussed above</strong>. Here we are specifically trying to
+prove that access to such encrypted signatures does not help the
+adversary in his pre-existing goal of forging <em>real </em>signatures.</p>
+<p>So the handle-cranking simply involves adding an "encrypted signature
+oracle" to the attacker's toolchest. EUF-CMA[VES] basically refers
+to the inability to create signatures on new messages even when you have
+access to arbitrary encrypted signatures, as well as arbitrary earlier
+<em>complete</em> signatures, again, on different messages.</p>
+<p>As Fournier points out here:</p>
+<blockquote>
+<p><em>EUF-CMA[VES] says nothing about the unforgeability of signature
+encryptions. In fact, an adversary who can produce valid VES
+ciphertexts without the secret signing key is perfectly compatible. Of
+course, they will never be able to forge a VES ciphertext under a
+particular encryption key. If they could do that, then they could
+trivially forge an encrypted signature under a key for which they know
+the decryption key and decrypt it.</em></p>
+</blockquote>
+<p>... which is the reason for my (I hope not too confusing) earlier
+section on "adaptor forgeability". It <em>is</em> actually possible, for
+Schnorr, but not ECDSA, to do what is mentioned in the second sentence
+above.</p>
+<h3>EUF-CMA[VES] for ECDSA</h3>
+<p>Here is the most technical, but the most important and difficult point
+about all this. In producing an encrypted ECDSA signature you output:</p>
+<p>\((\sigma', R, R', m, P), \quad \textrm{DLEQ}(R, R')\)</p>
+<p>(while \(m, P\) may be implicit of course), and this means you output
+one piece of information in addition to the signature: that two nonce
+points are related in a specific way. It turns out that this can be
+expressed differently as the Diffie Hellman key of the key pair \((P,
+T)\) (or, in Fournier's parlance, the signing key and the encryption
+key). That DH key would be \(tP = xT = xtG\). Here's how; starting
+from the verification equation for a published encrypted signature,
+using the notation that we've used so far:</p>
+<p>\(s'R' = \mathbb{H}(m) + R_{\mathrm{x}}P\)</p>
+<p>isolate the public key P (this is basically "pubkey recovery"):</p>
+<p>\(P = R_{\mathrm{x}}^{-1}\left(s'R' - \mathbb{H}(m)G\right)\)</p>
+<p>\(\Rightarrow tP = R_{\mathrm{x}}^{-1}\left(s'tR' -
+\mathbb{H}(m)tG\right)\)</p>
+<p>\(\Rightarrow xT = tP = R_{\mathrm{x}}^{-1}\left(s'R -
+\mathbb{H}(m)T\right)\)</p>
+<p>Notice how we - a verifier, not possessing either the nonce \(k\) nor
+the secret \(t\) - were able to deduce <em>this</em> DH key because we knew
+the DH key of the key pair \((R', T)\) - it's \(R\), which we were
+explicitly given. So this, in some sense "breaks" the <a href="https://en.wikipedia.org/wiki/Computational_Diffie%E2%80%93Hellman_assumption">CDH
+assumption</a>:
+that given only points on the curve \(A=aG, B=bG\) you should not be
+able to calculate the third point \(abG\) (but "breaks" - because
+actually we were given a related DH key to start with).</p>
+<p>Fournier addresses this point in two ways. First, he argues that
+requirement of the CDH problem being hard is not part of the protocols
+for which this scheme is useful and that keys are by design one-time-use
+in these applications. The more important point though, is that an
+attempt is made to show the scheme secure <strong>if the CDH problem is
+easy</strong>. A classic example of backwards cryptography logic ;)</p>
+<p>The framework for this is non-trivial, and it is exactly the framework
+developed by Fersch et al that was discussed in the section on ECDSA in
+<a href="https://web.archive.org/web/20200803123741/https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/">this</a>
+earlier blog post (subsection "What about ECDSA?"). I have not studied
+this framework in any detail, only cursorily, and would encourage anyone
+interested to at least watch the linked video of Fersch's talk on it,
+which was quite interesting. With the addition of the assumption "CDH
+is easy", Fournier claims that ECDSA can be said to have this
+EUF-CMA[VES] security guarantee, which is intended to prove,
+basically, that <strong>the leak of the DH key is the only leak of information
+and that the scheme is secure against forgery</strong>. I can't claim to be
+able to validate this; I can only say the argument appears plausible.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="">Joinmarket.me archive</a></li>
+							<li><a href="/pages/about-me.html"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="/pages/main-page.html"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="/category/waxwings-blog.html">waxwings Blog (3)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
