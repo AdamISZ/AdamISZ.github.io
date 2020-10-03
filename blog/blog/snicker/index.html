@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>SNICKER — Joinmarket.me archive</title>
+	<meta name="description" content="Title: SNICKER; Date: 2017-09-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="/theme/html5.js"></script>
+		<![endif]-->
+	<link href="/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="/theme/css/local.css" rel="stylesheet">
+	<link href="/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">SNICKER</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2017-09-15T00:00:00+02:00" itemprop="datePublished">Fri 15 September 2017</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="/tag/coinjoin.html" rel="tag">coinjoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>SNICKER</h3>
+<h2>SNICKER - Simple Non-Interactive Coinjoin with Keys for Encryption Reused</h2>
+<p>I'm going to do this backwards - start with the end goal user
+experience, and then work backwards to the technical design. This way,
+those not wanting to get lost in technical details can still get the
+gist.</p>
+<h3><img alt="Me misusing a meme as a symbol and not adding any text." height="330" src="../../../../../../20200510162733im_/https:/joinmarket.me/static/media/uploads/.thumbnails/evilplanbaby.jpg/evilplanbaby-400x330.jpg" width="400"></h3>
+<p><em>Pictured above: me misusing a meme as a symbol and deliberately not
+adding any text to it.</em></p>
+<h3><strong>Scenario</strong></h3>
+<p><strong>Alisa</strong> lives in Moscow; she is a tech-savvy Bitcoin user, uses Linux
+and the command line, and runs a fully verifying Bitcoin Core node. She
+doesn't have indexing enabled, but she (sometimes, or long-running)
+runs a tool called <code>snicker-scan</code> on the blocks received by her node. It
+scans recent Bitcoin blocks looking for transactions with a particular
+pattern, and returns to her in a file a list of candidate transactions.
+She pipes this list into another tool which uses her own Bitcoin wallet
+and constructs proposals: new transactions involving her own utxos and
+utxos from these newly found transactions, which she signs herself.
+Then, for each one, she makes up a secret random number and sends (the
+proposed transactions + the secrets), encrypted to a certain public key,
+in each case, so no one but the owner can read it, to a Tor hidden
+service which accepts such submissions. For now, her job is done and she
+gets on with her day.</p>
+<p><strong>Bob</strong> lives in New York. He's a Bitcoin enthusiast who uses it a lot,
+and likes to test out new features, but has never written code and
+isn't tech-savvy like that. A few hours after Alisa went to bed he
+opens one of his mobile wallets and a message pops up:
+<code>New coinjoin proposals found. Check?</code>. He heard about this, and heard
+that you can improve your privacy with this option, and even sometimes
+gain a few satoshis in the process. So he clicks <code>Yes</code>. In the
+background his mobile wallet downloads a file of some 5-10MB (more on
+this later!). Bob did this once before and was curious about the file;
+when he opened it he saw it was text with lots of unintelligible
+encrypted stuff like this:</p>
+<p><code>QklFMQOVXvpqgjaJFm00QhuJ1iWsnYYV4yJLjE0LaXa8N8c34Hzg5CeQduV.....</code>\
+<code>QklFMQI2JR50dOGEQdDdmeX0BwMH4c+yEW1v5/IyT900WBGdYRA/T5mqBMc.....</code></p>
+<p>Now his mobile does some processing on this file; it takes a little
+while, some seconds perhaps, processing in the background. At the end it
+pops up a new message:
+<code>Coinjoin transaction found. Would you like to broadcast it?</code> and
+underneath it shows the transaction spending 0.2433 BTC out of his
+wallet and returning 0.2434 BTC in one of the outputs. It shows that the
+other inputs and outputs are not his, although one of them is also for
+0.2434 BTC. Does he want to accept? Sure! Free money even if it's only
+cents. Even with no free money, he knows that coinjoin makes his privacy
+better. So he clicks <code>Yes</code> and it's broadcast. Done.</p>
+<h3>The NIC in SNICKER</h3>
+<p>Non-interactivity is a hugely desirable property in protocols; this is
+particularly the case where privacy is a priority. Firstly, it avoids
+the need to synchronize (<strong>Alisa</strong>, and her computer, had gone to sleep
+when <strong>Bob</strong> performed his step). Second, to avoid malicious
+interruption of an interactive protocol, it can help to identify the
+participants, but that is very damaging to the whole point of a protocol
+whose goal is privacy. Non-interactivity cuts this particular Gordian
+knot; one side can send the message anonymously and the other
+participant simply uses the data, but this has the limitation of the
+sender finding the receiver, which means some weak identification of the
+latter. Even better is if the request can be sent encrypted to the
+receiver, then it can be broadcast anywhere for the receiver to notice.
+That latter model is the most powerful, and is used here, but it does
+have practicality drawbacks as we'll discuss.</p>
+<p>So, note that in the above scenario <strong>Alisa</strong> and <strong>Bob</strong> do not meet,
+do not synchronize, and need never meet or find out who each other are
+in future either. Their "meeting" is entirely abstracted out to one
+side publishing an encrypted message and the other side receiving <em>all</em>
+such encrypted messages and only reading the one(s) encrypted to his
+pubkey. The <em>all</em> part helps preserve Bob's privacy, if he finds a way
+to broadcast the final transaction with a reasonable anonymity defence
+(see e.g.
+<a href="https://github.com/gfanti/bips/blob/master/bip-dandelion.mediawiki">Dandelion</a>;
+I'm of the opinion that that battle - making Bitcoin transaction
+broadcast anonymous - is something we <em>will</em> win, there is a massive
+asymmetry in favour of the privacy defender there).</p>
+<h3>Quick background - how to do a Coinjoin</h3>
+<p>Here's the obligatory
+<a href="https://bitcointalk.org/index.php?topic=279249.0">link</a>
+to the Coinjoin OP. You can skip this section if you know Coinjoin well.</p>
+<p>Otherwise, I'll give you a quick intro here, one that naturally leads
+into the SNICKER concept:</p>
+<p>Each input to a transaction requires (for the transaction to be valid) a
+signature by the owner of the private key (using singular deliberately,
+restricting consideration to p2pkh or segwit equivalent here) over a
+message which is \~ the transaction. Each of these signatures can be
+constructed separately, by separate parties if indeed the private key
+for each input are owned by separate parties. The "normal" coinjoining
+process thus involves the following steps (for now, not specifying <em>who</em>
+carries out each step):</p>
+<ul>
+<li>Gather all of the inputs - the utxos that will be spent</li>
+<li>Gather all of the destination addresses to various parties, and the
+    amounts to be paid</li>
+<li>Distribute a "template" of the transaction to all parties (i.e.
+    the transaction without any signatures)</li>
+<li>In some order all of the parties sign the transaction; whomever has
+    a transaction with all signatures complete, can broadcast it to the
+    Bitcoin network</li>
+</ul>
+<p>There are different protocols one can choose to get all these steps
+done, ranging from simple to complex. A server can be the coordinating
+party; blinding can be used to prevent the server knowing input-output
+mapping.
+<a href="http://crypsys.mmci.uni-saarland.de/projects/CoinShuffle/">Coinshuffle</a>
+can be used, creating a kind of onion-routing approach to prevent
+parties involved knowing the linkages (doesn't require a server to
+coordinate, but requires more complex interactivity). One of the parties
+in the join can be the "server", thus that party gains privacy that
+the others don't (Joinmarket). Etc.</p>
+<p>The difficulties created by any interactivity are considerably
+ameliorated in a client-server model (see e.g. the old blockchain.info
+<a href="https://en.bitcoin.it/wiki/Shared_coin">SharedCoin</a>(link
+outdated) model), the serious tradeoff is the server knowing too much,
+and/or a coordination/waiting problem (which may be considered
+tolerable; see both SharedCoin and
+<a href="https://github.com/darkwallet/darkwallet">DarkWallet</a>;
+with a sufficient liquidity pool the waiting may be acceptable).</p>
+<p>There are a lot of details to discuss here, but there is always <em>some</em>
+interactivity (you can only sign once you know the full transaction,
+assuming no custom sighashing^1^), and a model with a server is
+basically always going to be more problematic, especially at scale.</p>
+<p>So hence we try to construct a way of doing at least simple Coinjoins,
+in at least some scenarios, without any server requirement or
+coordination. Now I'll present the basic technical concept of how to do
+this in SNICKER, in 2 versions.</p>
+<h3>First version - snicKER = Keys for Encryption Reused</h3>
+<p>To make the Coinjoin non-interactive, we need it to be the case that
+Alisa can post a message for Bob, without explicitly requesting to
+create a private message channel with him. This requires encrypting a
+message that can then be broadcast (e.g. over a p2p network or on a
+bulletin board).</p>
+<p><em>(In case it isn't clear that either encryption or a private message
+channel is required, consider that Alice must pass to Bob a secret which
+identifies Bob's output address (explained below), critically, and also
+her signature, which is on only her inputs; if these are seen in public,
+the input-output linkages are obvious to anyone watching, defeating the
+usual purpose of Coinjoin.)</em></p>
+<h5>Encryption</h5>
+<p>To achieve this we need a public key to encrypt a message to Bob. This
+is the same kind of idea as is used in tools like PGP/gpg - only the
+owner of the public key's private key can read the message.</p>
+<p>In this "First version" we will assume something naughty on Bob's
+part: that he has <strong>reused an address</strong>! Thus, a public key will exist
+on the blockchain which we assume (not guaranteed but likely; nothing
+dangerous if he doesn't) he still holds the private key for.</p>
+<p>Given this admittedly unfortunate assumption, we can use a simple and
+established encryption protocol such as
+<a href="https://en.wikipedia.org/wiki/Integrated_Encryption_Scheme">ECIES</a>
+to encrypt a message to the holder of that public key.</p>
+<p>Alisa, upon finding such a pubkey, call it <code>PB</code>, and noting the
+corresponding utxo <code>UB</code>, will need to send, ECIES encrypted to <code>PB</code>,
+several items (mostly wrapped up in a transaction) to Bob to give him
+enough material to construct a valid coinjoin without any interaction
+with herself:</p>
+<ul>
+<li>Her own utxos (just <code>UA</code> for simplicity)</li>
+<li>Her proposed destination address(s)</li>
+<li>Her proposed amounts for output</li>
+<li>Her proposed bitcoin transaction fee</li>
+<li>The full proposed transaction template using <code>UA</code> and <code>UB</code> as inputs
+    (the above 4 can be implied from this)</li>
+<li>Her own signature on the transaction using the key for <code>UA</code></li>
+<li>Her proposed destination address <strong>for Bob</strong>.</li>
+</ul>
+<h4>Destination</h4>
+<p>The last point in the above list is of course at first glance not
+possible, unless you made some ultra dubious assumptions about shared
+ownership, i.e. if Alisa somehow tried to deduce other addresses that
+Bob already owns (involving <em>more</em> address reuse). I don't dismiss this
+approach <em>completely</em> but it certainly looks like a bit of an ugly mess
+to build a system based on that. Instead, we can use a very well known
+construct in ECC; in English something like "you can tweak a
+counterparty's pubkey by adding a point that <em>you</em> know the private key
+for, but you still won't know the private key of the sum". Thus in
+this case, Alice, given Bob's existing pubkey <code>PB</code>, which is the one
+she is using to encrypt the message, can construct a new pubkey:</p>
+<div class="highlight"><pre><span></span><span class="err">PB2 = PB + k*G</span>
+</pre></div>
+
+
+<p>for some 32 byte random value <code>k</code>.</p>
+<p>Alice will include the value of <code>k</code> in the encrypted message, so Bob can
+verify that the newly proposed destination is under his control (again
+we'll just assume a standard p2pkh address based on <code>PB2</code>, or a segwit
+equivalent).</p>
+<p>Assuming Bob somehow finds this message and successfully ECIES-decrypts
+it using the private key of <code>PB</code>, he now has everything he needs to (if
+he chooses), sign and broadcast the coinjoin transaction.</p>
+<h4>A protocol for the most naive version, in broad strokes:</h4>
+<ol>
+<li>Alisa must have the ability to scan the blockchain to some extent;
+    she must find scriptSigs or witnesses containing pubkeys which were
+    later reused in new addresses/scriptPubKeys.</li>
+<li>Alisa will use some kind of filtering mechanism to decide which are
+    interesting. The most obvious two examples are: amounts under
+    control in Bob's utxos matching her desired range, and perhaps age
+    of utxos (so likely level of activity of user) or some watermarking
+    not yet considered.</li>
+<li>Having found a set of potential candidates, for each case <code>PB, UB</code>:
+    Construct a standard formatted message; here is a simple suggestion
+    although in no way definitive:</li>
+</ol>
+<p><code>{=html}
+&lt;!-- --&gt;</code>
+        8(?) magic bytes and 2 version bytes for the message type
+        k-value 32 bytes
+        Partially signed transaction in standard Bitcoin serialization
+        (optionally padding to some fixed length)</p>
+<p>We defer discussing how in practice Bob will get access to the message
+later; but note that if he has done this, he already knows the value of
+<code>P_B</code> and will thus know also <code>U_B</code>. He ECIES-decrypts it, and
+recognizes it's for him through correct magic bytes (other messages
+encrypted to other pubkeys will come out random).</p>
+<p>Then, this format has sufficient information for Bob to evaluate easily.
+First, he can verify that <code>U_B</code> is in the inputs. Then he can verify
+that for 1 of the 2 outputs (simple model) has a scriptPubKey
+corresponding to <code>PB2 = PB + k*G</code>. He can then verify the output amounts
+fit his requirements. Finally he can verify the ECDSA signature provided
+on <code>U_A</code> (hence "partially signed transaction"). Given this he can, if
+he chooses, sign on <code>UB</code> using <code>PB</code> and broadcast. He must of course
+keep a permanent record of either <code>k</code> itself or, more likely, the
+private key <code>k + x</code> (assuming <code>P = x * G</code>).</p>
+<h3>A proof-of-concept</h3>
+<p>Before going further into details, and discussing the second (probably
+superior but not as obviously workable) version of SNICKER, I want to
+mention that I very quickly put together some proof of concept code in
+<a href="https://github.com/AdamISZ/SNICKER-POC">this github
+repo</a>;
+it uses
+<a href="https://github.com/Joinmarket-Org/joinmarket-clientserver">Joinmarket-clientserver</a>
+as a dependency, implements ECIES in a compatible form to that used by
+<a href="https://electrum.org/">Electrum</a>,
+and allows testing on regtest or testnet, admittedly with a bunch of
+manual steps, using the python script <code>snicker-tool.py</code>. The workflow
+for testing is in the README. To extend the testing to more wallets
+requires some way to do ECIES as well as some way to construct the
+destination addresses as per <code>PB2 = PB + kG</code> above. I did note that,
+usefully, the partially signed transactions can be signed directly in
+Bitcoin Core using <code>signrawtransaction</code> and then <code>sendrawtransaction</code>
+for broadcast, but note that somehow you'll have to recover the
+destination address, as receiver, too. Note that there was no attempt at
+all to construct a scanning tool for any reused-key transactions here,
+and I don't intend to do that (at least, in that codebase).</p>
+<h2>Practical issues</h2>
+<p>In this section will be a set of small subsections describing various
+issues that will have to be addressed to make this work.</p>
+<h3>Wallet integration</h3>
+<p>One reason this model is interesting is because it's much more
+plausible to integrate into an existing wallet than something like
+Joinmarket - which requires dealing with long term interactivity with
+other participants, communicating on a custom messaging channel,
+handling protocol negotiation failures etc. To do SNICKER as a receiver,
+a wallet needs the following elements:</p>
+<ul>
+<li>ECIES - this is really simple if you have the underlying secp256k1
+    and HMAC dependencies; see
+    <a href="https://github.com/spesmilo/electrum/blob/master/lib/bitcoin.py#L774-L817">here</a>
+    and
+    <a href="https://github.com/AdamISZ/SNICKER-POC/blob/master/ecies/ecies.py#L10-L50">here</a>;
+    note that the root construction in ECIES is ECDH.</li>
+<li>The ability to calculate <strong>and store</strong> the newly derived keys of the
+    form <code>P' = P + kG</code> where <code>k</code> is what is passed to you, and <code>P</code> is
+    the pubkey of your existing key controlling the output to be spent.
+    I would presume that you would have to treat <code>k+x</code>, where <code>P=xG</code>, as
+    a newly imported private key. Note that we <em>cannot</em> use a
+    deterministic scheme for this from <code>P</code>, since that would be
+    calculatable by an external observer; it must be based on a secret
+    generated by "Alisa".This could be a bit annoying for a wallet,
+    although of course it's easy in a naive sense.</li>
+<li>Ability to parse files containing encrypted coinjoin proposals in
+    the format outlined above - this is trivial.</li>
+<li>Ability to finish the signing of a partially signed transaction.
+    Most wallets have this out of the box (Core does for example); there
+    might be a problem for a wallet if it tacitly assumes complete
+    ownership of all inputs.</li>
+</ul>
+<p>If a wallet only wanted to implement the receiver side (what we called
+"Bob" above), that's it.</p>
+<h4>Compatibility/consensus between different wallets</h4>
+<p>The only "consensus" part of the protocol is the format of the
+encrypted coinjoin proposals (and the ECIES algorithm used to encrypt
+them). We could deal with different transaction types being proposed
+(i.e. different templates, e.g. 3 outputs or 4, segwit or not), although
+obviously it'll be saner if there are a certain set of templates that
+everyone knows is acceptable to others.</p>
+<h3>Notes on scanning for candidates</h3>
+<p>There is no real need for each individual "Alisa" to scan, although
+she might wish to if she has a Bitcoin node with indexing enabled. This
+is a job that can be done by any public block explorer and anyone can
+retrieve the data, albeit there are privacy concerns just from you
+choosing to download this data. The data could be replicated on Tor
+hidden services for example for better privacy. So for now I'm assuming
+that scanning, itself, is not an issue.</p>
+<p>A much bigger issue might be finding <strong>plausible</strong> candidates. Even in
+this version 1 model of looking only for reused keys, which are
+hopefully not a huge subset of the total utxo set, there are tons of
+potential candidates and, to start with, none of them at all are
+plausible. How to filter them?</p>
+<ul>
+<li>Filter on amount - if Alisa has X coins to join, she'll want to
+    work with outputs \&lt; X.</li>
+<li>Filter on age - this is more debatable, but very old utxos are less
+    likely to be candidates for usage.</li>
+<li>An "active" filter - this is more likely to be how things work.
+    Are certain transactions intrinsically watermarked in a way that
+    indicates that the "Bob" in question is actually interested in
+    this function? One way this can happen is if we know that the
+    transaction is from a certain type of wallet, which already has this
+    feature enabled.</li>
+</ul>
+<h4>Bootstrapping</h4>
+<p>If a set of users were using a particular wallet or service (preferably
+a <em>large</em> set), it might be possible to identify their transactions
+"Acme wallet transactions". Funnily enough, Joinmarket, because it
+uses a set and unusual coinjoin pattern, satisfies this property in a
+very obvious way; but there might be other cases too. See the notes in
+"second version", below, on how Joinmarket might work specifically in
+that case.</p>
+<p>Better of course, is if we achieved that goal with a more user-friendly
+wallet with a much bigger user-base; I'd ask wallet developers to
+consider how this might be achieved.</p>
+<p>Another aspect of bootstrapping is the Joinmarket concept - i.e. make a
+financial incentive to help bootstrap. If creators/proposers are
+sufficiently motivated they may offer a small financial incentive to
+"sweeten the pot", as was suggested in the scenario at the start of
+this post. This will help a lot if you want the user-set to grow
+reasonably large.</p>
+<h3>Scalability</h3>
+<p>This is of course filed under "problems you really want to have", but
+it's nevertheless a very real problem, arguably the biggest one here.</p>
+<p>Imagine 10,000 utxo candidates that are plausible and 1000 active
+proposers. Imagine they could all make proposals for a large-ish subset
+of the total candidates, we could easily imagine 1,000,000 candidates at
+a particular time. Each encrypted record takes 500-800 bytes of space,
+let's say. Just the data transfer starts to get huge - hundreds of
+megabytes? Perhaps this is not as bad as it looks, <em>if</em> the data is
+being received in small amounts over long periods.</p>
+<p>And let's say we can find a way to get the data out to everybody - they
+still have to try to decrypt <strong>every</strong> proposal with <strong>every</strong> pubkey
+they have that is a valid candidate (in version 1, that's reused keys,
+let's say, or some subset of them). The computational requirement of
+that is huge, even if some cleverness could reduce it (decrypt only one
+AES block; use high performance C code e.g. based on libsecp256k1).
+Again, perhaps if this is happening slowly, streamed over time, or in
+chunks at regular integrals, it's not as bad. Still.</p>
+<p>It's true that these problems don't arise at small scale, but then the
+real value of this would be if it scaled up to large anonymity sets.</p>
+<p>Even if this is addressed, there is another problem arising out of the
+anonymous submission - any repository of proposals could be filled with
+junk, to waste everyone's time. Apart from a
+<a href="https://en.wikipedia.org/wiki/Hashcash">hashcash</a>-like
+solution (not too implausible but may impose too much cost on the
+proposer), I'm not sure how one could address that while keeping
+submission anonymity.</p>
+<p>At least we have the nice concept that this kind of protocol can improve
+privacy on Bitcoin's blockchain without blowing up bandwidth and
+computation for the Bitcoin network itself - it's "off-band", unlike
+things like <a href="https://www.elementsproject.org/elements/confidential-transactions/investigation.html">Confidential
+Transactions</a>
+(although, of course, the effect of that is much more powerful). I think
+ideas that take semantics and computation off chain are particularly
+interesting.</p>
+<h3>Conflicting proposals</h3>
+<p>This is not really a problem: if Alisa proposes a coinjoin to Bob1 and
+Bob2, and Bob1 accepts, then when Bob2 checks, he will find one of the
+inputs for his proposed coinjoin is already spent, so it's not valid.
+Especially in cases where there is a financial incentive, it just
+incentives Bobs to be more proactive, or just be out of luck.</p>
+<h3>Transaction structure and 2 party joins</h3>
+<p>We have thus far talked only about 2 party coinjoins, which <em>ceteris
+paribus</em> are an inferior privacy model compared to any larger number
+(consider that in a 2 party coinjoin, the <em>other</em> party necessarily
+knows which output is yours). The SNICKER model is not easily extendable
+to N parties, although it's not impossible. But DarkWallet used 2 of 2
+joins, and it's still in my opinion valuable. Costs are kept lower, and
+over time these joins heavily damage blockchain analysis. A larger
+number of joins, and larger anonymity set could greatly outweigh the
+negatives<em>.</em></p>
+<p>Structure: the model used in the aforementioned
+<a href="https://github.com/AdamISZ/SNICKER-POC">POC</a>,
+although stupid simple, is still viable: 2 inputs, one from each party
+(easily extendable to 1+N), 3 outputs, with the receiver getting back
+exactly one output of \~ the same size as the one he started with. The
+proposer then has 1 output of exactly that size (so 2 equal outputs) and
+one change. Just as in Joinmarket, the concept is that fungibility is
+gained specifically in the equal outputs (the "coinjoin outputs"); the
+change output is of course trivially linked back to its originating
+input(s).</p>
+<p>But there's no need for us to be limited to just one transaction
+structure; we could imagine many, perhaps some templates that various
+wallets could choose to support; and it'll always be up to the receiver
+to decide if he likes the structure or not. Even the stupid X->X, Y->Y
+"coinjoin" I mused about in my Milan presentation
+<a href="https://youtu.be/IKSSWUBqMCM?t=47m21s">here</a>(warning:youtube)
+might be fun to do (for some reason!). What a particularly good or
+"best" structure is, I'll leave open for others to discuss.</p>
+<h3>Second version - snicKER = Keys Encrypted to R</h3>
+<p>We've been discussing all kinds of weird and whacky "Non-Interactive
+Coinjoin" models on IRC for years; and perhaps there will still be
+other variants. But arubi was mentioning to me yesterday that he was
+looking for a way to achieve this goal <em>without</em> the nasty requirement
+of reused keys, and between us we figured out that it is a fairly
+trivial extension, <em>if</em> you can find a way to get confidence that a
+particular existing utxo is co-owned with an input (or any input).
+That's because if you have an input, you have not only a pubkey, but
+also a <strong>signature</strong> (both will either be stored in the scriptSig, or in
+the case of segwit, in the witness section of the transaction). An
+<a href="https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm">ECDSA</a>
+signature is published on the blockchain as a pair: <code>(r, s)</code>, where <code>r</code>
+is the x-coordinate of a point <code>R</code> on the secp256k1 curve. Now, any
+elliptic curve point can be treated as a pubkey, assuming someone knows
+the private key for it; in the case of ECDSA, we call the private key
+for <code>R</code>, <code>k</code>, that is: <code>R = kG</code>. <code>k</code> is called the nonce (="number used
+once"), and is usually today calculated using the algorithm
+<a href="https://tools.ietf.org/html/rfc6979">RFC6979</a>,
+which determines its value deterministically from the private key
+you're signing with, and the message. But what matters here is, the
+signer either already knows <code>k</code>, or can calculate it trivially from the
+signing key and the transaction. This provides us with exactly the same
+scenario as in the first version; Bob knows the private key of <code>R</code>, so
+Alisa can send a proposal encrypted to that public key, and can derive a
+new address for Bob's destination using the same formula:</p>
+<div class="highlight"><pre><span></span><span class="err">PB2 = R + k&#39;G</span>
+</pre></div>
+
+
+<p>Here I used <code>k'</code> to disambiguate from the signature nonce <code>k</code>, but it's
+exactly the same as before. As before, Bob, in order to spend the output
+from the coinjoin, will need to store the new private key <code>k+k'</code>. For a
+wallet it's a bit more work because you'll have to keep a record of
+past transaction <code>k</code> values, or perhaps keep the transactions and
+retrieve <code>k</code> as and when. Apart from that, the whole protocol is
+identical.</p>
+<h4>Finding candidates in the second version</h4>
+<p>In version 2, we no longer need Bob to do something dubious (reusing
+addresses). But now the proposer (Alisa) has a different and arguably
+harder problem than before; she has to find transactions where she has
+some reasonable presumption that a specific output and a specific input
+are co-owned. You could argue that this is good, because now Alisa is
+proposing coinjoins where linkages <em>are</em> known, so she's improving
+privacy exactly where it's needed :) (only half true, but amusing). In
+a typical Bitcoin transaction there are two outputs - one to
+destination, one change; if you can unambiguously identify the change,
+even with say 90% likelihood not 100%, you could make proposals on this
+basis. This vastly expands the set of <em>possible</em> candidates, if not
+necessarily plausible ones (see above on bootstrapping).</p>
+<p>Additionally paradoxical is the fact that Joinmarket transactions <em>do</em>
+have that property! The change outputs are unambiguously linkable to
+their corresponding inputs through subset-sum analysis, see e.g.
+<a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md#jmsudoku-coinjoin-sudoku-for-jmtxs">here</a>.</p>
+<p>Thus, Adlai Chandrasekhar's
+<a href="http://adlai.uncommon-lisp.org:5000/">cjhunt</a>
+tool (appears down as of writing),
+<a href="https://github.com/adlai/cjhunt">code</a>,
+identifies all very-likely-to-be Joinmarket transactions through
+blockchain scanning, and its output could be used to generate candidates
+(the proposed joins could be with those change outputs, using the `R`
+values from one of the identified-as-co-owned inputs). See also
+<a href="https://citp.github.io/BlockSci/chain/blockchain.html">BlockSci</a>.
+Then if Joinmarket had both proposer- and receiver- side code
+integrated, it would create a scenario where these type of coinjoins
+would most likely be quite plausible to achieve.</p>
+<h3>Conclusion</h3>
+<p>I think this idea might well be viable. It's simple enough that there
+aren't likely crypto vulnerabilities. The short version of the pros and
+cons:</p>
+<h4>Pros</h4>
+<ul>
+<li>No interactivity (the point), has many positive consequences, and
+    high anonymity standard</li>
+<li>Relative ease of wallet integration (esp. compared to e.g.
+    Joinmarket), consensus requirement between them is limited.</li>
+<li>Potentially huge anonymity set (different for version 1 vs version
+    2, but both very large)</li>
+</ul>
+<h4>Cons</h4>
+<ul>
+<li>For now only 2 parties and probably stuck there; limited coinjoin
+    model (although many transaction patterns possible).</li>
+<li>Finding plausible candidates is hard, needs a bootstrap</li>
+<li>Sybil attack on the encrypted messages; how to avoid the "junk
+    mail" problem</li>
+</ul>
+<p>Lastly, it should be fine with Schnorr (to investigate: aggregation in
+this model), in version 1 and version 2 forms.</p>
+<h3>Footnotes</h3>
+<p>1. Sighashing - attempting a non-interactive coinjoin with some
+interesting use of <code>SIGHASH_SINGLE</code> and <code>SIGHASH_ANYONECANPAY</code> seems at
+least plausible (see
+<a href="https://en.bitcoin.it/wiki/OP_CHECKSIG#Procedure_for_Hashtype_SIGHASH_SINGLE">here</a>),
+although it's not exactly heartening that no one ever uses
+<code>SIGHASH_SINGLE</code> (and its rules are arcane and restrictive), not to even
+speak of watermarking. Hopefully the idea expressed here is better.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="">Joinmarket.me archive</a></li>
+							<li><a href="/pages/about-me.html"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="/pages/main-page.html"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="/category/waxwings-blog.html">waxwings Blog (4)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
