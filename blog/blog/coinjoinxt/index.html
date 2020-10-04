@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>CoinjoinXT — Joinmarket.me archive</title>
+	<meta name="description" content="Title: CoinjoinXT; Date: 2018-09-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">CoinjoinXT</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2018-09-15T00:00:00+02:00" itemprop="datePublished">Sat 15 September 2018</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/coinjoin.html" rel="tag">coinjoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>CoinJoinXT</h3>
+<h1>CoinJoinXT - a more flexible, extended approach to CoinJoin</h1>
+<p>*Ideas were first discussed
+<a href="https://gist.github.com/AdamISZ/a5b3fcdd8de4575dbb8e5fba8a9bd88c">here</a>.
+Thanks again to arubi on IRC for helping me flesh them out.\
+*</p>
+<h2>Introduction</h2>
+<p>We assume that the reader is familiar with CoinJoin as a basic idea -
+collaboratively providing inputs to a transactions so that it may be
+made difficult or impossible to distinguish ownership/control of the
+outputs.</p>
+<p>The way that CoinJoin is used in practice is (today mainly using
+JoinMarket, but others over Bitcoin's history) is to create large-ish
+transactions with multiple outputs of exactly the same amount. This can
+be called an "intrinsic fungibility" model - since, although the
+transactions created are unambiguously recognizable as CoinJoins, the
+indistinguishability of said equal outputs is kind of "absolute".</p>
+<p>However, as partially discussed in the earlier blog post <a href="https://web.archive.org/web/20200603010653/https://joinmarket.me/blog/blog/the-steganographic-principle/">"the
+steganographic
+principle"</a>,
+there's at least an argument for creating fungibility in a less
+explicit way - that is to say, creating transactions that have a
+fungibility effect but aren't <em>necessarily</em> visible as such - they
+<em>may</em> look like ordinary payments. I'll call this the <em>deniability</em>
+model vs the <em>intrinsic fungibility</em> model. It's harder to make this
+work, but it has the possibility of being much more effective than the
+<em>intrinsic fungibility model</em>, since it gives the adversary (who we'll
+talk about in a minute) an additional, huge problem: he doesn't even
+know where to start.</p>
+<h2>The adversary's assumptions</h2>
+<p>In trying to create privacy, we treat the "blockchain analyst" as our
+adversary (henceforth just "A").</p>
+<p>Blockchain analysis consists, perhaps, of two broad areas (not sure
+there is any canonical definition); we can call the first one
+"metadata", vaguely, and think of it is every kind of data that is not
+directly recorded on the blockchain, such as personally identifying
+information, exchange records etc, network info etc. In practice, it's
+probably the most important. The second is stuff recorded directly on
+the blockchain - pseudonyms (scriptPubKeys/addresses) and amount
+information (on non-amount-blinded blockchains as Bitcoin's is
+currently; for a discussion about that see this earlier <a href="https://web.archive.org/web/20200603010653/https://joinmarket.me/blog/blog/the-steganographic-principle/">blog
+post</a>);
+note that amount information includes the implicit amount - network fee.</p>
+<p>Timing information perhaps straddles the two categories, because while
+transactions are (loosely) timestamped, there is also the business of
+trying to pick up timing and perhaps geographic information from
+snooping the P2P network.</p>
+<p>With regard to that second category, the main goal of A is to correlate
+ownership of different utxos. An old
+<a href="https://cseweb.ucsd.edu/~smeiklejohn/files/imc13.pdf">paper</a>
+of Meiklejohn et al 2013 identified two Heuristics (let's call them
+probabilistic assumptions), of which the first was by far the most
+important:</p>
+<ul>
+<li>Heuristic 1 - All inputs to a transaction are owned by the same
+    party</li>
+<li>Heuristic 2 - One-time change addresses are owned by the same party
+    as the inputs</li>
+</ul>
+<p>The second is less important mainly because it had to be caveat-ed quite
+a bit and wasn't reliable in naive form; but, identification of change
+addresses generally is a plausible angle for A. The first has been, as
+far as I know, the bedrock of blockchain analysis and has been referred
+to in many other papers, was mentioned in Satoshi's whitepaper, and you
+can see one functional example at the long-existent website
+<a href="https://www.walletexplorer.com/">walletexplorer</a>.</p>
+<p>[But I think it's important to observe that this list is
+incomplete.]{style="text-decoration: underline;"}[]{style="text-decoration: underline;"}</p>
+<p>I'll now add two more items to the list; the first is omitted because
+it's elementary, the other, because it's subtle (and indeed you might
+find it a bit dumb at first sight):</p>
+<ul>
+<li><code>Heuristic/Assumption 0</code>: All inputs controlled by only one pubkey
+    are unilaterally controlled</li>
+<li>Heuristic/Assumption 1: All inputs to a transaction are owned by the
+    same party</li>
+<li>Heuristic/Assumption 2(?): One-time change addresses are owned by
+    the same party as the inputs</li>
+<li><code>Heuristic/Assumption 3</code>: Transfer of ownership between parties in
+    one transaction implies payment</li>
+</ul>
+<p>So, "Heuristic/Assumption" because assumption is probably a better
+word for all of these generally, but I want to keep the existing
+nomenclature, the "?" for 2 is simply because, as mentioned, this one
+is problematic (although still worthy of consideration).</p>
+<p><strong>Assumption 0</strong>: basically, that if it's not multisig, was never fully
+safe; there was always <a href="https://en.wikipedia.org/wiki/Shamir's_Secret_Sharing">Shamir's secret
+sharing</a>
+to share shards of a key, albeit that's very rarely used, and you can
+argue pedantically that full reconstruction means unilateral control.
+But Assumption 0 is a lot less safe now due to the recent
+<a href="https://eprint.iacr.org/2018/472">work</a>
+by Moreno-Sanchez et al. which means, at the very least, that 2 parties
+can easily use a 2-party computation based on the Paillier encryption
+system to effectively use a single ECDSA pubkey as a 2-2 multisig. So
+this assumption is generally unspoken, but in my opinion is now
+generally important (i.e. not necessarily correct!).</p>
+<p><strong>Assumption 3</strong>: this is rather strange and looks tautological; I could
+have even written "transfer of ownership between parties in one
+transaction implies transfer of ownership" to be cheeky. The point, if
+it is not clear to you, will become clear when I explain what
+"CoinJoinXT" means.</p>
+<p>Our purpose, now, is to make A's job harder <strong>by trying to invalidate
+all of the above assumptions at once</strong>.</p>
+<h2>Quick refresher: BIP141</h2>
+<p>This has been discussed in other blog posts about various types of
+"CoinSwap", so I won't dwell on it.</p>
+<p>Segwit fixes transaction malleability
+(<a href="https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki">BIP141</a>,
+along with BIP143,144 were the BIPs that specified segwit). One of the
+most important implications of this is explained directly in BIP 141
+itself, to
+<a href="https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#Trustfree_unconfirmed_transaction_dependency_chain">quote</a>
+from it:</p>
+<blockquote>
+<p><em>Two parties, Alice and Bob, may agree to send certain amount of
+Bitcoin to a 2-of-2 multisig output (the "funding transaction").
+Without signing the funding transaction, they may create another
+transaction, time-locked in the future, spending the 2-of-2 multisig
+output to third account(s) (the "spending transaction"). Alice and
+Bob will sign the spending transaction and exchange the signatures.
+After examining the signatures, they will sign and commit the funding
+transaction to the blockchain. Without further action, the spending
+transaction will be confirmed after the lock-time and release the
+funding according to the original contract.</em></p>
+</blockquote>
+<p>In short, if we agree a transaction, then we can fix its txid and sign
+transactions which use its output(s). The BIP specifically references
+the Lightning Network as an example of the application of this pattern,
+but of course it's not restricted to it. We can have Alice and Bob
+agree to any arbitrary set of transactions and pre-sign them, in
+advance, with all of them having the funding transaction as the root.</p>
+<h2>CoinJoinXT - the basic case</h2>
+<p>CoinJoin involves 2 or more parties contributing their utxos into 1
+transaction, but using the above model they can do the same to a funding
+transaction, but then pre-sign a set of more than one spending
+transaction. Here's a simple schematic:</p>
+<div class="highlight"><pre><span></span><span class="err">A 1btc ---&gt;</span>
+<span class="err">              F (2,2,A,B) --+</span>
+<span class="err">B 1btc ---&gt;                 |</span>
+<span class="err">                            |</span>
+<span class="err">                            +--&gt;[Proposed transaction graph (PTG) e.g. -&gt;TX1-&gt;TX2-&gt;TX3 ..]</span>
+</pre></div>
+
+
+<p>In human terms, you can envisage that: Alice and Bob would like to start
+to negotiate a set of conditional contracts about what happens to their
+money. Then they go through these steps:</p>
+<ol>
+<li>One side proposes F (the funding transaction) and a full graph of
+    unsigned transactions to fill out the PTG above; e.g. Alice
+    proposes, Bob and Alice share data (pubkeys, destination addresses).
+    Note that the set doesn't have to be a chain (TX1->TX2->TX3...),
+    it can be a tree, but each transaction must require sign-off of both
+    parties (either, at least one 2-2 multisig utxo, or at least one
+    utxo whose key is owned by each party).</li>
+<li>They exchange signatures on all transactions in the PTG, in either
+    order. Of course, they abort if signatures don't validate.</li>
+<li>With this in place (i.e. <strong>only</strong> after valid completion of (2)),
+    they both sign (in either order) F.</li>
+<li>Now both sides have a valid transaction set, starting with F. Either
+    or both can broadcast them. [The transactions are <em>all</em> guaranteed
+    to occur as long as at least one of them wants
+    it]{style="text-decoration: underline;"}. Contrariwise, <strong>none</strong> of
+    them is valid without F being broadcast.</li>
+</ol>
+<p>This does achieve one significant thing: <strong>one transaction such as TX2
+can transfer coins to, say, Bob's wallet, giving Alice nothing; and yet
+we can still get the overall effect of a CoinJoin. In other words,
+we've opened up the possibility to violate Heuristic 3 as well as
+Heuristic 1, in the same (short) interaction.</strong></p>
+<p>This construction works fine if <em>all</em> inputs used in transactions in the
+PTG are descendants of F; but this makes the construction very limited.
+So we'll immediately add more details to allow a more general use-case,
+in the next section.</p>
+<h2>Introducing Promises</h2>
+<p>If we allowed any of the transactions (TX1, TX2, ...) in the PTG in our
+previous example to have an input which did <em>not</em> come from the funding
+transaction F, then we would have introduced a risk; if Alice added utxo
+UA to, say, TX2, then, before Bob attempted to broadcast TX2, she could
+double spend it. This would break the atomicity of the graph, which was
+what allowed the crucial additional interesting feature (in bold,
+above): that an individual transaction could transfer funds to one
+party, without risks to the other. To address this problem, we call
+these additional inputs <strong>promise utxos</strong> and make use of <strong>refund
+transactions</strong>.</p>
+<div class="highlight"><pre><span></span><span class="err">A 1btc ---&gt;</span>
+<span class="err">              F (2,2,A,B) ---</span>
+<span class="err">B 1btc ---&gt;                 |       +--&gt; external payout 0.5 btc to Bob</span>
+<span class="err">                            |       |</span>
+<span class="err">                            +-&gt;[TX1 --&gt; TX2 --&gt; TX3 --&gt; TX4]</span>
+<span class="err">                                         |       ^</span>
+<span class="err">                                         |       |</span>
+<span class="err">                                         |       |</span>
+<span class="err">                                         |       +--- utxo A1</span>
+<span class="err">                                         |</span>
+<span class="err">                                         +--&gt; refund locktime M, pay out *remaining* funds to A: 1btc, B: 0.5btc</span>
+</pre></div>
+
+
+<p>In words: if, between the negotiation time and the time of broadcast of
+TX3, Alice spends A1 in some other transaction, Bob will still be safe;
+after block M he can simply broadcast the presigned refund transaction
+to claim the exact number of coins he is owed at that point in the
+graph.</p>
+<p>The above addresses the case of a single external input being included
+in a chain of transactions in the PTG (here, TX1,2,3,4). Extending this,
+and generalising to allowing external inputs in many transactions, is
+straightforward; we can add such in-PTG backouts at every step,
+redeeming all remaining funds to parties according to what they're
+owed.</p>
+<p>To summarize this section and how it differs from the original, simpler
+construction:</p>
+<p>Alice and Bob have a choice:</p>
+<ol>
+<li>They can set up a fully trustless PTG, without promises. They are
+    then guaranteed to achieve "all or nothing": either all
+    cooperative signing works, then all transactions can be broadcast
+    (as long as <em>at least one</em> of them wants to), or nothing
+    (including F) is broadcast at all.</li>
+<li>They can set up a PTG including promises from one or both parties.
+    Now they don't get "all or nothing" but only ensure that the
+    transactions that complete are a subset, in order, from the start F.
+    To achieve this they add presigned backouts at (probably every)
+    step, so that if the chain "breaks" somewhere along, they will
+    recover all the funds remaining that are owed to them.</li>
+</ol>
+<p>The tradeoff is: (2) is not perfectly atomic, but it allows the
+transaction graph to include utxos from outside of F's ancestory,
+particularly useful for privacy applications. In a sequence of 10
+coinjoins, you may be happy to risk that TXs 6-10 don't end up
+happening, if it doesn't cost you money. Case (2) is more likely to be
+of interest.</p>
+<h2>Interlude - overview of features of CoinJoinXT</h2>
+<p>There's a large design space here.</p>
+<ul>
+<li>We can have N parties, not just 2.</li>
+<li>We can have as many transactions as we like.</li>
+<li>We can have a tree with F as root, rather than a chain.</li>
+<li>We can have as many promise utxos from any of the N parties as we
+    like.</li>
+</ul>
+<p>A mixture of these features may give different tradeoffs in terms of
+<em>intrinsic fungibility</em> vs <em>deniability</em> vs <em>cost</em>; the tradeoff
+discussed in the introduction.</p>
+<p><strong>Interactivity</strong> - unlike either a CoinSwap of types discussed earlier
+in this blog, or doing multiple CoinJoins (to get a better fungibility
+effect than just a single one), this only requires one "phase" of
+interactivity (in terms of rounds, it may be 3). The two parties
+connect, exchange data and signatures, and then immediately disconnect.
+(This is what I called no-XBI in the previous <a href="https://web.archive.org/web/20200603010653/https://joinmarket.me/blog/blog/the-half-scriptless-swap/">blog
+post</a>).</p>
+<p><strong>Boundary</strong> - the adversary A, as was hinted at in the introduction, in
+this model, will not necessarily be able to easily see on the blockchain
+where the start and end points of this flow of transactions was. To the
+extent that this is true, it's an enormous win, but more on this later.</p>
+<h2>Example</h2>
+<p><img alt="ExampleCJXT" src="../../../../../../20200603010653im_/https:/joinmarket.me/static/media/uploads/.thumbnails/onchaincontract3.png/onchaincontract3-614x422.png">{width="614"
+height="422"}</p>
+<p>Here we are still restricting to 2 parties for simplicity of the
+diagram. There is still a chain of 4 TXs, but here we flesh out the
+inputs and outputs. About colors:</p>
+<p>Blue txos are co-owned by the two parties, envisioned as 2 of 2 multisig
+(although as originally mentioned, the technical requirement is only
+that each transaction is signed by both parties).</p>
+<p>Red inputs are <strong>promise utxos</strong> as described in the earlier section.</p>
+<p>Each promise has a corresponding backout transaction pre-signed as
+output consuming the bitcoins of the
+[previous]{style="text-decoration: underline;"} transaction to the one
+consuming that promise.</p>
+<p>Notice that this example contains two possible setups for each
+individual transaction in the chain; it can pay out only to one party
+(like TX3 which pays bob 0.6btc), or it can pay "CoinJoin-style"
+equal-sized outputs to 2 (or N) parties. Choosing this latter option
+means you are consciously deciding to blur the line between the
+<em>intrinsic-fungibility</em> model and the <em>deniability</em> <em>model,</em> which, by
+the way, is not necessarily a bad idea.</p>
+<h2>The return of A - amounts leak.</h2>
+<p>As mentioned, our adversary A has a very important problem - he may not
+know that the above negotiation has happened, unlike a simple CoinJoin
+where the transactions are watermarked as such (and this is particularly
+true if Alice and Bob do <em>not</em> use equal-sized outputs). The boundary
+may be unclear to A.</p>
+<p>So, what strategy <em>can</em> A use to find the transaction graph/set? He can
+do <a href="https://en.wikipedia.org/wiki/Subset_sum_problem">subset
+sum</a>
+analysis.</p>
+<p>If Alice and Bob are just 'mixing' coins, so that they are paid out
+the same amount that they paid in, I'll assert that subset sum is
+likely to work. It's true that A's job is quite hard, since in
+general, he would have to do such subset-sum analysis on a huge array of
+different possible sets of (inputs, outputs) on chain; but nevertheless
+it's the kind of thing that can be done by a professional adversary,
+over time. The fact that subset sum analysis is theoretically
+exponential time and therefore not feasible for very large sets may not
+be relevant in practice.</p>
+<p>In our example above it may not be hard to identify the two inputs from
+Alice (1btc, 0.3btc) as corresponding to 3 outputs (0.8btc, 0.2btc,
+0.3btc), albeit that the latter two - 0.2, 0.3 were part of CoinJoins.
+Remember that this was a tradeoff - if we <em>didn't</em> make equal sized
+outputs, to improve deniability/hiding, we'd no longer have any
+ambiguity there.</p>
+<h2>Breaking subset-sum with Lightning</h2>
+<p><img alt="" src="../../../../../../20200603010653im_/https:/joinmarket.me/static/media/uploads/.thumbnails/amtdecorr2.png/amtdecorr2-711x392.png">{width="711"
+height="392"}</p>
+<p>Here's one way of addressing the fact that A can do subset-sum on such
+a privacy-enhancing CoinJoinXT instantiation. The PTG is unspecified but
+you can imagine it as something similar to the previous example.</p>
+<p>Marked in blue is what the adversary A doesn't know, even if he has
+identified the specific transaction/graph set (as we've said, that in
+itself is already hard). Subset-sum analysis won't work here to
+identify which output belongs to Alice and which to Bob; since 5.5 + 1.5
+!= 6.6, nor does 5.4 fit, nor does such an equation fit with Alice's
+input 5.8 on the right hand side of the equation.</p>
+<p>The trick is that the 1.5 output is actually a <strong>dual funded Lightning
+channel</strong> between Alice and Bob. The actual channel balance is shown in
+blue again because hidden from A: (0.3, 1.2). If the channel is then
+immediately closed we have fallen back to a case where subset sum works,
+as the reader can easily verify.</p>
+<p>But if, as is usually the intent, the channel gets used, the balance
+will shift over time, due to payments over HTLC hops to other
+participants in the Lightning network. This will mean that the final
+closing balance of the channel will be something else; for example,
+(0.1, 1.4), and then subset-sum will still not reveal which of the 2
+outputs (5.4, 5.5) belong to Alice or Bob.</p>
+<p>At a high level, you can understand this as a <strong>bleed-through and
+amplification of off-chain privacy to on-chain.</strong></p>
+<p>It's worth noting that you clearly get a significant part of this
+effect from just the dual-funded Lightning channel; if you consider
+change outputs in such a single funding transaction, you see the same
+effect:</p>
+<div class="highlight"><pre><span></span><span class="err">Alice</span>
+<span class="err">2.46</span>
+<span class="err">       -&gt; Lightning funding 0.1</span>
+<span class="err">       -&gt; Change 2.41</span>
+<span class="err">       -&gt; Change 2.37</span>
+<span class="err">2.42</span>
+<span class="err">Bob</span>
+</pre></div>
+
+
+<p>It's easy to see that there is no delinking effect on the change-outs
+<em>if</em> we know that the funding is equal on both sides. However, there's
+no need for that to be the case; if the initial channel balance is
+(Alice: 0.09, Bob: 0.01) then the change-outs are going to the opposite
+parties compared to if the channel funding is (Alice: 0.05, Bob: 0.05).
+So this concrete example should help you to understand a crucial aspect
+of this:</p>
+<ul>
+<li>Such a fungibility effect is only achieved if the difference between
+    the two parties' initial inputs is small enough compared to the
+    size of the dual-funded Lightning channel</li>
+<li>If the size of the inputs is very large compared to the Lightning
+    channel overall size, which currently at maximum is 2**24 satoshis
+    (about 0.16btc), then, in order to achieve this obfuscation effect,
+    we "converge" to the case of something like a 2-in and 2-out
+    equal-sized coinjoin. It's hard for 2 parties to arrange to have
+    inputs of equal sizes, and it somewhat loses the deniability feature
+    we were going for. (You can easily confirm for yourself that there
+    will be no ambiguity if Alice and Bob's inputs are of completely
+    different sizes).</li>
+</ul>
+<p>So how does the picture change if instead of just doing a single
+dual-funded Lightning channel, we include it as an output in a
+CoinJoinXT structure?</p>
+<p>The answer again is deniability. Any contiguous subset of the entire
+blockchain has the property of sum preservation, modulo fees: the input
+total is \~= the output total. So no particular contiguous subset on the
+blockchain flags itself as being such a CoinJoinXT structure - unless
+subset sum works for some N subsets (2, as in our examples, or higher).
+But with the dual funded Lightning output of the type shown here, at
+least for the 2 of 2 case, this doesn't work.</p>
+<h2>Remove all traces?</h2>
+<p>What's been described up to now doesn't quite achieve the desired goal
+of "deniability"; there are still what we might call "fingerprints"
+in such a CoinJoinXT structure:</p>
+<ul>
+<li>Timing correlation: if we don't use nLockTime on these
+    transactions, then one party might choose to broadcast them all at
+    once. This is at the least a big clue, although not unambiguous. To
+    avoid it, have the pre-signed transactions in the PTG all be given
+    specific timelocks.</li>
+<li>Shared control utxos. If we use 2 of 2, or N of N, multisig outputs,
+    of the current normal p2sh type, then they are observable as such,
+    and this could easily help A to find the "skeleton" of such a
+    CoinJoinXT structure. Of course, let's not forget that we can do
+    CoinJoinXT with various equal sized outputs too, mixing the
+    "intrinsic fungibility" and "deniability" approaches together,
+    as discussed, so it's not that CoinJoinXT with p2sh multisig
+    connecting utxos is useless. But we may want to focus on less
+    detectable forms, like Schnorr/MuSig based multisig with key
+    aggregation so that N of N is indistinguishable from 1 of 1, or the
+    new
+    <a href="https://eprint.iacr.org/2018/472">construction</a>
+    that allows an ECDSA pubkey to be effectively a 2 of 2 multisig.</li>
+</ul>
+<h2>Conclusion</h2>
+<p><strong>Proof of Concept</strong> - I put together a some very simple <a href="https://github.com/AdamISZ/CoinJoinXT-POC">PoC
+code</a>;
+it only covers something like the above first "Example" with 2
+parties. Going through such an exercise in practice at least allows one
+to see concretely that (a) the interaction between the parties is very
+minimal (sub-second) which is great of course, but it gets a little
+hairy when you think about how to set up a template of such a
+transaction chain that 2 parties can agree on using whatever utxos they
+have available as inputs. A substantial chunk of that PoC code was
+devoted to that - there is a general <code>Template</code> class for specifying a
+graph of transactions, with parametrized input/output sizes.</p>
+<p><strong>Practicality today</strong> - Although it can be done today (see previous),
+there are barriers to making this work well. Ideally we'd have Schnorr
+key aggregation for multisig, and support for dual funded Lightning
+channels for the amount decorrelation trick mentioned. Without either of
+those, such a transaction graph on the blockchain will be <em>somewhat</em>
+identifiable, but I still think there can be a lot of use doing it as an
+alternative to large sets of clearly identifiable CoinJoins.</p>
+<p><strong>Cost tradeoffs</strong> - left open here is the tradeoffs in terms of
+blockchain space usage for each "unit of fungibility", i.e. how much
+it costs to gain privacy/fungibility this way. I think it's almost
+impossible to come up with definitive mathematical models of such
+things, but my feeling is that, exactly to the extent any
+"deniability" is achieved, it's cost-effective, and to the extent
+it's not, it's not cost-effective.</p>
+<p><strong>Coordination model</strong> - Currently we have "in play" at least two
+models of coordination for CoinJoin - Joinmarket's market-based model,
+and the Chaumian server model currently championed by
+<a href="https://github.com/nopara73/ZeroLink">ZeroLink</a>.
+<strong>CoinJoinXT as an idea is orthogonal to the coordination mechanism</strong>.
+The only "non-orthogonal" aspect, perhaps, is that I think the
+CoinJoinXT approach may still be pretty useful with only 2 parties (or
+3), more so that CoinJoin with only 2/3.</p>
+<p>Finally, where should this fit in one's fungibility "toolchest"?
+Lightning is <em>hopefully</em> going to emerge as a principal way that people
+gain fungibility for their everyday payments. The area it can't help
+with now, and probably not in the future due to its properties, is with
+larger amounts of money. So you might naturally want to ensure that in,
+say, sending funds to an exchange, making a large-ish payment, or
+perhaps funding a channel, you don't reveal the size of your cold
+storage wallet. I would see the technique described on this blog post as
+fitting into that medium-large sized funds transfer situation. CoinJoin
+of the pure "intrinsic fungibility" type, done in repeated rounds or
+at least in very large anonymity sets, is the other alternative (and
+perhaps the best) for large sizes.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/pages/about-me.html"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/pages/main-page.html"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (5)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
