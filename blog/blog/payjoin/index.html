@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Payjoin — Joinmarket.me archive</title>
+	<meta name="description" content="Title: Payjoin; Date: 2018-09-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">Payjoin</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2018-09-15T00:00:00+02:00" itemprop="datePublished">Sat 15 September 2018</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/coinjoin.html" rel="tag">coinjoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>PayJoin</h3>
+<h2>PayJoin.</h2>
+<p>You haven't read any other blog posts here? No worries, here's what
+you need to know (<em>unless you're an expert, read them anyway...</em>):</p>
+<ul>
+<li>A utxo is an "unspent transaction output" - a Bitcoin transaction
+    creates one or more of these, and each contains a specific amount of
+    Bitcoin. Those outputs get "used up" in the transaction that
+    spends them (somewhat like physical coins, someone gives you them in
+    a payment to you, then you give them to someone else when you spend
+    them; bitcoins aren't coins, utxos are coins; only difference is
+    physical coins don't get destroyed in transactions).</li>
+<li>The fees you have to pay for a Bitcoin transaction depend on how
+    many bytes it takes up; this is *somewhat* dominated by how many
+    inputs you provide, although there are other factors.</li>
+<li>CoinJoin basically means - two or more people provide inputs (utxos)
+    to a transaction and co-sign without needing trust, because when
+    they sign that the output amounts and addresses are what they
+    expect. <strong>Note that CoinJoin requires interaction, almost always.</strong></li>
+<li>Traditional "equal-sized" CoinJoin means a bunch of people paying
+    <em>themselves</em> the same fixed amount in a single transaction
+    (according to the process just mentioned), with the intention that
+    nobody can tell which of the equal sized outputs belong to who
+    (basically!).</li>
+</ul>
+<h2>The drawbacks of CoinJoin as implemented</h2>
+<p>Current implementations of CoinJoin are of the "equal-sized" variety
+(see above). This requires coordination, but it's possible to get a
+decent number of people to come together and agree to do a CoinJoin of a
+certain fixed amount. The negative is that this kind of transaction is
+trivially distinguishable from an "ordinary" transaction, in
+particular a payment from one counterparty to another. Here's a typical
+Joinmarket CoinJoin (and other implementations are just as, or more,
+distinguishable):</p>
+<p><img alt="Equal-outs-coinjoin-example" src="/web/20200803124759im_/https://joinmarket.me/static/media/uploads/.thumbnails/screenshot_from_2019-01-18_15-00-33.png/screenshot_from_2019-01-18_15-00-33-807x433.png">{width="807"
+height="433"}</p>
+<p>The biggest flag of "this is CoinJoin" is exactly the multiple
+equal-value (0.18875417 here) outputs that are the core premise of the
+idea, that give the anonymity. Here, you get anonymity in an "anonymity
+set" of all participants of <em>this</em> transaction, first, but through
+repeated rounds, you <em>kind of</em> get a much bigger anonymity set,
+ultimately of all participants of that CoinJoin implementation in the
+absolute best scenario. But it's still only a small chunk of Bitcoin
+usage generally.</p>
+<p>And while this obviously gets better if more people use it, there is a
+limit to that thinking: because <strong>all participants are forced to use the
+same denomination for any single round</strong>, it isn't possible to fold in
+the payments you're doing using Bitcoin as a currency (don't laugh!)
+into these CoinJoin rounds (notice: this problem mostly disappears with
+blinded amounts).</p>
+<p>So a world where "basically everyone uses CoinJoin" is cool for
+privacy, but could end up pretty bad for scalability, because these
+transactions are <em>in addition to</em> the normal payments.</p>
+<p>Also, the fact that these transactions are trivially watermarked means
+that, if the blockchain analyst is not able to "crack" and unmix such
+transactions, he can at least isolate them in analysis. That's
+something; "these coins went from Exchange A to wallet B and then into
+this mixset" may be a somewhat negative result, but it's still a
+result. There are even noises made occasionally that coins might be
+blocked from being sent to certain exchange-type entities if they're
+seen to have come from a "mixer" (doesn't matter that CoinJoin is
+<em>trustless</em> mixing here; just that it's an activity specific for
+obfuscation).</p>
+<p>I don't mean to scaremonger - I have used such CoinJoin for years
+(measured in the thousands) and will continue to do so, and never had
+payments blocked because of it. But this is another angle that must be
+borne in mind.</p>
+<p>So let's say our primary goal is to minimize the negative privacy
+effects of blockchain analysis; can we do better? It's debatable, but
+we <em>do</em> have another angle of attack.</p>
+<h2>Hiding in a much bigger crowd ... ?</h2>
+<p>[One angle is to make your behaviour look more like other, non-coinjoin
+transactions]{style="text-decoration: underline;"}. (For the
+philosophically/abstract inclined people, <a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/the-steganographic-principle/">this post might be of
+interest</a>,
+but it sidetracks us here, so - later!). Let's think of the naive way
+to do that. Suppose just Alice and Bob make a 2 party CoinJoin:</p>
+<p><code>0.05 BTC ---&gt;|   0.05 BTC  3AliceSAddReSs</code></p>
+<p><code>0.05 BTC ---&gt;|   0.05 BTC  3BobSAddReSs</code></p>
+<p>This first attempt is a clear failure - it "looks like an ordinary
+payment" <em>only</em> in the sense that it has two outputs (one change, one
+payment). But the failure is not <em>just</em> the obvious, that the output
+amounts are equal and so "obviously CoinJoin". There's another aspect
+of that failure, illustrated here:</p>
+<p><code>0.01 BTC ---&gt;|   0.05 BTC  3AliceSAddReSs</code></p>
+<p><code>0.04 BTC ---&gt;|   0.06 BTC  3BobSAddReSs</code></p>
+<p><code>0.03 BTC ---&gt;|</code></p>
+<p><code>0.03 BTC ---&gt;|</code></p>
+<p>This at least is <em>more</em> plausible as a payment, but it shows the
+<strong>subset sum</strong> problem that I was describing in my <a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/coinjoinxt/">CoinJoinXT
+post</a>
+- and trying to solve with CoinJoinUnlimited (i.e. using a Lightning
+channel to break the subset sum problem and feed-back the LN privacy
+onto the main chain). While the blockchain analyst <em>could</em> interpret
+this as a payment, semi-reasonably, of 0.05 btc by one participant, he
+could also notice that there are two subsets of the inputs that add up
+to 0.05, 0.06. And also splitting the outputs doesn't fundamentally
+solve that problem, notice (they'd also have to split into subsets),
+and it would anyway break the idea of "looking like a normal payment"
+(one payment, one change):</p>
+<p><code>0.01 BTC ---&gt;|   0.011 BTC  3AliceSAddReSs</code></p>
+<p><code>0.04 BTC ---&gt;|   0.022 BTC  3BobSAddReSs</code></p>
+<p><code>0.03 BTC ---&gt;|   0.039 BTC  3Alice2</code></p>
+<p><code>0.03 BTC ---&gt;|   0.038 BTC  3Bob2</code></p>
+<p>After you think about this problem for a while you come to the
+conclusion - only if there's actually a transfer of coins from one
+party to the other is it solved. Hence
+<a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/coinjoinxt/">CoinJoinXT</a>.</p>
+<p>But also, hence <strong>PayJoin</strong> - why not actually do a CoinJoin [while you
+are making a payment?]{style="text-decoration: underline;"}</p>
+<p>[]{style="text-decoration: underline;"}</p>
+<h2>PayJoin advantages</h2>
+<p>I'm not sure who first thought of doing CoinJoins (see bullet point at
+start) of this particular flavour, but a <a href="https://blockstream.com/2018/08/08/improving-privacy-using-pay-to-endpoint/">blogpost from Matthew
+Haywood</a>
+last summer detailed an implementation approach which came out of a
+technical workshop in London shortly before, and a little later a
+<a href="https://github.com/bitcoin/bips/blob/master/bip-0079.mediawiki">BIP</a>
+was put out by Ryan Havar.</p>
+<p>The central idea is:</p>
+<ul>
+<li>Let Bob do a CoinJoin with his customer Alice - he'll provide at
+    least one utxo as input, and that/those utxos will be consumed,
+    meaning that in net, he will have no more utxos after the
+    transaction than before, and an obfuscation of ownership of the
+    inputs will have happened [without it looking different from an
+    ordinary payment.]{style="text-decoration: underline;"}</li>
+</ul>
+<p>Before we look in detail at the advantages, it's worth answering my
+earlier question ("Why not actually do a CoinJoin while you are making
+a payment?") in the negative: it's not easy to coordinate that. It
+means that either (a) all wallets support it and have a way for
+*anyone* to connect to *anyone* to negotiate this (2-party) CoinJoin
+or (b) it's only limited to peer to peer payments between owners of a
+specific wallet that has a method for them to communicate. So let's be
+clear: this is not going to suddently take over the world, but
+incremental increases in usage could be tremendously valuable (I'll
+explain that statement shortly; but you probably already get
+it).[]{style="text-decoration: underline;"}</p>
+<ul>
+<li><strong>Advantage 1: Hiding the payment amount</strong></li>
+</ul>
+<p>This is what will immediately stand out from looking at the idea. Bob
+"chips in" a utxo (or sometimes more than one). So the payment
+<em>output</em> will be more than the actual payment, and it will be profoundly
+unobvious what the true payment amount was. Here's an example:</p>
+<p><code>0.05 BTC ---&gt;|   0.04 BTC  3AliceSAddReSs</code></p>
+<p><code>0.09 BTC ---&gt;|   0.18 BTC  3BobSAddReSs</code></p>
+<p><code>0.08 BTC ---&gt;|</code></p>
+<p>Now, actually, Alice paid Bob 0.1 BTC using 0.09 and 0.05, getting back
+0.04 change. But what does a blockchain analyst think? His first
+interpretation will certainly be that there is a payment <em>either</em> of
+0.04 BTC or 0.18 BTC, by the owner of the wallet containing all the
+inputs. Now, it probably seems very unlikely that the <em>payment</em> was 0.04
+and the <em>change</em> 0.18. Why? Because, if the payment output were 0.04,
+why would you use all three of those utxos, and not just the first, say?
+(0.05). This line of reasoning we have called "UIH1" in the comments
+to <a href="https://gist.github.com/AdamISZ/4551b947789d3216bacfcb7af25e029e">this
+gist</a>
+(h/t Chris Belcher for the nomenclature - "unnecessary input
+heuristic") for the details. To be fair, this kind of deduction by a
+blockchain analyst is unreliable, as it depends on wallet selection
+algorithms; many are not nearly so simplistic that this deduction would
+be correct. But possibly combined with wallet fingerprinting and
+detailed knowledge of wallet selection algorithms, it's one very
+reasonable line of attack to finding the change output and hence the
+payment output.</p>
+<p>For those interested in the "weeds" I've reproduced the key points
+about this UIH1 and UIH2 (probably more important) including stats
+collected by LaurentMT of oxt.me, in an "Appendix" section at the end
+of this post.</p>
+<p>Anyway, what else <em>could</em> the payment amount be, in the transaction
+above? As well as 0.04 and 0.18, there is 0.09 and 0.01. Do you see the
+reasoning? <em>If</em> we assume that PayJoin is a possibility, then one party
+could be consuming 0.09 and 0.08 and getting back 0.01. And similarly
+for other contributions of inputs. In the simplest case, I would claim
+there are 4 potential payment amounts if there are only two inputs and
+we assume that one of the two is owned by the receiver. For the
+blockchain analyst, this is a huge mess.</p>
+<ul>
+<li><strong>Advantage 2 - breaking Heuristic 1</strong></li>
+</ul>
+<p>I discussed Heuristic 1 in the <a href="%22https://joinmarket.me/blog/blog/coinjoinxt/">CoinJoinXT
+post</a>. Simple
+description: people (analysts) assume that all the inputs to any
+particular transaction are owned by one wallet/owner; i.e. they assume
+coinjoin is not used, usually. Following the overall logic of our
+narrative here, it's obvious what the main point is with PayJoin - we
+break the heuristic <em>without flagging to the external observer that the
+breakage has occurred. </em>This is enormously important, even if the
+breakage of the assumption of common input ownership on its own seems
+rather trivial (especially if PayJoin is used by only few people), with
+only 2 counterparties in each transaction.</p>
+<ul>
+<li><strong>Advantage 3 - Utxo sanitization</strong></li>
+</ul>
+<p>This one might not occur to you immediately, at all, but is actually
+really nice. Consider the plight of the merchant who sells 1,000 widgest
+per day for Bitcoin. At the end of the day he has 1,000 utxos that he
+has to spend. Perhaps the next day he pays his supplier with 80% of the
+money; he'll have to construct a transaction (crudest scenario) with
+800 inputs. It's not just that that costs a lot in fees (it does!); we
+can't really directly solve that problem (well - use layer 2! - but
+that's another blog post); but we can solve something else about it -
+the privacy. The merchant immediately links <em>almost</em> <em>all</em> of his
+payments in the 800-input payout transaction - horrible!</p>
+<p>But PayJoin really helps this; each payment that comes in can consume
+the utxo of the last payment. Here are two fictitious widget payments in
+sequence to illustrate; Bob's utxos are bolded for clarity:</p>
+<p>[PayJoin 1 - Alice pays Bob 0.1 for a
+widget:]{style="text-decoration: underline;"}</p>
+<p><code>0.05 BTC ---&gt;|   0.04 BTC  3AliceSAddReSs</code></p>
+<p><code>0.09 BTC ---&gt;|   0.18 BTC  3BobSAddReSs</code></p>
+<p><code>0.08 BTC ---&gt;|</code></p>
+<p>(notice: Bob used up one utxo and created one utxo - no net change)</p>
+<p>[PayJoin2 - Carol pays Bob 0.05 for a discount
+widget:]{style="text-decoration: underline;"}</p>
+<p><code>0.01 BTC ---&gt;|   0.02 BTC  3CarolSAddReSs</code></p>
+<p><code>0.06 BTC ---&gt;|   0.23 BTC  3BobSAddReSs</code></p>
+<p><code>0.18 BTC ---&gt;|</code></p>
+<p>This would be a kind of snowball utxo in the naive interpretation, that
+gets bigger and bigger with each payment. In the fantasy case of every
+payment being PayJoin, the merchant has a particularly easy wallet to
+deal with - a wallet that only ever has 1 coin/utxo! (I know it's quite
+dubious to think that nobody could trace this sequence, there are other
+potential giveaways <em>in this case</em> than just Heuristic 1; but with
+Heuristic 1 gone, you have a lot more room to breathe, privacy-wise).</p>
+<p>It's worth mentioning though that the full snowball effect can damage
+the anonymity set: after several such transactions, Bob's utxo is
+starting to get big, and may dwarf other utxos used in the transaction.
+In this case, the transaction will violate "UIH2" (you may remember
+UIH1 - again, see the Appendix for more details on this) because a
+wallet <em>probably</em> wouldn't choose other utxos if it can fulfil the
+payment with only one. So this may create a dynamic where it's better
+to mix PayJoin with non-PayJoin payments.</p>
+<ul>
+<li><strong>Advantage 4 - hiding in (and being helpful to) the large crowd</strong></li>
+</ul>
+<p>"...but incremental increases in usage could be tremendously
+valuable..." - let's be explicit about that now. If you're even
+reasonably careful, these PayJoin transactions will be basically
+indistinguishable from ordinary payments (see earlier comments about
+UIH1 and UIH2 here, which don't contradict this statement). It's a
+good idea to use decide on a specific locktime and sequence value that
+fits in with commonly used wallets (transaction version 2 makes the most
+sense). Now, here's the cool thing: suppose a small-ish uptake of this
+was publically observed. Let's say 5% of payments used this method.
+<strong>The point is that nobody will know which 5% of payments are PayJoin</strong>.
+That is a great achievement (one that we're not yet ready to achieve
+for some other privacy techniques which use custom scripts, for example;
+that may happen after Schnorr/taproot but not yet), because <em>it means
+that all payments, including ones that don't use PayJoin, gain a
+privacy advantage!</em></p>
+<h2>Merchants? Automation?</h2>
+<p>The aforementioned
+<a href="https://github.com/bitcoin/bips/blob/master/bip-0079.mediawiki">BIP79</a>
+tries to address how this might work in a standardized protocol;
+there's probably still significant work to do before the becomes
+actualized. As it stands, it may be enough to have the following
+features:</p>
+<ul>
+<li>Some kind of "endpoint" (hence "pay to endpoint"/p2ep) that a
+    customer/payer can connect to encoded as some kind of URL. A Tor
+    hidden service would be ideal, in some cases. It could be encoded in
+    the payment request similar to BIP21 for example.</li>
+<li>Some safety measures on the server side (the merchant/receiver) to
+    make sure that an attacker doesn't use the service to connect,
+    request, and block: thus enumerating the server's (merchant's)
+    utxos. BIP79 has given one defensive measure against this that may
+    be sufficient, Haywood's blog post discussed some more advanced
+    ideas on that score.</li>
+<li>To state the obvious friction point - wallets would have to
+    implement such a thing, and it is not trivial compared to features
+    like RBF which are pure Bitcoin.</li>
+</ul>
+<h2>Who pays the fees?</h2>
+<p>The "snowball effect" described above, where the merchant always has
+one utxo, may lead you to think that we are saving a lot of fees (no 800
+input transactions). But not true except because of some second/third
+order effect: every payment to the merchant creates a utxo, and every
+one of those must be paid for in fees when consumed in some transaction.
+The effect here is to pay those fees slowly over time. And it's left
+open to the implementation how to distribute the bitcoin transaction
+fees of the CoinJoin. Most logically, each participant pays according to
+the amount of utxos they consume; I leave the question open here.</p>
+<h2>Implementation in practice</h2>
+<p>As far as I know as of this writing (mid-January 2019), there are two
+implementations of this idea in the wild. One is from Samourai Wallet,
+called
+<a href="https://samouraiwallet.com/stowaway">Stowaway</a>
+and the other is in
+<a href="https://github.com/Joinmarket-Org/joinmarket-clientserver/blob/master/docs/PAYJOIN.md">Joinmarket</a>
+as of version 0.5.2 (just released).</p>
+<p>I gave a demo of the latter in my last <a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/payjoin-basic-demo/">post on this
+blog</a>.</p>
+<p>In both cases this is intended for peers to pay each other, i.e. it's
+not something for large scale merchant automation (as per discussion in
+previous section).</p>
+<p>It requires communication between parties, as does any CoinJoin, except
+arguably
+<a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/snicker/">SNICKER</a>.</p>
+<p>The sender of the payment always sends a non-CoinJoin payment
+transaction to start with; it's a convenient/sane thing to do, because
+if connection problems occur, or software problems, the receiver can
+simply broadcast this "fallback" payment instead.</p>
+<p>In Joinmarket specifically, the implementation looks crudely like this:</p>
+<p><code>Sender            Receiver</code></p>
+<p><code>pubkey+versionrange --&gt;</code></p>
+<p><code>&lt;-- pubkey and version</code></p>
+<p><code>(ECDH e2e encryption set up)</code></p>
+<p><code>fallback tx ---&gt;</code></p>
+<p><code>&lt;--- PayJoin tx partial-signed</code></p>
+<p><code>co-signs and broadcasts</code></p>
+<p>Before starting that interchange of course, the receiver must "send"
+(somehow) the sender the payment amount and destination address, as well
+as (in Joinmarket) an ephemeral "nick" to communicate over the message
+channel. Details here of course will vary, but bear in mind that as any
+normal payment, there <em>must </em>be some mechanism for receiver to
+communicate payment information to the sender.</p>
+<h2>Conclusion</h2>
+<p>This is another nail in the coffin of blockchain analysis. If 5% of us
+do this, it will <em>not</em> be safe to assume that a totally ordinary looking
+payment is not a CoinJoin. That's basically it.</p>
+<p>----------------------------------------------------------------------</p>
+<h3>Appendix: Unnecessary Input Heuristics</h3>
+<p>The health warning to this reasoning has already been given: wallets
+will definitely not <em>always</em> respect the logic given below - I know of
+at least one such case (h/t David Harding). However I think it's worth
+paying attention to (this is slightly edited from the comment section of
+the referenced gist):</p>
+<p>[Definitions:]{style="text-decoration: underline;"}</p>
+<p>"UIH1" : one output is smaller than any input. This heuristically
+implies that <em>that</em> output is not a payment, and must therefore be a
+change output.</p>
+<p>"UIH2": one input is larger than any output. This heuristically
+implies that <em>no output</em> is a payment, or, to say it better, it implies
+that this is not a normal wallet-created payment, it's something
+strange/exotic.</p>
+<p>Note: UIH2 does not necessarily imply UIH1.</p>
+<p>~~ ~~</p>
+<p>So we just have to focus on UIH2. Avoiding UIH1 condition is nice,
+because it means that both outputs could be the payment; but in any case
+the normal blockchain analysis will be wrong about the payment amount.
+If we don't avoid the UIH2 condition, though, we lose the
+steganographic aspect which is at least 50% of the appeal of this
+technique.</p>
+<p>Joinmarket's current implementation does its best to avoid UIH2, but
+proceeds with PayJoin anyway even if it can't. The reasoning is
+partially as already discussed: not all wallets follow this logic; the
+other part of the reasoning is the actual data, as we see next:</p>
+<p>[Data collection from LaurentMT:]{style="text-decoration: underline;"}</p>
+<p>From block 552084 to block 552207 (One day: 01/12/2018)</p>
+<ul>
+<li>Txs with 2 outputs and more than 1 input = 35,349<ul>
+<li>UIH1 Txs (identifiable change output) = 19,020 (0.54)</li>
+<li>!UIH1 Txs = 16,203 (0.46)</li>
+<li>Ambiguous Txs = 126 (0.00)</li>
+</ul>
+</li>
+</ul>
+<p>From block 552322 to block 553207 (One week: 03/12/2018 - 09/12/2018)</p>
+<ul>
+<li>Txs with 2 outputs and more than 1 input = 268,092<ul>
+<li>UIH1 Txs (identifiable change output) = 145,264 (0.54)</li>
+<li>!UIH1 Txs = 121,820 (0.45)</li>
+<li>Ambiguous Txs = 1,008 (0.00)</li>
+</ul>
+</li>
+</ul>
+<p>And here are a few stats for UIH2:</p>
+<p>Stats from block 552084 to block 552207 (One day: 01/12/2018)</p>
+<ul>
+<li>Txs with 2 outputs and more than 1 input = 35,349<ul>
+<li>UIH2 Txs = 10,986 (0.31)</li>
+<li>!UIH2 Txs = 23,596 (0.67)</li>
+<li>Ambiguous Txs = 767 (0.02)</li>
+</ul>
+</li>
+</ul>
+<p>From block 552322 to block 553207 (One week: 03/12/2018 - 09/12/2018)</p>
+<ul>
+<li>Txs with 2 outputs and more than 1 input = 268,092<ul>
+<li>UIH2 Txs = 83,513 (0.31)</li>
+<li>!UIH2 Txs = 178,638 (0.67)</li>
+<li>Ambiguous Txs = 5,941 (0.02)</li>
+</ul>
+</li>
+</ul></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/pages/about-me.html"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/pages/main-page.html"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (6)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
