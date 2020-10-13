@@ -1109,7 +1109,7 @@ is easy", Fournier claims that ECDSA can be said to have this
 EUF-CMA[VES] security guarantee, which is intended to prove,
 basically, that &lt;strong&gt;the leak of the DH key is the only leak of information
 and that the scheme is secure against forgery&lt;/strong&gt;. I can't claim to be
-able to validate this; I can only say the argument appears plausible.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Ring Signatures</title><link href="https://joinmarket.me/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-03-15T00:00:00+01:00</published><updated>2019-03-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-03-15:/blog/blog/ring-signatures/</id><summary type="html">&lt;p&gt;construction of several different ring signatures relevant to Bitcoin.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
+able to validate this; I can only say the argument appears plausible.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Ring Signatures</title><link href="https://joinmarket.me/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-02-28T00:00:00+01:00</published><updated>2019-02-28T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-02-28:/blog/blog/ring-signatures/</id><summary type="html">&lt;p&gt;construction of several different ring signatures relevant to Bitcoin.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
 &lt;h2&gt;Outline:&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Basic goal of 1-of-\(N\) ring signatures&lt;/li&gt;
@@ -1902,7 +1902,698 @@ folded in with the above into a new design which seems to have two
 variants "RingCTFull" and "RingCTSimple". This can be investigate
 further in the documents on RingCT as referenced in the previously
 mentioned
-&lt;a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf"&gt;ZeroToMonero&lt;/a&gt;.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Payjoin</title><link href="https://joinmarket.me/blog/blog/payjoin/" rel="alternate"></link><published>2018-12-15T00:00:00+01:00</published><updated>2018-12-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-12-15:/blog/blog/payjoin/</id><summary type="html">&lt;p&gt;coinjoins in payments&lt;/p&gt;</summary><content type="html">&lt;h3&gt;PayJoin&lt;/h3&gt;
+&lt;a href="https://ww.getmonero.org/library/Zero-to-Monero-1-0-0.pdf"&gt;ZeroToMonero&lt;/a&gt;.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Liars, cheats, scammers and the Schnorr signature</title><link href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/" rel="alternate"></link><published>2019-02-01T00:00:00+01:00</published><updated>2019-02-01T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-02-01:/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/</id><summary type="html">&lt;p&gt;security arguments for Schnorr&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Liars, cheats, scammers and the Schnorr signature&lt;/h3&gt;
+&lt;p&gt;How sure are &lt;em&gt;you&lt;/em&gt; that the cryptography underlying Bitcoin is secure?
+With regard to one future development of Bitcoin's crypto, in
+discussions in public fora, I have more than once confidently asserted
+"well, but the Schnorr signature has a security reduction to ECDLP".
+Three comments on that before we begin:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;If you don't know what "reduction" means here, fear not, we will
+    get deeply into this here.&lt;/li&gt;
+&lt;li&gt;Apart from simply &lt;em&gt;hearing&lt;/em&gt; this and repeating it, I was mostly
+    basing this on a loose understanding that "it's kinda related to
+    the soundness proof of a sigma protocol" which I discussed in my
+    &lt;a href="https://github.com/AdamISZ/from0k2bp"&gt;ZK2Bulletproofs&lt;/a&gt;
+    paper, which is true -  but there's a lot more involved.&lt;/li&gt;
+&lt;li&gt;The assertion is true, but there are caveats, as we will see. And
+    Schnorr is different from ECDSA in this regard, as we'll also see,
+    at the end.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;But why write this out in detail? It actually came sort of out of left
+field. Ruben Somsen was asking on slack about some aspect of Monero, I
+forget, but it prompted me to take another look at those and other ring
+signatures, and I realised that attempting to understand the
+&lt;strong&gt;security&lt;/strong&gt; of those more complex constructions is a non-starter unless
+you &lt;strong&gt;really understand why we can say "Schnorr is secure" in the
+first place&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3&gt;Liars and cheats&lt;/h3&gt;
+&lt;p&gt;The world of "security proofs" in cryptography appears to be a set of
+complex stories about liars - basically made up magic beans algorithms
+that &lt;em&gt;pretend&lt;/em&gt; to solve things that nobody &lt;em&gt;actually&lt;/em&gt; knows how to
+solve, or someone placing you in a room and resetting your clock
+periodically and pretending today is yesterday - and cheats, like
+"let's pretend the output of the hash function is \(x\), because it
+suits my agenda for it to be \(x\)" (at least in this case the lying
+is consistent - the liar doesn't change his mind about \(x\); that's
+something!).&lt;/p&gt;
+&lt;p&gt;I hope that sounds crazy, it mostly really is :)&lt;/p&gt;
+&lt;p&gt;(&lt;em&gt;Concepts I am alluding to include: the random oracle, a ZKP simulator,
+extractor/"forking", an "adversary" etc. etc.&lt;/em&gt;)&lt;/p&gt;
+&lt;h2&gt;Preamble: the reluctant Satoshi scammer&lt;/h2&gt;
+&lt;p&gt;The material of this blog post is pretty abstract, so I decided to spice
+it up by framing it as some kind of sci-fi :)&lt;/p&gt;
+&lt;p&gt;&lt;img alt="" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/cube-250082_6402.png"&gt;{width="174"
+height="174"}&lt;/p&gt;
+&lt;p&gt;Imagine you have a mysterious small black cube which you were given by
+an alien that has two slots you can plug into to feed it input data and
+another to get output data, but you absolutely can't open it (so like
+an Apple device, but more interoperable), and it does one thing only,
+but that thing is astonishing: if you feed it a message and a &lt;strong&gt;public&lt;/strong&gt;
+key in its input slot, then it'll &lt;em&gt;sometimes&lt;/em&gt; spit out a valid Schnorr
+signature on that message.&lt;/p&gt;
+&lt;p&gt;Well in 2019 this is basically useless, but after considerable
+campaigning (mainly by you, for some reason!), Schnorr is included into
+Bitcoin in late 2020. Delighted, you start trying to steal money but it
+proves to be annoying.&lt;/p&gt;
+&lt;p&gt;First, you have to know the public key, so the address must be reused or
+something similar. Secondly (and this isn't a problem, but is weird and
+will become relevant later): the second input slot is needed to pass the
+values of the hash function sha2 (or whatever is the right one for our
+signature scheme) into the black box for any data it needs to hash. Next
+problem: it turns out that the device only works if you feed it a few
+&lt;em&gt;other&lt;/em&gt; signatures of other messages on the same public key, first.
+Generally speaking, you don't have that. Lastly, it doesn't &lt;em&gt;always&lt;/em&gt;
+work for any message you feed into it (you want to feed in 'messages'
+which are transactions paying you money), only sometimes.&lt;/p&gt;
+&lt;p&gt;With all these caveats and limitations, you fail to steal any money at
+all, dammit!&lt;/p&gt;
+&lt;p&gt;Is there anything else we can try? How about we pretend to be someone
+else? Like Satoshi? Hmm ...&lt;/p&gt;
+&lt;p&gt;For argument's sake, we'll assume that people use the Schnorr Identity
+Protocol (henceforth SIDP), which can be thought of as "Schnorr
+signature without the message, but with an interactive challenge".
+We'll get into the technicals below, for now note that a signature
+doesn't prove anything about identity (because it can be passed
+around), you need an interactive challenge, a bit like saying "yes,
+give me a signature, but *I* choose what you sign".&lt;/p&gt;
+&lt;p&gt;So to get people to believe I'm Satoshi (and thus scam them into
+investing in me perhaps? Hmm sounds familiar ...) I'm going to somehow
+use this black box thing to successfully complete a run of SIDP. But as
+noted it's unreliable; I'll need a bunch of previous signatures
+(let's pretend that I get that somehow), but I *also* know this thing
+doesn't work reliably for every message, so the best I can do is
+probably to try to &lt;strong&gt;scam 1000&lt;/strong&gt; &lt;strong&gt;people simultaneously&lt;/strong&gt;. That way
+they might reasonably believe that their successful run represents
+proof; after all it's supposed to be &lt;em&gt;impossible&lt;/em&gt; to create this kind
+of proof without having the private key - that's the entire idea of it!
+(the fact that it failed for other people could be just a rumour, after
+all!)&lt;/p&gt;
+&lt;p&gt;So it's all a bit contrived, but weirder scams have paid off - and they
+didn't even use literally alien technology!&lt;/p&gt;
+&lt;p&gt;So, we'll need to read the input to our hash function slot from the
+magic box; it's always of the form:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;message || R-value&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;... details to follow, but basically \(R\) is the starting value in
+the SIDP, so we pass it to our skeptical challenger(s). They respond
+with \(e\), intended to be completely random to make our job of
+proving ID as hard as possible, then &lt;strong&gt;we trick our black box&lt;/strong&gt; - we
+don't return SHA2(\(m||R\)) but instead we return \(e\). More on
+this later, see "random oracle model" in the below. Our magic box
+outputs, if successful, \(R, s\) where \(s\) is a new random-looking
+value. The challenger will be amazed to see that:&lt;/p&gt;
+&lt;p&gt;\(sG = R + eP_{satoshi}\)&lt;/p&gt;
+&lt;p&gt;is true!! And the millions roll in.&lt;/p&gt;
+&lt;p&gt;If you didn't get in detail how that scam operated, don't worry,
+we're going to unpack it, since it's the heart of our technical story
+below. The crazy fact is that &lt;strong&gt;our belief that signatures like the
+Schnorr signature (and ECDSA is a cousin of it) is mostly reliant on
+basically the argument above.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;But 'mostly' is an important word there: what we actually do, to make
+the argument that it's secure, is stack that argument on top of at
+least 2 other arguments of a similar nature (using one algorithm as a
+kind of 'magic black box' and feeding it as input to a different
+algorithm) and to relate the digital signature's security to the
+security of something else which ... we &lt;em&gt;think&lt;/em&gt; is secure, but don't
+have absolute proof.&lt;/p&gt;
+&lt;p&gt;Yeah, really.&lt;/p&gt;
+&lt;p&gt;We'll see that our silly sci-fi story has &lt;em&gt;some&lt;/em&gt; practical reality to
+it - it really &lt;em&gt;is&lt;/em&gt; true that to impersonate is a bit more practically
+feasible than to extract private keys, and we can even quantify this
+statement, somewhat.&lt;/p&gt;
+&lt;p&gt;But not the magic cube part. That part was not real at all, sorry.&lt;/p&gt;
+&lt;h2&gt;Schnorr ID Protocol and signature overview&lt;/h2&gt;
+&lt;p&gt;I have explained SIDP with reference to core concepts of Sigma Protocols
+and Zero Knowledge Proofs of Knowledge in Section 3.2
+&lt;a href="https://github.com/AdamISZ/from0k2bp"&gt;here&lt;/a&gt;
+. A more thorough explanation can be found in lots of places, e.g.
+Section 19.1 of &lt;a href="https://crypto.stanford.edu/~dabo/cryptobook/"&gt;Boneh and
+Shoup&lt;/a&gt;.
+Reviewing the basic idea, cribbing from my own doc:&lt;/p&gt;
+&lt;p&gt;Prover \(\mathbf{P}\) starts with a public key \(P\) and a
+corresponding private key \(x\) s.t. \(P = xG\).\
+\(\mathbf{P}\) wishes to prove in zero knowledge, to verifier
+\(\mathbf{V}\), that he knows \(x\).\
+\(\mathbf{P}\) → \(\mathbf{V}\): \(R\) (a new random curve
+point, but \(\mathbf{P}\) knows \(k\) s.t. \(R = kG\))\
+\(\mathbf{V}\) → \(\mathbf{P}\): \(e\) (a random scalar)\
+\(\mathbf{P}\) → \(\mathbf{V}\): \(s\) (which \(\mathbf{P}\)
+calculated from the equation \(s = k + ex\))\
+Note: the transcript of the conversation would here be: \((R, e,
+s)\).\
+Verification works fairly trivially: verifier checks sG
+\(\stackrel{?}{=} R+eP\). See previously mentioned doc for details on
+why this is supposedly &lt;em&gt;zero knowledge&lt;/em&gt;, that is to say, the verifier
+doesn't learn anything about the private key from the procedure.&lt;/p&gt;
+&lt;p&gt;As to why it's sound - why does it really prove that the Prover knows
+\(x\), see the same doc, but in brief: if we can convince the prover
+to re-run the third step with a modified second step (but the same first
+step!), then he'll be producing a second signature \(s'\) on a
+second random \(e'\), but with the same \(k\) and \(R\), thus:&lt;/p&gt;
+&lt;p&gt;\(x = \frac{s-s'}{e-e'}\)&lt;/p&gt;
+&lt;p&gt;So we say it's "sound" in the specific sense that only a
+knower-of-the-secret-key can complete the protocol. But more on this
+shortly!&lt;/p&gt;
+&lt;p&gt;What about the famous "Schnorr signature"? It's just an
+noninteractive version of the above. There is btw a brief summary in
+&lt;a href="https://web.archive.org/web/20200428212652/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/"&gt;this&lt;/a&gt;
+earlier blog post, also. Basically replace \(e\) with a hash (we'll
+call our hash function \(H\)) of the commitment value \(R\) and the
+message we want to sign \(m\):&lt;/p&gt;
+&lt;p&gt;\(e = H(m||R)\)&lt;/p&gt;
+&lt;p&gt;; as mentioned in the just-linked blog post, it's also possible to add
+other stuff to the hash, but these two elements at least are necessary
+to make a sound signature.&lt;/p&gt;
+&lt;p&gt;As was noted in the 80s by &lt;a href="https://link.springer.com/content/pdf/10.1007%2F3-540-47721-7_12.pdf"&gt;Fiat and
+Shamir&lt;/a&gt;,
+this transformation is generic to any zero-knowledge identification
+protocol of the "three pass" or sigma protocol type - just use a hash
+function to replace the challenge with H(message, commitment) to create
+the new signature scheme.&lt;/p&gt;
+&lt;p&gt;Now, if we want to discuss security, we first have to decide what that
+even means, for a signature scheme. Since we're coming at things from a
+Bitcoin angle, we're naturally focused on preventing two things:
+forgery and key disclosure. But really it's the same for any usage of
+signatures. Theorists class security into at least three types (usually
+more, these are the most elementary classifications):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Total break&lt;/li&gt;
+&lt;li&gt;Universal forgery&lt;/li&gt;
+&lt;li&gt;Existential forgery&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;(Interesting historical note: this taxonomy is due to Goldwasser, Micali
+and Rackoff - the same authors who introduced the revolutionary notion
+of a "Zero Knowledge Proof" in the 1980s.)&lt;/p&gt;
+&lt;p&gt;Total break means key disclosure. To give a silly example: if \(k=0\)
+in the above, then \(s = ex\) and, on receipt of \(s\), the verifier
+could simply multiply it by the modular inverse of \(e\) to extract
+the private key \(x\). A properly random \(k\) value, or 'nonce',
+as explained ad nauseam elsewhere, is critical to the security. Since
+this is the worst possible security failure, being secure against it is
+considered the weakest notion of "security" (note this kind of
+"reverse" reasoning, it is very common and important in this field).&lt;/p&gt;
+&lt;p&gt;The next weakest notion of security would be security against universal
+forgery - the forger should not be able to generate a signature on any
+message they are given. We won't mention this too much; we will focus
+on the next, stronger notion of "security":&lt;/p&gt;
+&lt;p&gt;"Security against existential forgery under adaptive chosen message
+attack", often shortened to EUF-CMA for sanity (the 'adaptive(ly)'
+sometimes seems to be dropped, i.e. understood), is clearly the
+strongest notion out of these three, and papers on this topic generally
+focus on proving this. "Chosen message" here refers to the idea that
+the attacker even gets to choose &lt;em&gt;what&lt;/em&gt; message he will generate a
+verifying forgery for; with the trivial restriction that it can't be a
+message that the genuine signer has already signed.&lt;/p&gt;
+&lt;p&gt;(A minor point: you can also make this definition more precise with
+SUF-CMA (S = "strongly"), where you insist that the finally produced
+signature by the attacker is not on the same message as one of the
+pre-existing signatures. The famous problem of &lt;strong&gt;signature
+malleability&lt;/strong&gt; experienced in ECDSA/Bitcoin relates to this, as noted by
+Matt Green
+&lt;a href="https://blog.cryptographyengineering.com/euf-cma-and-suf-cma/"&gt;here&lt;/a&gt;.)&lt;/p&gt;
+&lt;p&gt;I believe there are even stronger notions (e.g. involving active
+attacks) but I haven't studied this.&lt;/p&gt;
+&lt;p&gt;In the next, main section of this post, I want to outline how
+cryptographers try to argue that both the SIDP and the Schnorr signature
+are secure (in the latter case, with that strongest notion of security).&lt;/p&gt;
+&lt;h2&gt;Why the Schnorr signature is secure&lt;/h2&gt;
+&lt;h3&gt;Why the SIDP is secure&lt;/h3&gt;
+&lt;p&gt;Here, almost by definition, we can see that only the notion of "total
+break" makes sense: there is no message, just an assertion of key
+ownership. In the context of SIDP this is sometimes called the
+"impersonation attack" for obvious reasons - see our reluctant
+scammer.&lt;/p&gt;
+&lt;p&gt;The justification of this is somehow elegantly and intriguingly short:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The SIDP is secure against impersonation = The SIDP is &lt;em&gt;sound&lt;/em&gt; as a
+ZKPOK.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;You can see that these are just two ways of saying the same thing. But
+what's the justification that either of them are true? Intuitively the
+soundness proof tries to isolate the Prover as a machine/algorithm and
+screw around with its sequencing, in an attempt to force it to spit out
+the secret that we believe it possesses. If we hypothesise an adversary
+\(\mathbb{A}\) who &lt;em&gt;doesn't&lt;/em&gt; possess the private key to begin with,
+or more specifically, one that can pass the test of knowing the key for
+any public key we choose, we can argue that there's only one
+circumstance in which that's possible: &lt;strong&gt;if \(\mathbb{A}\) can solve
+the general Elliptic Curve Discrete Logarithm Problem(ECDLP) on our
+curve.&lt;/strong&gt; That's intuitively &lt;em&gt;very&lt;/em&gt; plausible, but can we prove it?&lt;/p&gt;
+&lt;h3&gt;Reduction&lt;/h3&gt;
+&lt;p&gt;(One of a billion variants on the web, taken from
+&lt;a href="https://jcdverha.home.xs4all.nl/scijokes/6_2.html"&gt;here&lt;/a&gt;
+:))&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;``` {.joke}
+A mathematician and a physicist were asked the following question:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;    Suppose you walked by a burning house and saw a hydrant and&lt;/span&gt;
+&lt;span class="err"&gt;    a hose not connected to the hydrant.  What would you do?&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;P: I would attach the hose to the hydrant, turn on the water, and put out
+   the fire.&lt;/p&gt;
+&lt;p&gt;M: I would attach the hose to the hydrant, turn on the water, and put out
+   the fire.&lt;/p&gt;
+&lt;p&gt;Then they were asked this question:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;    Suppose you walked by a house and saw a hose connected to&lt;/span&gt;
+&lt;span class="err"&gt;    a hydrant.  What would you do?&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;P: I would keep walking, as there is no problem to solve.&lt;/p&gt;
+&lt;p&gt;M: I would disconnect the hose from the hydrant and set the house on fire,
+   reducing the problem to a previously solved form.
+```&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The general paradigm here is:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A protocol X is "reducible to" a hardness assumption Y if a
+hypothetical adversary \(\mathbb{A}\) who can break X can also
+violate Y.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;In the concrete case of X = SIDP and Y = ECDLP we have nothing to do,
+since we've already done it. SIDP is intrinsically a test that's
+relying on ECDLP; if you can successfully impersonate (i.e. break SIDP)
+on any given public key \(P\) then an "Extractor" which we will now
+call a &lt;strong&gt;wrapper&lt;/strong&gt;, acting to control the environment of
+\(\mathbb{A}\) and running two executions of the second half of the
+transcript, as already described above, will be able to extract the
+private key/discrete log corresponding to \(P\). So we can think of
+that Extractor itself as a machine/algorithm which spits out the \(x\)
+after being fed in the \(P\), in the simple case where our
+hypothetical adversary \(\mathbb{A}\) is 100% reliable. In this
+specific sense:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;SIDP is reducible to ECDLP&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;However, in the real world of cryptographic research, such an analysis
+is woefully inadequate; because to begin with ECDLP being "hard" is a
+computational statement: if the group of points on the curve is only of
+order 101, it is totally useless since it's easy to compute all
+discrete logs by brute force. So, if ECDLP is "hard" on a group of
+size \(2\^k\), let's say its hardness is measured as the probability
+of successfully cracking by guessing, i.e. \(2\^{-k}\) (here
+&lt;strong&gt;deliberately avoiding&lt;/strong&gt; the real measure based on smarter than pure
+guesses, because it's detail that doesn't affect the rest). Suppose
+\(\mathbb{A}\) has a probability of success \(\epsilon\); what
+probability of success does that imply in solving ECDLP, in our
+"wrapper" model? Is it \(\epsilon\)?&lt;/p&gt;
+&lt;p&gt;No; remember the wrapper had to actually extract &lt;strong&gt;two&lt;/strong&gt; successful
+impersonations in the form of valid responses \(s\) to challenge
+values \(e\). We can say that the wrapper &lt;strong&gt;forks&lt;/strong&gt; \(\mathbb{A}\):&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Fork your sigma protocol if you want
+fork" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"&gt;{width="659"
+height="466"}&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Fork your sigma protocol if you want fork&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Crudely, the success probability is \(\epsilon\^2\); both of those
+impersonations have to be successful, so we multiply the probabilities.
+(More exact: by a subtle argument we can see that the size of the
+challenge space being reduced by 1 for the second run of the protocol
+implies that the probability of success in that second run is reduced,
+and the correct formula is \(\epsilon\^2 - \frac{\epsilon}{n}\),
+where \(n\) is the size of the hash function output space; obviously
+this doesn't matter too much).&lt;/p&gt;
+&lt;p&gt;How does this factor into a real world decision? We have to go back to
+the aforementioned "reverse thinking". The reasoning is something
+like:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;We believe ECDLP is hard for our group, let's say we think you
+    can't do better than p = \(p\) (I'll ignore running time and
+    just use probability of success as a measure, for simplicity).&lt;/li&gt;
+&lt;li&gt;The above reduction implies that &lt;em&gt;if&lt;/em&gt; we can break SIDP with prob
+    \(\epsilon\), we can also break ECDLP with prob \(\simeq
+    \epsilon\^2\).&lt;/li&gt;
+&lt;li&gt;This reduction is thus &lt;strong&gt;not tight&lt;/strong&gt; - if it's really the case that
+    "the way to break SIDP is only to break ECDLP" then a certain
+    hardness \(p\) only implies a hardness \(\sqrt{p}\) for SIDP,
+    which we may not consider sufficiently improbable (remember that if
+    \(p=2\^{-128}\), it means halving the number of bits: \(\sqrt{p}
+    =2\^{-64}\)). See
+    &lt;a href="https://crypto.stackexchange.com/questions/14439/proofs-by-reduction-and-times-of-adversaries"&gt;here&lt;/a&gt;
+    for a nice summary on "non-tight reductions".&lt;/li&gt;
+&lt;li&gt;And &lt;em&gt;that&lt;/em&gt; implies that if I want 128 bit security for my SIDP, I
+    need to use 256 bits for my ECDLP (so my EC group, say). This is all
+    handwavy but you get the pattern: these arguments are central to
+    deciding what security parameter is used for the underlying hardness
+    problem (here ECDLP) when it's applied in practice to a specific
+    protocol (here SIDP).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I started this subsection on "reductions" with a lame math joke; but I
+hope you can see how delicate this all is ... we start with something
+we believe to be hard, but then "solve" it with a purely hypothetical
+other thing (here \(\mathbb{A}\) ), and from this we imply a two-way
+connection (I don't say &lt;em&gt;equivalence&lt;/em&gt;; it's not quite that) that we
+use to make concrete decisions about security. Koblitz (he of the 'k'
+in secp256k1) had some interesting thoughts about 'reductionist'
+security arguments in Section 2.2 and elsewhere in
+&lt;a href="https://cr.yp.to/bib/2004/koblitz.pdf"&gt;this&lt;/a&gt;
+paper. More from that later.&lt;/p&gt;
+&lt;p&gt;So we have sketched out how to think about "proving our particular SIDP
+instance is/isn't secure based on the intractability of ECDLP in the
+underlying group"; but that's only 2 stacks in our jenga tower; we
+need MOAR!&lt;/p&gt;
+&lt;h2&gt;From SIDP to Schnorr signature&lt;/h2&gt;
+&lt;p&gt;So putting together a couple of ideas from previous sections, I hope it
+makes sense to you now that we want to prove that:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;"the (EC) Schnorr signature has existential unforgeability against
+chosen message attack (EUFCMA) &lt;strong&gt;if&lt;/strong&gt; the Schnorr Identity Protocol is
+secure against impersonation attacks."&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;with the understanding that, if we succeed in doing so, we have proven
+also:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;"the (EC) Schnorr signature has existential unforgeability against
+chosen message attack (EUFCMA) &lt;strong&gt;if&lt;/strong&gt; the Elliptic Curve discrete
+logarithm problem is hard in our chosen EC group."&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;with the substantial caveat, as per the previous section, that the
+reduction involved in making this statement is not tight.&lt;/p&gt;
+&lt;p&gt;(there is another caveat though - see the next subsection, &lt;em&gt;The Random
+Oracle Model&lt;/em&gt;).&lt;/p&gt;
+&lt;p&gt;This second (third?) phase is much less obvious and indeed it can be
+approached in more than one way.
+&lt;a href="https://crypto.stanford.edu/~dabo/cryptobook/"&gt;Boneh-Shoup&lt;/a&gt;
+deals with it in a lot more detail; I'll use this as an outline but
+dumb it down a fair bit. There is a simpler description
+&lt;a href="http://web.stanford.edu/class/cs259c/lectures/schnorr.pdf"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The "CMA" part of "EUFCMA" implies that our adversary
+\(\mathbb{A}\), who we are now going to posit has the magical ability
+to forge signatures (so it's the black cube of our preamble), should be
+able to request signatures on an arbitrarily chosen set of messages
+\(m_i\), with \(i\) running from 1 to some defined number \(S\).
+But we must also allow him to make queries to the hash function, which
+we idealise as a machine called a "random oracle". Brief notes on that
+before continuing:&lt;/p&gt;
+&lt;h3&gt;Aside: The Random Oracle Model&lt;/h3&gt;
+&lt;p&gt;Briefly described
+&lt;a href="https://en.wikipedia.org/wiki/Random_oracle"&gt;here&lt;/a&gt;
+. It's a simple but powerful idea: we basically idealise how we want a
+cryptographic hash function \(f\) to behave. We imagine an output
+space for \(f\) of size \(C\). For any given input \(x\) from a
+predefined input space of one or more inputs, we will get a
+deterministic output \(y\), but it should be unpredictable, so we
+imagine that the function is &lt;em&gt;randomly&lt;/em&gt; deterministic. Not a
+contradiction - the idea is only that there is no &lt;strong&gt;public&lt;/strong&gt; law or
+structure that allows the prediction of the output without actually
+passing it through the function \(f\). The randomness should be
+uniform.&lt;/p&gt;
+&lt;p&gt;In using this in a security proof, we encounter only one problem: we
+will usually want to model \(f\) by drawing its output \(y\) from a
+uniformly random distribution (you'll see lines like \(y
+\stackrel{\$}{\leftarrow} \mathbb{Z}_N\) in papers, indicating
+\(y\) is set randomly). But in doing this, we have set the value of
+the output for that input \(x\) permanently, so if we call \(f\)
+again on the same \(x\), whether by design or accident, we &lt;em&gt;must&lt;/em&gt;
+again return the same "random" \(y\).&lt;/p&gt;
+&lt;p&gt;We also find sometimes that in the nature of the security game we are
+playing, one "wrapper" algorithm wants to "cheat" another, wrapped
+algorithm, by using some hidden logic to decide the "random" \(y\)
+at a particular \(x\). This &lt;em&gt;can&lt;/em&gt; be fine, because to the "inner"
+algorithm it can look entirely random. In this case we sometimes say we
+are "&lt;strong&gt;patching the value of the RO at \(x\) to \(y\)"&lt;/strong&gt; to
+indicate that this artificial event has occurred; as already mentioned,
+it's essential to remember this output and respond with it again, if a
+query at \(x\) is repeated.&lt;/p&gt;
+&lt;p&gt;Finally, this "perfectly random" behaviour is very idealised. Not all
+cryptographic protocols involving hash functions require this behaviour,
+but those that do are said to be "secure in the random oracle model
+(ROM)" or similar.&lt;/p&gt;
+&lt;h3&gt;Wrapping A with B&lt;/h3&gt;
+&lt;p&gt;&lt;img alt="B tries to win the impersonation game against C, by wrapping the
+signature forger
+A" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"&gt;{width="584"
+height="413"}&lt;/p&gt;
+&lt;p&gt;So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
+And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
+"game" against a challenger \(\mathbb{C}\) .&lt;/p&gt;
+&lt;p&gt;Now \(\mathbb{A}\) is allowed \(S\) signing queries; given his
+messages \(m_i\), we can use \(S\) eavesdropped conversations \(R,
+e, s\) from the actual signer (or equivalently, just forge transcripts
+- see "zero knowledgeness" of the Schnorr signature), and for each,
+\(\mathbb{B}\) can patch up the RO to make these transcripts fit
+\(\mathbb{A}\)'s requested messages; just do
+\(H(m_i||R_i)=e_i\). Notice that this part of the process represents
+\(S\) queries to the random oracle.&lt;/p&gt;
+&lt;p&gt;Observe that \(\mathbb{B}\)  is our real "attacker" here: he's the
+one trying to fool/attack \(\mathbb{C}\) 's identification
+algorithm; he's just using \(\mathbb{A}\) as a black box (or cube,
+as we say). We can say \(\mathbb{A}\) is a "subprotocol" used by
+\(\mathbb{B}\).&lt;/p&gt;
+&lt;p&gt;It's all getting a bit complicated, but by now you should probably have
+a vague intuition that this will work, although of course not reliably,
+and as a function of the probability of \(\mathbb{A}\) being able to
+forge signatures of course (we'll again call this \(\epsilon\)).&lt;/p&gt;
+&lt;h3&gt;Toy version: \(\epsilon = 1\)&lt;/h3&gt;
+&lt;p&gt;To aid understanding, imagine the simplest possible case, when
+\(\mathbb{A}\) works flawlessly. The key \(P\) is given to him and
+he chooses a random \(k, R =kG\), and also chooses his message \(m\)
+as is his right in this scenario. The "CMA" part of EUF-CMA is
+irrelevant here, since \(\mathbb{A}\) can just forge immediately
+without signature queries:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;\(\mathbb{A}\) asks for the value of \(H(m||R)\), by passing
+    across \(m,R\) to \(\mathbb{B}\).&lt;/li&gt;
+&lt;li&gt;\(\mathbb{B}\) receives this query and passes \(R\) as the
+    first message in SIDP to \(\mathbb{C}\) .&lt;/li&gt;
+&lt;li&gt;\(\mathbb{C}\) responds with a completely random challenge value
+    \(e\).&lt;/li&gt;
+&lt;li&gt;\(\mathbb{B}\) "patches" the RO with \(e\) as the output for
+    input \(m, R\), and returns \(e\) to \(\mathbb{A}\) .&lt;/li&gt;
+&lt;li&gt;\(\mathbb{A}\) takes \(e\) as \(H(m||R)\), and provides a
+    valid \(s\) as signature.&lt;/li&gt;
+&lt;li&gt;\(\mathbb{B}\) passes \(s\) through to \(\mathbb{C}\) , who
+    verifies \(sG = R + eP\); identification passed.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;You can see that nothing here is new except the random oracle patching,
+which is trivially non-problematic as we make only one RO query, so
+there can't be a conflict. The probability of successful impersonation
+is 1.&lt;/p&gt;
+&lt;p&gt;Note that this implies the probability of successfully breaking ECDLP is
+also \(\simeq 1\). We just use a second-layer wrapper around
+\(\mathbb{B}\), and fork its execution after the provision of
+\(R\), providing two separate challenges and thus in each run getting
+two separate \(s\) values and solving for \(x\), the private
+key/discrete log as has already been explained.&lt;/p&gt;
+&lt;p&gt;Why \(\simeq\)? As noted on the SIDP to ECDLP reduction above, there
+is a tiny probability of a reused challenge value which must be factored
+out, but it's of course negligible in practice.&lt;/p&gt;
+&lt;p&gt;If we assert that the ECDLP is not trivially broken in reasonable time,
+we must also assert that such a powerful \(\mathbb{A}\) does not
+exist, given similarly limited time (well; &lt;em&gt;in the random oracle model&lt;/em&gt;,
+of course...).&lt;/p&gt;
+&lt;h3&gt;Full CMA case, \(\epsilon \&amp;lt;\&amp;lt; 1\)&lt;/h3&gt;
+&lt;p&gt;Now we give \(\mathbb{A}\) the opportunity to make \(S\) signing
+queries (as already mentioned, this is what we mean by an "adaptive
+chosen message attack"). The sequence of events will be a little longer
+than the previous subsection, but we must think it through to get a
+sense of the "tightness of the reduction" as already discussed.&lt;/p&gt;
+&lt;p&gt;The setup is largely as before: \(P\) is given. There will be \(h\)
+RO queries allowed (additional to the implicit ones in the signing
+queries).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;For any signing query from \(\mathbb{A}\), as we covered in
+    "Wrapping A with B", a valid response can be generated by patching
+    the RO (or using real transcripts). We'll have to account for the
+    possibility of a conflict between RO queries (addressed below), but
+    it's a minor detail.&lt;/li&gt;
+&lt;li&gt;Notice that as per the toy example previously, during
+    \(\mathbb{A}\)'s forgery process, his only interaction with his
+    wrapper \(\mathbb{B}\) is to request a hash value
+    \(H(m||R)\). So it's important to understand that, first
+    because of the probabilistic nature of the forgery (\(\epsilon
+    \&amp;lt;\&amp;lt; 1\)), and second because \(\mathbb{A}\)'s algorithm is
+    unknown, &lt;strong&gt;\(\mathbb{B}\) does not know which hash function query
+    (and therefore which RO response) will correspond to a successful
+    forgery.&lt;/strong&gt; This isn't just important to the logic of the game; as
+    we'll see, it's a critical limitation of the security result we
+    arrive at.&lt;/li&gt;
+&lt;li&gt;So to address the above, \(\mathbb{B}\) has to make a decision
+    upfront: which query should I use as the basis of my impersonation
+    attempt with \(\mathbb{C}\)? He chooses an index \(\omega\
+    \in 1..h\).&lt;/li&gt;
+&lt;li&gt;There will be a total of \(S+h+1\) queries to the random oracle,
+    at most (the +1 is a technical detail I'll ignore here). We
+    discussed in the first bullet point that if there is a repeated
+    \(m, R\) pair in one of the \(S\) signing queries, it causes a
+    "conflict" on the RO output. In the very most pessimistic
+    scenario, the probability of this causing our algorithm to fail can
+    be no more than \(\frac{S+h+1}{n}\) for each individual signing
+    query, and \(\frac{S(S+h+1)}{n}\) for all of them (as before we
+    use \(n\) for the size of the output space of the hash function).&lt;/li&gt;
+&lt;li&gt;So \(\mathbb{B}\) will &lt;strong&gt;fork&lt;/strong&gt; \(\mathbb{A}\)'s execution,
+    just as for the SIDP \(\rightarrow\) ECDLP reduction, &lt;strong&gt;at index
+    \(\omega\)&lt;/strong&gt;, without knowing in advance whether \(\omega\) is
+    indeed the index at the which the hash query corresponds to
+    \(\mathbb{A}\)'s final output forgery. There's a \(1/h\)
+    chance of this guess being correct. So the "partial success
+    probability", if you will, for this first phase, is
+    \(\epsilon/h\), rather than purely \(\epsilon\), as we had for
+    the SIDP case.&lt;/li&gt;
+&lt;li&gt;In order to extract \(x\), though, we need that the execution
+    &lt;em&gt;after&lt;/em&gt; the fork, with the new challenge value, at that same index
+    \(\omega\), also outputs a valid forgery. What's the probability
+    of both succeeding together? Intuitively it's of the order of
+    \(\epsilon\^2\) as for the SIDP case, but clearly the factor
+    \(1/h\), based on accounting for the guessing of the index
+    \(\omega\), complicates things, and it turns out that the
+    statistical argument is rather subtle; you apply what has been
+    called the &lt;strong&gt;Forking Lemma&lt;/strong&gt;, described on
+    &lt;a href="https://en.wikipedia.org/wiki/Forking_lemma"&gt;Wikipedia&lt;/a&gt;
+    and with the clearest statement and proof in
+    &lt;a href="https://cseweb.ucsd.edu/~mihir/papers/multisignatures-ccs.pdf"&gt;this&lt;/a&gt;
+    paper of Bellare-Neven '06. The formula for the success probability
+    of \(\mathbb{B}\) turns out to be:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;\(\epsilon_{\mathbb{B}} = \epsilon\left(\frac{\epsilon}{h} -
+\frac{1}{n}\right)\)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://crypto.stanford.edu/~dabo/cryptobook/"&gt;Boneh-Shoup&lt;/a&gt;
+    in Section 19.2 bundle this all together (with significantly more
+    rigorous arguments!) into a formula taking account of the Forking
+    Lemma, the accounting for collisions in the signing queries, to
+    produce the more detailed statement, where \(\epsilon\) on the
+    left here refers to the probability of success of \(\mathbb{B}\),
+    and "DLADv" on the right refers to the probability of success in
+    solving the discrete log. The square root term of course corresponds
+    to the "reduction" from Schnorr sig. to ECDLP being roughly a
+    square:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;\(\epsilon \le \frac{S(S+h+1)}{n} + \frac{h+1}{n} +
+\sqrt{(h+1)\ \times \ \textrm{DLAdv}}\)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;So in summary: we see that analysing the full CMA case in detail is
+pretty complicated, but by far the biggest take away should be: &lt;strong&gt;The
+security reduction for Schnorr sig to ECDLP has the same
+\(\epsilon\^2\) dependency, but is nevertheless far less tight,
+because the success probability is also reduced by a factor \(\simeq
+h\) due to having to guess which RO query corresponds to the successful
+forgery.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;(&lt;em&gt;Minor clarification: basically ignoring the first two terms on the RHS
+of the preceding as "minor corrections", you can see that DLAdv is
+very roughly \(\epsilon\^2/h\)&lt;/em&gt;).&lt;/p&gt;
+&lt;p&gt;The above bolded caveat is, arguably, very practically important, not
+just a matter of theory - because querying a hash function is something
+that it's very easy for an attacker to do. If the reduction loses
+\(h\) in tightness, and the attacker is allowed \(2\^{60}\) hash
+function queries (note - they can be offline), then we (crudely!) need
+60 bits more of security in our underlying cryptographic hardness
+problem (here ECDLP); at least, &lt;em&gt;if&lt;/em&gt; we are basing our security model on
+the above argument.&lt;/p&gt;
+&lt;p&gt;Although I haven't studied it, &lt;a href="https://eprint.iacr.org/2012/029"&gt;the 2012 paper by Yannick
+Seurin&lt;/a&gt;
+makes an argument (as far as I understand) that we cannot do better than
+this, in the random oracle model, i.e. the factor of \(h\) cannot be
+removed from this security reduction by some better kind of argument.&lt;/p&gt;
+&lt;h2&gt;Summary - is Schnorr secure?&lt;/h2&gt;
+&lt;p&gt;For all that this technical discussion has exposed the non-trivial guts
+of this machine, it's still true that the argument provides some pretty
+nice guarantees. We can say something like "Schnorr is secure if:"&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The hash function behaves to all intents and purposes like an ideal
+    random oracle as discussed&lt;/li&gt;
+&lt;li&gt;The ECDLP on our chosen curve (secp256k1 in Bitcoin) is hard to the
+    extent we reasonably expect, given the size of the curve and any
+    other features it has (in secp256k1, we hope, no features at all!)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This naturally raises the question "well, but how hard &lt;em&gt;is&lt;/em&gt; the
+Elliptic Curve discrete logarithm problem, on secp256k1?" Nobody really
+knows; there are known, standard ways of attacking it, which are better
+than brute force unintelligent search, but their "advantage" is a
+roughly known quantity (see e.g. &lt;a href="https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm"&gt;Pollard's
+rho&lt;/a&gt;).
+What there isn't, is some kind of proof "we know that \(\nexists\)
+algorithm solving ECDLP on (insert curve) faster than \(X\)".&lt;/p&gt;
+&lt;p&gt;Not only don't we know this, but it's even rather difficult to make
+statements about analogies. I recently raised the point on
+#bitcoin-wizards (freenode) that I thought there must be a relationship
+between problems like RSA/factoring and discrete log finding on prime
+order curves, prompting a couple of interesting responses, agreeing that
+indirect evidence points to the two hardness problems being to some
+extent or other connected. Madars Virza kindly pointed out a
+&lt;a href="https://wstein.org/projects/john_gregg_thesis.pdf#page=43"&gt;document&lt;/a&gt;
+that details some ideas about the connection (obviously this is some
+pretty highbrow mathematics, but some may be interested to investigate
+further).&lt;/p&gt;
+&lt;h2&gt;What about ECDSA?&lt;/h2&gt;
+&lt;p&gt;ECDSA (and more specifically, DSA) were inspired by Schnorr, but have
+design decisions embedded in them that make them &lt;em&gt;very&lt;/em&gt; different when
+it comes to security analysis. ECDSA looks like this:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;\(s = k\^{-1}\left(H(m) + rx\right), \quad r=R.x, \ R = kG\)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The first problem with trying to analyse this is that it doesn't
+conform to the
+three-move-sigma-protocol-identification-scheme-converts-to-signature-scheme-via-Fiat-Shamir-transform.
+Why? Because the hash value is \(H(m)\) and doesn't include the
+commitment to the nonce, \(R\). This means that the standard
+"attack" on Schnorr, via rewinding and resetting the random oracle
+doesn't work. This doesn't of course mean, that it's insecure -
+there's another kind of "fixing" of the nonce, in the setting
+of\(R.x\). This latter "conversion function" kind of a random
+function, but really not much like a hash function; it's trivially
+"semi-invertible" in as much as given an output x-coordinate one can
+easily extract the two possible input R-values.&lt;/p&gt;
+&lt;p&gt;Some serious analysis has been done on this, for the obvious reason that
+(EC)DSA is &lt;strong&gt;very widely used in practice.&lt;/strong&gt; There is work by
+&lt;a href="https://www.iacr.org/archive/pkc2003/25670309/25670309.pdf"&gt;Vaudenay&lt;/a&gt;
+and
+&lt;a href="https://www.cambridge.org/core/books/advances-in-elliptic-curve-cryptography/on-the-provable-security-of-ecdsa/69827A20CC94C54BBCBC8A51DBAF075A"&gt;Brown&lt;/a&gt;
+(actually a few papers but I think most behind academic paywalls)  and
+most recently &lt;a href="https://dl.acm.org/citation.cfm?doid=2976749.2978413"&gt;Fersch et
+al&lt;/a&gt;.
+Fersch gave a talk on this work
+&lt;a href="https://www.youtube.com/watch?v=5aUPBT4Rdr8"&gt;here&lt;/a&gt;
+.&lt;/p&gt;
+&lt;p&gt;The general consensus seems to be "it's very likely secure - but
+attempting to get a remotely "clean" security reduction is very
+difficult compared to Schnorr".&lt;/p&gt;
+&lt;p&gt;But wait; before we trail off with an inaudible mumble of "well, not
+really sure..." - there's a crucial logical implication you may not
+have noticed. Very obviously, ECDSA is not secure if ECDLP is not secure
+(because you just get the private key; game over for any signature
+scheme). Meanwhile, in the long argument above we &lt;strong&gt;reduced&lt;/strong&gt; Schnorr to
+ECDLP. This means:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;If ECDSA is secure, Schnorr is secure, but we have no security
+reduction to indicate the contrary.&lt;/strong&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The aforementioned Koblitz paper tells an interesting historical
+anecdote about all this, when the new DSA proposal was first put forth
+in '92 (emphasis mine):&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;"At the time, the proposed standard --- which soon after became the
+first digital signature algorithm ever approved by the industrial
+standards bodies --- encountered stiff opposition, especially from
+advocates of RSA signatures and from people who mistrusted the NSA's
+motives. Some of the leading cryptographers of the day tried hard to
+find weaknesses in the NIST proposal. A summary of the most important
+objections and the responses to them was published in the Crypto'92
+proceedings[17]. The opposition was unable to find any significant
+defects in the system. [In retrospect, it is amazing that none of the
+DSA opponents noticed that when the Schnorr signature was modified,
+the equivalence with discrete logarithms was
+lost.]{style="text-decoration: underline;"}"&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;More exotic constructions&lt;/h2&gt;
+&lt;p&gt;In a future blog post, I hope to extend this discussion to other
+constructions, which are based on Schnorr in some way or other, in
+particular:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The AOS ring signature&lt;/li&gt;
+&lt;li&gt;The Fujisaki-Suzuki, and the cryptonote ringsig&lt;/li&gt;
+&lt;li&gt;the Liu-Wei-Wong, and the Monero MLSAG (via Adam Back) ringsig&lt;/li&gt;
+&lt;li&gt;The MuSig multisignature&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;While these are all quite complicated (to say the least!), so no
+guarantee of covering all that, the security arguments follow similar
+lines to the discussion in this post. Of course ring signatures have
+their own unique features and foibles, so I will hopefully cover that a
+bit, as well as the security question.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="bitcoin"></category></entry><entry><title>Payjoin</title><link href="https://joinmarket.me/blog/blog/payjoin/" rel="alternate"></link><published>2018-12-15T00:00:00+01:00</published><updated>2018-12-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-12-15:/blog/blog/payjoin/</id><summary type="html">&lt;p&gt;coinjoins in payments&lt;/p&gt;</summary><content type="html">&lt;h3&gt;PayJoin&lt;/h3&gt;
 &lt;h2&gt;PayJoin.&lt;/h2&gt;
 &lt;p&gt;You haven't read any other blog posts here? No worries, here's what
 you need to know (&lt;em&gt;unless you're an expert, read them anyway...&lt;/em&gt;):&lt;/p&gt;
