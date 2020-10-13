@@ -2203,7 +2203,7 @@ probability of success does that imply in solving ECDLP, in our
 impersonations in the form of valid responses \(s\) to challenge
 values \(e\). We can say that the wrapper &lt;strong&gt;forks&lt;/strong&gt; \(\mathbb{A}\):&lt;/p&gt;
 &lt;p&gt;&lt;img alt="Fork your sigma protocol if you want
-fork" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"&gt;{width="659"
+fork" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"&gt;{width="659"
 height="466"}&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Fork your sigma protocol if you want fork&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Crudely, the success probability is \(\epsilon^2\); both of those
@@ -2323,7 +2323,7 @@ but those that do are said to be "secure in the random oracle model
 &lt;h3&gt;Wrapping A with B&lt;/h3&gt;
 &lt;p&gt;&lt;img alt="B tries to win the impersonation game against C, by wrapping the
 signature forger
-A" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"&gt;{width="584"
+A" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"&gt;{width="584"
 height="413"}&lt;/p&gt;
 &lt;p&gt;So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
 And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
