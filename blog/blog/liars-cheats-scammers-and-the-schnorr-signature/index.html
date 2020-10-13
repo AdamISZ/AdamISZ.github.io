@@ -340,8 +340,8 @@ is woefully inadequate; because to begin with ECDLP being "hard" is a
 computational statement: if the group of points on the curve is only of
 order 101, it is totally useless since it's easy to compute all
 discrete logs by brute force. So, if ECDLP is "hard" on a group of
-size (2\^k), let's say its hardness is measured as the probability
-of successfully cracking by guessing, i.e. (2\^{-k}) (here
+size (2^k), let's say its hardness is measured as the probability
+of successfully cracking by guessing, i.e. (2^{-k}) (here
 <strong>deliberately avoiding</strong> the real measure based on smarter than pure
 guesses, because it's detail that doesn't affect the rest). Suppose
 (\mathbb{A}) has a probability of success (\epsilon); what
@@ -354,12 +354,12 @@ values (e). We can say that the wrapper <strong>forks</strong> (\mathbb{A}):</p>
 fork" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png">{width="659"
 height="466"}</p>
 <p><em>Fork your sigma protocol if you want fork</em></p>
-<p>Crudely, the success probability is (\epsilon\^2); both of those
+<p>Crudely, the success probability is (\epsilon^2); both of those
 impersonations have to be successful, so we multiply the probabilities.
 (More exact: by a subtle argument we can see that the size of the
 challenge space being reduced by 1 for the second run of the protocol
 implies that the probability of success in that second run is reduced,
-and the correct formula is (\epsilon\^2 - \frac{\epsilon}{n}),
+and the correct formula is (\epsilon^2 - \frac{\epsilon}{n}),
 where (n) is the size of the hash function output space; obviously
 this doesn't matter too much).</p>
 <p>How does this factor into a real world decision? We have to go back to
@@ -371,13 +371,13 @@ like:</p>
     just use probability of success as a measure, for simplicity).</li>
 <li>The above reduction implies that <em>if</em> we can break SIDP with prob
     (\epsilon), we can also break ECDLP with prob (\simeq
-    \epsilon\^2).</li>
+    \epsilon^2).</li>
 <li>This reduction is thus <strong>not tight</strong> - if it's really the case that
     "the way to break SIDP is only to break ECDLP" then a certain
     hardness (p) only implies a hardness (\sqrt{p}) for SIDP,
     which we may not consider sufficiently improbable (remember that if
-    (p=2\^{-128}), it means halving the number of bits: (\sqrt{p}
-    =2\^{-64})). See
+    (p=2^{-128}), it means halving the number of bits: (\sqrt{p}
+    =2^{-64})). See
     <a href="https://crypto.stackexchange.com/questions/14439/proofs-by-reduction-and-times-of-adversaries">here</a>
     for a nice summary on "non-tight reductions".</li>
 <li>And <em>that</em> implies that if I want 128 bit security for my SIDP, I
@@ -583,7 +583,7 @@ queries).</p>
     <em>after</em> the fork, with the new challenge value, at that same index
     (\omega), also outputs a valid forgery. What's the probability
     of both succeeding together? Intuitively it's of the order of
-    (\epsilon\^2) as for the SIDP case, but clearly the factor
+    (\epsilon^2) as for the SIDP case, but clearly the factor
     (1/h), based on accounting for the guessing of the index
     (\omega), complicates things, and it turns out that the
     statistical argument is rather subtle; you apply what has been
@@ -617,17 +617,17 @@ queries).</p>
 <p>So in summary: we see that analysing the full CMA case in detail is
 pretty complicated, but by far the biggest take away should be: <strong>The
 security reduction for Schnorr sig to ECDLP has the same
-(\epsilon\^2) dependency, but is nevertheless far less tight,
+(\epsilon^2) dependency, but is nevertheless far less tight,
 because the success probability is also reduced by a factor (\simeq
 h) due to having to guess which RO query corresponds to the successful
 forgery.</strong></p>
 <p>(<em>Minor clarification: basically ignoring the first two terms on the RHS
 of the preceding as "minor corrections", you can see that DLAdv is
-very roughly (\epsilon\^2/h)</em>).</p>
+very roughly (\epsilon^2/h)</em>).</p>
 <p>The above bolded caveat is, arguably, very practically important, not
 just a matter of theory - because querying a hash function is something
 that it's very easy for an attacker to do. If the reduction loses
-(h) in tightness, and the attacker is allowed (2\^{60}) hash
+(h) in tightness, and the attacker is allowed (2^{60}) hash
 function queries (note - they can be offline), then we (crudely!) need
 60 bits more of security in our underlying cryptographic hardness
 problem (here ECDLP); at least, <em>if</em> we are basing our security model on
@@ -672,7 +672,7 @@ further).</p>
 design decisions embedded in them that make them <em>very</em> different when
 it comes to security analysis. ECDSA looks like this:</p>
 <blockquote>
-<p>(s = k\^{-1}\left(H(m) + rx\right), \quad r=R.x, \ R = kG)</p>
+<p>(s = k^{-1}\left(H(m) + rx\right), \quad r=R.x, \ R = kG)</p>
 </blockquote>
 <p>The first problem with trying to analyse this is that it doesn't
 conform to the
