@@ -44,10 +44,7 @@
 	<div>
 		Tags:
 		<span itemprop="keywords">
-			<a href="https://joinmarket.me/tag/coinjoin.html" rel="tag">coinjoin</a>
-		</span>
-		<span itemprop="keywords">
-			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+			<a href="https://joinmarket.me/tag/cryptography.html" rel="tag">cryptography</a>
 		</span>
 	</div>
 	<div itemprop="articleBody" class="article-body"><h3>Liars, cheats, scammers and the Schnorr signature</h3>
@@ -81,9 +78,9 @@ complex stories about liars - basically made up magic beans algorithms
 that <em>pretend</em> to solve things that nobody <em>actually</em> knows how to
 solve, or someone placing you in a room and resetting your clock
 periodically and pretending today is yesterday - and cheats, like
-"let's pretend the output of the hash function is (x), because it
-suits my agenda for it to be (x)" (at least in this case the lying
-is consistent - the liar doesn't change his mind about (x); that's
+"let's pretend the output of the hash function is \(x\), because it
+suits my agenda for it to be \(x\)" (at least in this case the lying
+is consistent - the liar doesn't change his mind about \(x\); that's
 something!).</p>
 <p>I hope that sounds crazy, it mostly really is :)</p>
 <p>(<em>Concepts I am alluding to include: the random oracle, a ZKP simulator,
@@ -142,15 +139,15 @@ didn't even use literally alien technology!</p>
 <p>So, we'll need to read the input to our hash function slot from the
 magic box; it's always of the form:</p>
 <p><code>message || R-value</code></p>
-<p>... details to follow, but basically (R) is the starting value in
+<p>... details to follow, but basically \(R\) is the starting value in
 the SIDP, so we pass it to our skeptical challenger(s). They respond
-with (e), intended to be completely random to make our job of
+with \(e\), intended to be completely random to make our job of
 proving ID as hard as possible, then <strong>we trick our black box</strong> - we
-don't return SHA2((m||R)) but instead we return (e). More on
+don't return SHA2(\(m||R\)) but instead we return \(e\). More on
 this later, see "random oracle model" in the below. Our magic box
-outputs, if successful, (R, s) where (s) is a new random-looking
+outputs, if successful, \(R, s\) where \(s\) is a new random-looking
 value. The challenger will be amazed to see that:</p>
-<p>(sG = R + eP_{satoshi})</p>
+<p>\(sG = R + eP_{satoshi}\)</p>
 <p>is true!! And the millions roll in.</p>
 <p>If you didn't get in detail how that scam operated, don't worry,
 we're going to unpack it, since it's the heart of our technical story
@@ -178,37 +175,37 @@ and Zero Knowledge Proofs of Knowledge in Section 3.2
 Section 19.1 of <a href="https://crypto.stanford.edu/~dabo/cryptobook/">Boneh and
 Shoup</a>.
 Reviewing the basic idea, cribbing from my own doc:</p>
-<p>Prover (\mathbf{P}) starts with a public key (P) and a
-corresponding private key (x) s.t. (P = xG).\
-(\mathbf{P}) wishes to prove in zero knowledge, to verifier
-(\mathbf{V}), that he knows (x).\
-(\mathbf{P}) → (\mathbf{V}): (R) (a new random curve
-point, but (\mathbf{P}) knows (k) s.t. (R = kG))\
-(\mathbf{V}) → (\mathbf{P}): (e) (a random scalar)\
-(\mathbf{P}) → (\mathbf{V}): (s) (which (\mathbf{P})
-calculated from the equation (s = k + ex))\
-Note: the transcript of the conversation would here be: ((R, e,
-s)).\
+<p>Prover \(\mathbf{P}\) starts with a public key \(P\) and a
+corresponding private key \(x\) s.t. \(P = xG\).\
+\(\mathbf{P}\) wishes to prove in zero knowledge, to verifier
+\(\mathbf{V}\), that he knows \(x\).\
+\(\mathbf{P}\) → \(\mathbf{V}\): \(R\) (a new random curve
+point, but \(\mathbf{P}\) knows \(k\) s.t. \(R = kG\))\
+\(\mathbf{V}\) → \(\mathbf{P}\): \(e\) (a random scalar)\
+\(\mathbf{P}\) → \(\mathbf{V}\): \(s\) (which \(\mathbf{P}\)
+calculated from the equation \(s = k + ex\))\
+Note: the transcript of the conversation would here be: \((R, e,
+s)\).\
 Verification works fairly trivially: verifier checks sG
-(\stackrel{?}{=} R+eP). See previously mentioned doc for details on
+\(\stackrel{?}{=} R+eP\). See previously mentioned doc for details on
 why this is supposedly <em>zero knowledge</em>, that is to say, the verifier
 doesn't learn anything about the private key from the procedure.</p>
 <p>As to why it's sound - why does it really prove that the Prover knows
-(x), see the same doc, but in brief: if we can convince the prover
+\(x\), see the same doc, but in brief: if we can convince the prover
 to re-run the third step with a modified second step (but the same first
-step!), then he'll be producing a second signature (s') on a
-second random (e'), but with the same (k) and (R), thus:</p>
-<p>(x = \frac{s-s'}{e-e'})</p>
+step!), then he'll be producing a second signature \(s'\) on a
+second random \(e'\), but with the same \(k\) and \(R\), thus:</p>
+<p>\(x = \frac{s-s'}{e-e'}\)</p>
 <p>So we say it's "sound" in the specific sense that only a
 knower-of-the-secret-key can complete the protocol. But more on this
 shortly!</p>
 <p>What about the famous "Schnorr signature"? It's just an
 noninteractive version of the above. There is btw a brief summary in
 <a href="https://web.archive.org/web/20200428212652/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">this</a>
-earlier blog post, also. Basically replace (e) with a hash (we'll
-call our hash function (H)) of the commitment value (R) and the
-message we want to sign (m):</p>
-<p>(e = H(m||R))</p>
+earlier blog post, also. Basically replace \(e\) with a hash (we'll
+call our hash function \(H\)) of the commitment value \(R\) and the
+message we want to sign \(m\):</p>
+<p>\(e = H(m||R)\)</p>
 <p>; as mentioned in the just-linked blog post, it's also possible to add
 other stuff to the hash, but these two elements at least are necessary
 to make a sound signature.</p>
@@ -232,10 +229,10 @@ more, these are the most elementary classifications):</p>
 <p>(Interesting historical note: this taxonomy is due to Goldwasser, Micali
 and Rackoff - the same authors who introduced the revolutionary notion
 of a "Zero Knowledge Proof" in the 1980s.)</p>
-<p>Total break means key disclosure. To give a silly example: if (k=0)
-in the above, then (s = ex) and, on receipt of (s), the verifier
-could simply multiply it by the modular inverse of (e) to extract
-the private key (x). A properly random (k) value, or 'nonce',
+<p>Total break means key disclosure. To give a silly example: if \(k=0\)
+in the above, then \(s = ex\) and, on receipt of \(s\), the verifier
+could simply multiply it by the modular inverse of \(e\) to extract
+the private key \(x\). A properly random \(k\) value, or 'nonce',
 as explained ad nauseam elsewhere, is critical to the security. Since
 this is the worst possible security failure, being secure against it is
 considered the weakest notion of "security" (note this kind of
@@ -281,10 +278,10 @@ what's the justification that either of them are true? Intuitively the
 soundness proof tries to isolate the Prover as a machine/algorithm and
 screw around with its sequencing, in an attempt to force it to spit out
 the secret that we believe it possesses. If we hypothesise an adversary
-(\mathbb{A}) who <em>doesn't</em> possess the private key to begin with,
+\(\mathbb{A}\) who <em>doesn't</em> possess the private key to begin with,
 or more specifically, one that can pass the test of knowing the key for
 any public key we choose, we can argue that there's only one
-circumstance in which that's possible: <strong>if (\mathbb{A}) can solve
+circumstance in which that's possible: <strong>if \(\mathbb{A}\) can solve
 the general Elliptic Curve Discrete Logarithm Problem(ECDLP) on our
 curve.</strong> That's intuitively <em>very</em> plausible, but can we prove it?</p>
 <h3>Reduction</h3>
@@ -317,20 +314,20 @@ A mathematician and a physicist were asked the following question:</p>
 <p>The general paradigm here is:</p>
 <blockquote>
 <p>A protocol X is "reducible to" a hardness assumption Y if a
-hypothetical adversary (\mathbb{A}) who can break X can also
+hypothetical adversary \(\mathbb{A}\) who can break X can also
 violate Y.</p>
 </blockquote>
 <p>In the concrete case of X = SIDP and Y = ECDLP we have nothing to do,
 since we've already done it. SIDP is intrinsically a test that's
 relying on ECDLP; if you can successfully impersonate (i.e. break SIDP)
-on any given public key (P) then an "Extractor" which we will now
+on any given public key \(P\) then an "Extractor" which we will now
 call a <strong>wrapper</strong>, acting to control the environment of
-(\mathbb{A}) and running two executions of the second half of the
+\(\mathbb{A}\) and running two executions of the second half of the
 transcript, as already described above, will be able to extract the
-private key/discrete log corresponding to (P). So we can think of
-that Extractor itself as a machine/algorithm which spits out the (x)
-after being fed in the (P), in the simple case where our
-hypothetical adversary (\mathbb{A}) is 100% reliable. In this
+private key/discrete log corresponding to \(P\). So we can think of
+that Extractor itself as a machine/algorithm which spits out the \(x\)
+after being fed in the \(P\), in the simple case where our
+hypothetical adversary \(\mathbb{A}\) is 100% reliable. In this
 specific sense:</p>
 <blockquote>
 <p><strong>SIDP is reducible to ECDLP</strong></p>
@@ -340,44 +337,44 @@ is woefully inadequate; because to begin with ECDLP being "hard" is a
 computational statement: if the group of points on the curve is only of
 order 101, it is totally useless since it's easy to compute all
 discrete logs by brute force. So, if ECDLP is "hard" on a group of
-size (2^k), let's say its hardness is measured as the probability
-of successfully cracking by guessing, i.e. (2^{-k}) (here
+size \(2^k\), let's say its hardness is measured as the probability
+of successfully cracking by guessing, i.e. \(2^{-k}\) (here
 <strong>deliberately avoiding</strong> the real measure based on smarter than pure
 guesses, because it's detail that doesn't affect the rest). Suppose
-(\mathbb{A}) has a probability of success (\epsilon); what
+\(\mathbb{A}\) has a probability of success \(\epsilon\); what
 probability of success does that imply in solving ECDLP, in our
-"wrapper" model? Is it (\epsilon)?</p>
+"wrapper" model? Is it \(\epsilon\)?</p>
 <p>No; remember the wrapper had to actually extract <strong>two</strong> successful
-impersonations in the form of valid responses (s) to challenge
-values (e). We can say that the wrapper <strong>forks</strong> (\mathbb{A}):</p>
+impersonations in the form of valid responses \(s\) to challenge
+values \(e\). We can say that the wrapper <strong>forks</strong> \(\mathbb{A}\):</p>
 <p><img alt="Fork your sigma protocol if you want
 fork" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png">{width="659"
 height="466"}</p>
 <p><em>Fork your sigma protocol if you want fork</em></p>
-<p>Crudely, the success probability is (\epsilon^2); both of those
+<p>Crudely, the success probability is \(\epsilon^2\); both of those
 impersonations have to be successful, so we multiply the probabilities.
 (More exact: by a subtle argument we can see that the size of the
 challenge space being reduced by 1 for the second run of the protocol
 implies that the probability of success in that second run is reduced,
-and the correct formula is (\epsilon^2 - \frac{\epsilon}{n}),
-where (n) is the size of the hash function output space; obviously
+and the correct formula is \(\epsilon^2 - \frac{\epsilon}{n}\),
+where \(n\) is the size of the hash function output space; obviously
 this doesn't matter too much).</p>
 <p>How does this factor into a real world decision? We have to go back to
 the aforementioned "reverse thinking". The reasoning is something
 like:</p>
 <ul>
 <li>We believe ECDLP is hard for our group, let's say we think you
-    can't do better than p = (p) (I'll ignore running time and
+    can't do better than p = \(p\) (I'll ignore running time and
     just use probability of success as a measure, for simplicity).</li>
 <li>The above reduction implies that <em>if</em> we can break SIDP with prob
-    (\epsilon), we can also break ECDLP with prob (\simeq
-    \epsilon^2).</li>
+    \(\epsilon\), we can also break ECDLP with prob \(\simeq
+    \epsilon^2\).</li>
 <li>This reduction is thus <strong>not tight</strong> - if it's really the case that
     "the way to break SIDP is only to break ECDLP" then a certain
-    hardness (p) only implies a hardness (\sqrt{p}) for SIDP,
+    hardness \(p\) only implies a hardness \(\sqrt{p}\) for SIDP,
     which we may not consider sufficiently improbable (remember that if
-    (p=2^{-128}), it means halving the number of bits: (\sqrt{p}
-    =2^{-64})). See
+    \(p=2^{-128}\), it means halving the number of bits: \(\sqrt{p}
+    =2^{-64}\)). See
     <a href="https://crypto.stackexchange.com/questions/14439/proofs-by-reduction-and-times-of-adversaries">here</a>
     for a nice summary on "non-tight reductions".</li>
 <li>And <em>that</em> implies that if I want 128 bit security for my SIDP, I
@@ -390,7 +387,7 @@ like:</p>
 <p>I started this subsection on "reductions" with a lame math joke; but I
 hope you can see how delicate this all is ... we start with something
 we believe to be hard, but then "solve" it with a purely hypothetical
-other thing (here (\mathbb{A}) ), and from this we imply a two-way
+other thing (here \(\mathbb{A}\) ), and from this we imply a two-way
 connection (I don't say <em>equivalence</em>; it's not quite that) that we
 use to make concrete decisions about security. Koblitz (he of the 'k'
 in secp256k1) had some interesting thoughts about 'reductionist'
@@ -427,10 +424,10 @@ deals with it in a lot more detail; I'll use this as an outline but
 dumb it down a fair bit. There is a simpler description
 <a href="http://web.stanford.edu/class/cs259c/lectures/schnorr.pdf">here</a>.</p>
 <p>The "CMA" part of "EUFCMA" implies that our adversary
-(\mathbb{A}), who we are now going to posit has the magical ability
+\(\mathbb{A}\), who we are now going to posit has the magical ability
 to forge signatures (so it's the black cube of our preamble), should be
 able to request signatures on an arbitrarily chosen set of messages
-(m_i), with (i) running from 1 to some defined number (S).
+\(m_i\), with \(i\) running from 1 to some defined number \(S\).
 But we must also allow him to make queries to the hash function, which
 we idealise as a machine called a "random oracle". Brief notes on that
 before continuing:</p>
@@ -438,32 +435,32 @@ before continuing:</p>
 <p>Briefly described
 <a href="https://en.wikipedia.org/wiki/Random_oracle">here</a>
 . It's a simple but powerful idea: we basically idealise how we want a
-cryptographic hash function (f) to behave. We imagine an output
-space for (f) of size (C). For any given input (x) from a
+cryptographic hash function \(f\) to behave. We imagine an output
+space for \(f\) of size \(C\). For any given input \(x\) from a
 predefined input space of one or more inputs, we will get a
-deterministic output (y), but it should be unpredictable, so we
+deterministic output \(y\), but it should be unpredictable, so we
 imagine that the function is <em>randomly</em> deterministic. Not a
 contradiction - the idea is only that there is no <strong>public</strong> law or
 structure that allows the prediction of the output without actually
-passing it through the function (f). The randomness should be
+passing it through the function \(f\). The randomness should be
 uniform.</p>
 <p>In using this in a security proof, we encounter only one problem: we
-will usually want to model (f) by drawing its output (y) from a
-uniformly random distribution (you'll see lines like (y
-\stackrel{\$}{\leftarrow} \mathbb{Z}_N) in papers, indicating
-(y) is set randomly). But in doing this, we have set the value of
-the output for that input (x) permanently, so if we call (f)
-again on the same (x), whether by design or accident, we <em>must</em>
-again return the same "random" (y).</p>
+will usually want to model \(f\) by drawing its output \(y\) from a
+uniformly random distribution (you'll see lines like \(y
+\stackrel{\$}{\leftarrow} \mathbb{Z}_N\) in papers, indicating
+\(y\) is set randomly). But in doing this, we have set the value of
+the output for that input \(x\) permanently, so if we call \(f\)
+again on the same \(x\), whether by design or accident, we <em>must</em>
+again return the same "random" \(y\).</p>
 <p>We also find sometimes that in the nature of the security game we are
 playing, one "wrapper" algorithm wants to "cheat" another, wrapped
-algorithm, by using some hidden logic to decide the "random" (y)
-at a particular (x). This <em>can</em> be fine, because to the "inner"
+algorithm, by using some hidden logic to decide the "random" \(y\)
+at a particular \(x\). This <em>can</em> be fine, because to the "inner"
 algorithm it can look entirely random. In this case we sometimes say we
-are "<strong>patching the value of the RO at (x) to (y)"</strong> to
+are "<strong>patching the value of the RO at \(x\) to \(y\)"</strong> to
 indicate that this artificial event has occurred; as already mentioned,
 it's essential to remember this output and respond with it again, if a
-query at (x) is repeated.</p>
+query at \(x\) is repeated.</p>
 <p>Finally, this "perfectly random" behaviour is very idealised. Not all
 cryptographic protocols involving hash functions require this behaviour,
 but those that do are said to be "secure in the random oracle model
@@ -473,161 +470,161 @@ but those that do are said to be "secure in the random oracle model
 signature forger
 A" src="/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png">{width="584"
 height="413"}</p>
-<p>So we now wrap (\mathbb{A})  with (\mathbb{B}).
-And (\mathbb{B})'s job will be to succeed at winning the SIDP
-"game" against a challenger (\mathbb{C}) .</p>
-<p>Now (\mathbb{A}) is allowed (S) signing queries; given his
-messages (m_i), we can use (S) eavesdropped conversations (R,
-e, s) from the actual signer (or equivalently, just forge transcripts
+<p>So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
+And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
+"game" against a challenger \(\mathbb{C}\) .</p>
+<p>Now \(\mathbb{A}\) is allowed \(S\) signing queries; given his
+messages \(m_i\), we can use \(S\) eavesdropped conversations \(R,
+e, s\) from the actual signer (or equivalently, just forge transcripts
 - see "zero knowledgeness" of the Schnorr signature), and for each,
-(\mathbb{B}) can patch up the RO to make these transcripts fit
-(\mathbb{A})'s requested messages; just do
-(H(m_i||R_i)=e_i). Notice that this part of the process represents
-(S) queries to the random oracle.</p>
-<p>Observe that (\mathbb{B})  is our real "attacker" here: he's the
-one trying to fool/attack (\mathbb{C}) 's identification
-algorithm; he's just using (\mathbb{A}) as a black box (or cube,
-as we say). We can say (\mathbb{A}) is a "subprotocol" used by
-(\mathbb{B}).</p>
+\(\mathbb{B}\) can patch up the RO to make these transcripts fit
+\(\mathbb{A}\)'s requested messages; just do
+\(H(m_i||R_i)=e_i\). Notice that this part of the process represents
+\(S\) queries to the random oracle.</p>
+<p>Observe that \(\mathbb{B}\)  is our real "attacker" here: he's the
+one trying to fool/attack \(\mathbb{C}\) 's identification
+algorithm; he's just using \(\mathbb{A}\) as a black box (or cube,
+as we say). We can say \(\mathbb{A}\) is a "subprotocol" used by
+\(\mathbb{B}\).</p>
 <p>It's all getting a bit complicated, but by now you should probably have
 a vague intuition that this will work, although of course not reliably,
-and as a function of the probability of (\mathbb{A}) being able to
-forge signatures of course (we'll again call this (\epsilon)).</p>
-<h3>Toy version: (\epsilon = 1)</h3>
+and as a function of the probability of \(\mathbb{A}\) being able to
+forge signatures of course (we'll again call this \(\epsilon\)).</p>
+<h3>Toy version: \(\epsilon = 1\)</h3>
 <p>To aid understanding, imagine the simplest possible case, when
-(\mathbb{A}) works flawlessly. The key (P) is given to him and
-he chooses a random (k, R =kG), and also chooses his message (m)
+\(\mathbb{A}\) works flawlessly. The key \(P\) is given to him and
+he chooses a random \(k, R =kG\), and also chooses his message \(m\)
 as is his right in this scenario. The "CMA" part of EUF-CMA is
-irrelevant here, since (\mathbb{A}) can just forge immediately
+irrelevant here, since \(\mathbb{A}\) can just forge immediately
 without signature queries:</p>
 <ul>
-<li>(\mathbb{A}) asks for the value of (H(m||R)), by passing
-    across (m,R) to (\mathbb{B}).</li>
-<li>(\mathbb{B}) receives this query and passes (R) as the
-    first message in SIDP to (\mathbb{C}) .</li>
-<li>(\mathbb{C}) responds with a completely random challenge value
-    (e).</li>
-<li>(\mathbb{B}) "patches" the RO with (e) as the output for
-    input (m, R), and returns (e) to (\mathbb{A}) .</li>
-<li>(\mathbb{A}) takes (e) as (H(m||R)), and provides a
-    valid (s) as signature.</li>
-<li>(\mathbb{B}) passes (s) through to (\mathbb{C}) , who
-    verifies (sG = R + eP); identification passed.</li>
+<li>\(\mathbb{A}\) asks for the value of \(H(m||R)\), by passing
+    across \(m,R\) to \(\mathbb{B}\).</li>
+<li>\(\mathbb{B}\) receives this query and passes \(R\) as the
+    first message in SIDP to \(\mathbb{C}\) .</li>
+<li>\(\mathbb{C}\) responds with a completely random challenge value
+    \(e\).</li>
+<li>\(\mathbb{B}\) "patches" the RO with \(e\) as the output for
+    input \(m, R\), and returns \(e\) to \(\mathbb{A}\) .</li>
+<li>\(\mathbb{A}\) takes \(e\) as \(H(m||R)\), and provides a
+    valid \(s\) as signature.</li>
+<li>\(\mathbb{B}\) passes \(s\) through to \(\mathbb{C}\) , who
+    verifies \(sG = R + eP\); identification passed.</li>
 </ul>
 <p>You can see that nothing here is new except the random oracle patching,
 which is trivially non-problematic as we make only one RO query, so
 there can't be a conflict. The probability of successful impersonation
 is 1.</p>
 <p>Note that this implies the probability of successfully breaking ECDLP is
-also (\simeq 1). We just use a second-layer wrapper around
-(\mathbb{B}), and fork its execution after the provision of
-(R), providing two separate challenges and thus in each run getting
-two separate (s) values and solving for (x), the private
+also \(\simeq 1\). We just use a second-layer wrapper around
+\(\mathbb{B}\), and fork its execution after the provision of
+\(R\), providing two separate challenges and thus in each run getting
+two separate \(s\) values and solving for \(x\), the private
 key/discrete log as has already been explained.</p>
-<p>Why (\simeq)? As noted on the SIDP to ECDLP reduction above, there
+<p>Why \(\simeq\)? As noted on the SIDP to ECDLP reduction above, there
 is a tiny probability of a reused challenge value which must be factored
 out, but it's of course negligible in practice.</p>
 <p>If we assert that the ECDLP is not trivially broken in reasonable time,
-we must also assert that such a powerful (\mathbb{A}) does not
+we must also assert that such a powerful \(\mathbb{A}\) does not
 exist, given similarly limited time (well; <em>in the random oracle model</em>,
 of course...).</p>
-<h3>Full CMA case, (\epsilon \&lt;\&lt; 1)</h3>
-<p>Now we give (\mathbb{A}) the opportunity to make (S) signing
+<h3>Full CMA case, \(\epsilon \&lt;\&lt; 1\)</h3>
+<p>Now we give \(\mathbb{A}\) the opportunity to make \(S\) signing
 queries (as already mentioned, this is what we mean by an "adaptive
 chosen message attack"). The sequence of events will be a little longer
 than the previous subsection, but we must think it through to get a
 sense of the "tightness of the reduction" as already discussed.</p>
-<p>The setup is largely as before: (P) is given. There will be (h)
+<p>The setup is largely as before: \(P\) is given. There will be \(h\)
 RO queries allowed (additional to the implicit ones in the signing
 queries).</p>
 <ul>
-<li>For any signing query from (\mathbb{A}), as we covered in
+<li>For any signing query from \(\mathbb{A}\), as we covered in
     "Wrapping A with B", a valid response can be generated by patching
     the RO (or using real transcripts). We'll have to account for the
     possibility of a conflict between RO queries (addressed below), but
     it's a minor detail.</li>
 <li>Notice that as per the toy example previously, during
-    (\mathbb{A})'s forgery process, his only interaction with his
-    wrapper (\mathbb{B}) is to request a hash value
-    (H(m||R)). So it's important to understand that, first
-    because of the probabilistic nature of the forgery ((\epsilon
-    \&lt;\&lt; 1)), and second because (\mathbb{A})'s algorithm is
-    unknown, <strong>(\mathbb{B}) does not know which hash function query
+    \(\mathbb{A}\)'s forgery process, his only interaction with his
+    wrapper \(\mathbb{B}\) is to request a hash value
+    \(H(m||R)\). So it's important to understand that, first
+    because of the probabilistic nature of the forgery (\(\epsilon
+    \&lt;\&lt; 1\)), and second because \(\mathbb{A}\)'s algorithm is
+    unknown, <strong>\(\mathbb{B}\) does not know which hash function query
     (and therefore which RO response) will correspond to a successful
     forgery.</strong> This isn't just important to the logic of the game; as
     we'll see, it's a critical limitation of the security result we
     arrive at.</li>
-<li>So to address the above, (\mathbb{B}) has to make a decision
+<li>So to address the above, \(\mathbb{B}\) has to make a decision
     upfront: which query should I use as the basis of my impersonation
-    attempt with (\mathbb{C})? He chooses an index (\omega\
-    \in 1..h).</li>
-<li>There will be a total of (S+h+1) queries to the random oracle,
+    attempt with \(\mathbb{C}\)? He chooses an index \(\omega\
+    \in 1..h\).</li>
+<li>There will be a total of \(S+h+1\) queries to the random oracle,
     at most (the +1 is a technical detail I'll ignore here). We
     discussed in the first bullet point that if there is a repeated
-    (m, R) pair in one of the (S) signing queries, it causes a
+    \(m, R\) pair in one of the \(S\) signing queries, it causes a
     "conflict" on the RO output. In the very most pessimistic
     scenario, the probability of this causing our algorithm to fail can
-    be no more than (\frac{S+h+1}{n}) for each individual signing
-    query, and (\frac{S(S+h+1)}{n}) for all of them (as before we
-    use (n) for the size of the output space of the hash function).</li>
-<li>So (\mathbb{B}) will <strong>fork</strong> (\mathbb{A})'s execution,
-    just as for the SIDP (\rightarrow) ECDLP reduction, <strong>at index
-    (\omega)</strong>, without knowing in advance whether (\omega) is
+    be no more than \(\frac{S+h+1}{n}\) for each individual signing
+    query, and \(\frac{S(S+h+1)}{n}\) for all of them (as before we
+    use \(n\) for the size of the output space of the hash function).</li>
+<li>So \(\mathbb{B}\) will <strong>fork</strong> \(\mathbb{A}\)'s execution,
+    just as for the SIDP \(\rightarrow\) ECDLP reduction, <strong>at index
+    \(\omega\)</strong>, without knowing in advance whether \(\omega\) is
     indeed the index at the which the hash query corresponds to
-    (\mathbb{A})'s final output forgery. There's a (1/h)
+    \(\mathbb{A}\)'s final output forgery. There's a \(1/h\)
     chance of this guess being correct. So the "partial success
     probability", if you will, for this first phase, is
-    (\epsilon/h), rather than purely (\epsilon), as we had for
+    \(\epsilon/h\), rather than purely \(\epsilon\), as we had for
     the SIDP case.</li>
-<li>In order to extract (x), though, we need that the execution
+<li>In order to extract \(x\), though, we need that the execution
     <em>after</em> the fork, with the new challenge value, at that same index
-    (\omega), also outputs a valid forgery. What's the probability
+    \(\omega\), also outputs a valid forgery. What's the probability
     of both succeeding together? Intuitively it's of the order of
-    (\epsilon^2) as for the SIDP case, but clearly the factor
-    (1/h), based on accounting for the guessing of the index
-    (\omega), complicates things, and it turns out that the
+    \(\epsilon^2\) as for the SIDP case, but clearly the factor
+    \(1/h\), based on accounting for the guessing of the index
+    \(\omega\), complicates things, and it turns out that the
     statistical argument is rather subtle; you apply what has been
     called the <strong>Forking Lemma</strong>, described on
     <a href="https://en.wikipedia.org/wiki/Forking_lemma">Wikipedia</a>
     and with the clearest statement and proof in
     <a href="https://cseweb.ucsd.edu/~mihir/papers/multisignatures-ccs.pdf">this</a>
     paper of Bellare-Neven '06. The formula for the success probability
-    of (\mathbb{B}) turns out to be:</li>
+    of \(\mathbb{B}\) turns out to be:</li>
 </ul>
 <blockquote>
-<p>(\epsilon_{\mathbb{B}} = \epsilon\left(\frac{\epsilon}{h} -
-\frac{1}{n}\right))</p>
+<p>\(\epsilon_{\mathbb{B}} = \epsilon\left(\frac{\epsilon}{h} -
+\frac{1}{n}\right)\)</p>
 </blockquote>
 <ul>
 <li><a href="https://crypto.stanford.edu/~dabo/cryptobook/">Boneh-Shoup</a>
     in Section 19.2 bundle this all together (with significantly more
     rigorous arguments!) into a formula taking account of the Forking
     Lemma, the accounting for collisions in the signing queries, to
-    produce the more detailed statement, where (\epsilon) on the
-    left here refers to the probability of success of (\mathbb{B}),
+    produce the more detailed statement, where \(\epsilon\) on the
+    left here refers to the probability of success of \(\mathbb{B}\),
     and "DLADv" on the right refers to the probability of success in
     solving the discrete log. The square root term of course corresponds
     to the "reduction" from Schnorr sig. to ECDLP being roughly a
     square:</li>
 </ul>
 <blockquote>
-<p>(\epsilon \le \frac{S(S+h+1)}{n} + \frac{h+1}{n} +
-\sqrt{(h+1)\ \times \ \textrm{DLAdv}})</p>
+<p>\(\epsilon \le \frac{S(S+h+1)}{n} + \frac{h+1}{n} +
+\sqrt{(h+1)\ \times \ \textrm{DLAdv}}\)</p>
 </blockquote>
 <p>So in summary: we see that analysing the full CMA case in detail is
 pretty complicated, but by far the biggest take away should be: <strong>The
 security reduction for Schnorr sig to ECDLP has the same
-(\epsilon^2) dependency, but is nevertheless far less tight,
-because the success probability is also reduced by a factor (\simeq
-h) due to having to guess which RO query corresponds to the successful
+\(\epsilon^2\) dependency, but is nevertheless far less tight,
+because the success probability is also reduced by a factor \(\simeq
+h\) due to having to guess which RO query corresponds to the successful
 forgery.</strong></p>
 <p>(<em>Minor clarification: basically ignoring the first two terms on the RHS
 of the preceding as "minor corrections", you can see that DLAdv is
-very roughly (\epsilon^2/h)</em>).</p>
+very roughly \(\epsilon^2/h\)</em>).</p>
 <p>The above bolded caveat is, arguably, very practically important, not
 just a matter of theory - because querying a hash function is something
 that it's very easy for an attacker to do. If the reduction loses
-(h) in tightness, and the attacker is allowed (2^{60}) hash
+\(h\) in tightness, and the attacker is allowed \(2^{60}\) hash
 function queries (note - they can be offline), then we (crudely!) need
 60 bits more of security in our underlying cryptographic hardness
 problem (here ECDLP); at least, <em>if</em> we are basing our security model on
@@ -635,7 +632,7 @@ the above argument.</p>
 <p>Although I haven't studied it, <a href="https://eprint.iacr.org/2012/029">the 2012 paper by Yannick
 Seurin</a>
 makes an argument (as far as I understand) that we cannot do better than
-this, in the random oracle model, i.e. the factor of (h) cannot be
+this, in the random oracle model, i.e. the factor of \(h\) cannot be
 removed from this security reduction by some better kind of argument.</p>
 <h2>Summary - is Schnorr secure?</h2>
 <p>For all that this technical discussion has exposed the non-trivial guts
@@ -654,8 +651,8 @@ knows; there are known, standard ways of attacking it, which are better
 than brute force unintelligent search, but their "advantage" is a
 roughly known quantity (see e.g. <a href="https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm">Pollard's
 rho</a>).
-What there isn't, is some kind of proof "we know that (\nexists)
-algorithm solving ECDLP on (insert curve) faster than (X)".</p>
+What there isn't, is some kind of proof "we know that \(\nexists\)
+algorithm solving ECDLP on (insert curve) faster than \(X\)".</p>
 <p>Not only don't we know this, but it's even rather difficult to make
 statements about analogies. I recently raised the point on
 #bitcoin-wizards (freenode) that I thought there must be a relationship
@@ -672,17 +669,17 @@ further).</p>
 design decisions embedded in them that make them <em>very</em> different when
 it comes to security analysis. ECDSA looks like this:</p>
 <blockquote>
-<p>(s = k^{-1}\left(H(m) + rx\right), \quad r=R.x, \ R = kG)</p>
+<p>\(s = k^{-1}\left(H(m) + rx\right), \quad r=R.x, \ R = kG\)</p>
 </blockquote>
 <p>The first problem with trying to analyse this is that it doesn't
 conform to the
 three-move-sigma-protocol-identification-scheme-converts-to-signature-scheme-via-Fiat-Shamir-transform.
-Why? Because the hash value is (H(m)) and doesn't include the
-commitment to the nonce, (R). This means that the standard
+Why? Because the hash value is \(H(m)\) and doesn't include the
+commitment to the nonce, \(R\). This means that the standard
 "attack" on Schnorr, via rewinding and resetting the random oracle
 doesn't work. This doesn't of course mean, that it's insecure -
 there's another kind of "fixing" of the nonce, in the setting
-of(R.x). This latter "conversion function" kind of a random
+of\(R.x\). This latter "conversion function" kind of a random
 function, but really not much like a hash function; it's trivially
 "semi-invertible" in as much as given an output x-coordinate one can
 easily extract the two possible input R-values.</p>
