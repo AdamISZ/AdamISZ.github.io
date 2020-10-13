@@ -88,8 +88,7 @@ extractor/"forking", an "adversary" etc. etc.</em>)</p>
 <h2>Preamble: the reluctant Satoshi scammer</h2>
 <p>The material of this blog post is pretty abstract, so I decided to spice
 it up by framing it as some kind of sci-fi :)</p>
-<p><img alt="" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/cube-250082_6402.png">{width="174"
-height="174"}</p>
+<p><img alt="" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/cube-250082_6402.png"></p>
 <p>Imagine you have a mysterious small black cube which you were given by
 an alien that has two slots you can plug into to feed it input data and
 another to get output data, but you absolutely can't open it (so like
@@ -176,17 +175,17 @@ Section 19.1 of <a href="https://crypto.stanford.edu/~dabo/cryptobook/">Boneh an
 Shoup</a>.
 Reviewing the basic idea, cribbing from my own doc:</p>
 <p>Prover \(\mathbf{P}\) starts with a public key \(P\) and a
-corresponding private key \(x\) s.t. \(P = xG\).\
-\(\mathbf{P}\) wishes to prove in zero knowledge, to verifier
-\(\mathbf{V}\), that he knows \(x\).\
-\(\mathbf{P}\) → \(\mathbf{V}\): \(R\) (a new random curve
-point, but \(\mathbf{P}\) knows \(k\) s.t. \(R = kG\))\
-\(\mathbf{V}\) → \(\mathbf{P}\): \(e\) (a random scalar)\
-\(\mathbf{P}\) → \(\mathbf{V}\): \(s\) (which \(\mathbf{P}\)
-calculated from the equation \(s = k + ex\))\
-Note: the transcript of the conversation would here be: \((R, e,
-s)\).\
-Verification works fairly trivially: verifier checks sG
+corresponding private key \(x\) s.t. \(P = xG\).</p>
+<p>\(\mathbf{P}\) wishes to prove in zero knowledge, to verifier
+\(\mathbf{V}\), that he knows \(x\).</p>
+<p>\(\mathbf{P}\) → \(\mathbf{V}\): \(R\) (a new random curve
+point, but \(\mathbf{P}\) knows \(k\) s.t. \(R = kG\))</p>
+<p>\(\mathbf{V}\) → \(\mathbf{P}\): \(e\) (a random scalar)</p>
+<p>\(\mathbf{P}\) → \(\mathbf{V}\): \(s\) (which \(\mathbf{P}\)
+calculated from the equation \(s = k + ex\))</p>
+<p>Note: the transcript of the conversation would here be: \((R, e,
+s)\).</p>
+<p>Verification works fairly trivially: verifier checks sG
 \(\stackrel{?}{=} R+eP\). See previously mentioned doc for details on
 why this is supposedly <em>zero knowledge</em>, that is to say, the verifier
 doesn't learn anything about the private key from the procedure.</p>
@@ -348,8 +347,7 @@ probability of success does that imply in solving ECDLP, in our
 impersonations in the form of valid responses \(s\) to challenge
 values \(e\). We can say that the wrapper <strong>forks</strong> \(\mathbb{A}\):</p>
 <p><img alt="Fork your sigma protocol if you want
-fork" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png">{width="659"
-height="466"}</p>
+fork" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"></p>
 <p><em>Fork your sigma protocol if you want fork</em></p>
 <p>Crudely, the success probability is \(\epsilon^2\); both of those
 impersonations have to be successful, so we multiply the probabilities.
@@ -468,8 +466,7 @@ but those that do are said to be "secure in the random oracle model
 <h3>Wrapping A with B</h3>
 <p><img alt="B tries to win the impersonation game against C, by wrapping the
 signature forger
-A" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png">{width="584"
-height="413"}</p>
+A" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"></p>
 <p>So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
 And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
 "game" against a challenger \(\mathbb{C}\) .</p>
