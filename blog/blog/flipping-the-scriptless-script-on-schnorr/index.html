@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Flipping the scriptless script on Schnorr — Joinmarket.me archive</title>
+	<meta name="description" content="Title: Flipping the scriptless script on Schnorr; Date: 2018-03-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">Flipping the scriptless script on Schnorr</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2018-03-15T00:00:00+01:00" itemprop="datePublished">Thu 15 March 2018</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/cryptography.html" rel="tag">cryptography</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>Flipping the scriptless script on Schnorr</h3>
+<h2>Outline</h2>
+<p>It's by now very well known in the community of Bitcoin enthusiasts that
+the <a href="https://en.wikipedia.org/wiki/Schnorr_signature">Schnorr
+signature</a>
+may have great significance; and "everyone knows" that its significance
+is that it will enable signatures to be aggregated, which could be
+<strong>great</strong> for scalability, and nice for privacy too. This has been
+elucidated quite nicely in a Bitcoin Core <a href="https://bitcoincore.org/en/2017/03/23/schnorr-signature-aggregation/">blog
+post</a>.</p>
+<p>This is very true.</p>
+<p>There are more fundamental reasons to like Schnorr too; it can be shown
+with a simple proof that Schnorr signatures are secure if the elliptic
+curve crypto that prevents someone stealing your coins (basically the
+"Elliptic Curve Discrete Logarithm Problem" or ECDLP for short) is
+secure, and assuming the hash function you're using is secure (see <a href="https://blog.cryptographyengineering.com/2011/09/29/what-is-random-oracle-model-and-why-3/">this
+deep dive into the random oracle
+model</a>
+if you're interested in such things). ECDSA doesn't have the same level
+of mathematical surety.</p>
+<p>Perhaps most importantly of all Schnorr signatures are <strong>linear</strong> in the
+keys you're using (while ECDSA is not).</p>
+<p>Which brings me to my lame pun-title : another way that Schnorr
+signatures may matter is to do with, in a sense, the <strong>opposite</strong> of
+Schnorr aggregation - Schnorr subtraction. The rest of this very long
+blog post is intended to lead you through the steps to showing how
+clever use of signature subtraction can lead to <span
+style="text-decoration: underline;">one</span> very excellent outcome
+(there are others!) - a private Coinswap that's simpler and better than
+the private Coinswap outlined in my <a href="https://web.archive.org/web/20200506162002/https://joinmarket.me/blog/blog/coinswaps">previous blog
+post</a>.</p>
+<p>The ideas being laid out in the rest of this post are an attempt to
+concretize work that, as far as I know, is primarily that of Andrew
+Poelstra, who has coined the term "<strong>scriptless scripts</strong>" to describe a
+whole set of applications, usually but not exclusively leveraging the
+linearity of Schnorr signatures to achieve goals that otherwise are not
+possible without a system like Bitcoin's
+<a href="https://en.bitcoin.it/wiki/Script">Script</a>.
+This was partly motivated by Mimblewimble (another separate, huge
+topic), but it certainly isn't limited to that. The broad overview of
+these ideas can be found in these
+<a href="https://download.wpsoftware.net/bitcoin/wizardry/mw-slides/2017-05-milan-meetup/slides.pdf">slides</a>
+from Poelstra's Milan presentation last May.</p>
+<p>So what follows is a series of constructions, starting with Schnorr
+itself, that will (hopefully) achieve a goal: an on-chain atomic
+coinswap where the swap of a secret occurs, on chain, inside the
+signatures - but the secret remains entirely invisible to outside
+observers; only the two parties can see it.</p>
+<p>If you and I agree between ourselves that the number to subtract is 7,
+you can publish "100" on the blockchain and nobody except me will know
+that our secret is "93". Something similar (but more powerful) is
+happening here; remember signatures are actually just numbers; the
+reason it's "more powerful" is that we can enforce the revealing of the
+secret by the other party if the signature is valid, and coins
+successfully spent.</p>
+<p>Before we therefore dive into how it works, I wanted to mention why this
+idea struck me as so important; after talking to Andrew and seeing the
+slides and talk referenced above, I
+<a href="https://twitter.com/waxwing__/status/862724170802761728">tweeted</a>
+about it:</p>
+<p><strong>If we can take the <em>semantics</em> of transactions off-chain in this kind
+of way, it will more and more improve what Bitcoin (or any other
+blockchain) can do - we can transact securely without exposing our
+contracts to the world, and we can reduce blockchain bloat by using
+secrets embedded in data that is already present. The long term vision
+would be to allow the blockchain itself to be a *very* lean contract
+enforcement mechanism, with all the "rich statefulness" .. client-side
+;)<span style="text-decoration: underline;">
+</span></strong></p>
+<h4>Preliminaries: the Schnorr signature itself</h4>
+<p><em>(Notation: We'll use <code>||</code> for concatenation and capitals for elliptic
+curve points and lower case letters for scalars.)</em></p>
+<p>If you want to understand the construction of a Schnorr signature well,
+I can recommend Oleg Andreev's compact and clear
+<a href="http://blog.oleganza.com/post/162861219668/eli5-how-digital-signatures-actually-work">description</a>
+; also nice is Section 1 in the Maxwell/Poelstra Borromean Ring
+Signatures
+<a href="https://github.com/Blockstream/borromean_paper">paper</a>,
+although there are of course tons of other descriptions out there. We'll
+write it in basic form as:</p>
+<div class="highlight"><pre><span></span><span class="err">s = r + e * x</span>
+<span class="err">e = H(P||R||m)</span>
+</pre></div>
+
+
+<p>Note: we can hash, as "challenge" a la <a href="https://en.wikipedia.org/wiki/Proof_of_knowledge#Sigma_protocols">sigma
+protocol</a>,
+just <code>R||m</code> in some cases, and more complex things than just <code>P||R||m</code>,
+too; this is just the most fundamental case, fixing the signature to a
+specific pubkey; the nonce point <code>R</code> is always required).</p>
+<p>For clarity, in the above, <code>x</code> is the private key, <code>m</code> is the message,
+<code>r</code> is the "nonce" and <code>s</code> is the signature. The signature is published
+as either <code>(s, R)</code> or <code>(s, e)</code>, the former will be used here if
+necessary.</p>
+<p>Apologies if people are more used to <code>s = r - ex</code>, for some reason it's
+always <code>+</code> to me!</p>
+<p>Note the linearity, in hand-wavy terms we can say:</p>
+<div class="highlight"><pre><span></span><span class="err">s_1 = r_1 + e * x_1</span>
+<span class="err">s_2 = r_2 + e * x_2</span>
+<span class="err">e = H(P_1 + P2 || R_1 + R_2 || m)</span>
+<span class="err">=&gt;</span>
+<span class="err">s_1 + s_2 is a valid signature for public key (P_1 + P_2) on m.</span>
+</pre></div>
+
+
+<p>But this is <strong>NOT</strong> a useable construction as-is: we'll discuss how
+aggregation of signatures is achieved properly later, briefly.</p>
+<h4>Construction of an "adaptor" signature</h4>
+<p>This is the particular aspect of Poelstra's "scriptless script" concept
+that gets us started leveraging the Schnorr signature's linearity to do
+fun things. In words, an "adaptor signature" is a not a full, valid
+signature on a message with your key, but functions as a kind of
+"promise" that a signature you agree to publish will reveal a secret, or
+equivalently, allows creation of a valid signature on your key for
+anyone possessing that secret.</p>
+<p>Since this is the core idea, it's worth taking a step back here to see
+how the idea arises: you want to do a similar trick to what's already
+been done in atomic swaps: to enforce the atomicity of (spending a coin:
+revealing a secret); but without Script, you can't just appeal to
+something like <code>OP_HASH160</code>; if you're stuck in ECC land, all you have
+is scalar multiplication of elliptic curve points; but luckily that
+function operates similar to a hash function in being one-way; so you
+simply share an elliptic curve point (in this case it will be <code>T</code>), and
+the secret will be its corresponding private key. The beatiful thing is,
+it <em>is</em> possible to achieve that goal directly in the ECC Schnorr
+signing operation.</p>
+<p>Here's how Alice would give such an adaptor signature to Bob:</p>
+<p>Alice (<code>P = xG</code>), constructs for Bob:</p>
+<ul>
+<li>Calculate <code>T = tG</code>, <code>R = rG</code></li>
+<li>Calculate <code>s = r + t + H(P || R+T || m) * x</code></li>
+<li>Publish (to Bob, others): <code>(s', R, T)</code> with <code>s' = s - t</code> (so <code>s'</code>
+    should be "adaptor signature"; this notation is retained for the
+    rest of the document).</li>
+</ul>
+<p>Bob can verify the adaptor sig <code>s'</code> for <code>T,m</code>:</p>
+<div class="highlight"><pre><span></span><span class="err">s&#39; * G ?= R + H(P || R+T || m) * P</span>
+</pre></div>
+
+
+<p>This is not a valid sig: hashed nonce point is <code>R+T</code> not <code>R</code>;</p>
+<p>Bob cannot retrieve a valid sig : to recover <code>s'+t</code> requires ECDLP
+solving.</p>
+<p>After validation of adaptor sig by Bob, though, he knows:</p>
+<p>Receipt of <code>t</code> &lt;=&gt; receipt of valid sig <code>s = s' + t</code></p>
+<h4>Deniability:</h4>
+<p>This is a way of concretizing the concept that all of this will be
+indistinguishable to an observer of the blockchain, that is to say, an
+observer only of the final fully valid signatures:</p>
+<p>Given any <code>(s, R)</code> on chain, create <code>(t, T)</code>, and assert that the
+adaptor signature was: <code>s' = s - t</code>, with <code>R' = R - T</code>, so adaptor
+verify eqn was: <code>s'G = R' + H(P || R'+T || m)P</code></p>
+<h4></h4>
+<h4>Moving to the 2-of-2 case, with Schnorr</h4>
+<p>For the remainder, we're considering the matter of signing off
+transactions from outpoints jointly owned (2 of 2) by Alice and Bob.</p>
+<p>Start by assuming Alice has keypair <code>(x_A, P_A)</code>, and Bob <code>(x_B, P_B)</code>.
+Each chooses a random nonce point <code>r_A</code>, <code>r_B</code> and exchanges the curve
+points with each other (<code>P_A, R_A, P_B, R_B</code>) to create a
+scriptPubKey/destination address.</p>
+<h4>2-of-2 Schnorr without adaptor sig</h4>
+<p>To avoid related-key attacks (if you don't know what that means see e.g.
+the "Cancelation" section in
+<a href="https://diyhpl.us/wiki/transcripts/scalingbitcoin/milan/schnorr-signatures/">https://diyhpl.us/wiki/transcripts/scalingbitcoin/milan/schnorr-signatures/</a>),
+the "hash challenge" is made more complex here, as was noted in the
+first section on Schnorr signatures. The two parties Alice and Bob,
+starting with pubkeys <code>P_A</code>, <code>P_B</code>, construct for themselves a "joint
+key" thusly:</p>
+<div class="highlight"><pre><span></span><span class="err">P_A&#39; = H(H(P_A||P_B) || P_A) * P_A ,</span>
+<span class="err">P_B&#39; = H(H(P_A||P_B) || P_B) * P_B ,</span>
+<span class="err">joint_key = P_A&#39; + P_B&#39;</span>
+</pre></div>
+
+
+<p>Note that Alice possesses the private key for <code>P_A'</code> (it's
+<code>H(H(P_A||P_B) || P_A) * x_A</code>, we call it <code>x_A'</code> for brevity), and
+likewise does Bob. From now on, we'll call this "joint_key" <code>J(A, B)</code>
+to save space.</p>
+<p>Common hash challenge:</p>
+<div class="highlight"><pre><span></span><span class="err">H(J(A, B) || R_A + R_B || m) = e</span>
+<span class="err">s_agg = = r_A + r_B + e(x_A&#39; + x_B&#39;)</span>
+<span class="err">-&gt; s_agg * G = R_A + R_B + e * J(A, B)</span>
+</pre></div>
+
+
+<p>Alice's sig: <code>s_A = r_A + e * x_A'</code>, Bob's sig: <code>s_B = r_B + e * x_B'</code>
+and of course: <code>s_agg = s_A + s_B</code>.</p>
+<p>There is, as I understand it, more to say on this topic, see
+e.g.<a href="http://diyhpl.us/wiki/transcripts/bitcoin-core-dev-tech/2017-09-06-signature-aggregation/">here</a>,
+but it's outside my zone of knowledge, and is somewhat orthogonal to the
+topic here.</p>
+<h4>2-of-2 with adaptor sig</h4>
+<p>Now suppose Bob chooses <code>t</code> s.t. <code>T = t * G</code>, and Bob is going to
+provide an adaptor signature for his half of the 2-of-2.</p>
+<p>Then:</p>
+<ol>
+<li>Alice, Bob share <code>P_A, P_B, R_A, R_B</code> as above; Bob gives <code>T</code> to
+    Alice</li>
+<li>Alice and Bob therefore agree on
+    <code>e = H(J(A, B) || R_A + R_B + T || m)</code> (note difference, <code>T</code>)</li>
+<li>Bob provides adaptor <code>s' = r_B + e * x_B'</code> (as in previous section,
+    not a valid signature, but verifiable)</li>
+<li>Alice verifies: <code>s' * G ?= R_B + e * P_B'</code></li>
+<li>If OK, Alice sends to Bob her sig: <code>s_A = r_A + e * x_A'</code></li>
+<li>Bob completes, atomically releasing <code>t</code>: first, construct
+    <code>s_B = r_B + t + e * x_B'</code>, then combine: <code>s_agg = s_A + s_B</code> and
+    broadcast, then Alice sees <code>s_agg</code></li>
+<li>Alice subtracts:
+    <code>s_agg - s_A - s' = (r_B + t + e * x_B') - (r_B + e * x_B') = t</code></li>
+</ol>
+<p>Thus the desired property is achieved: <code>t</code> is revealed by a validating
+"completion" of the adaptor signature.</p>
+<p><strong>Note</strong>, however that this has no timing control, Bob can jam the
+protocol indefinitely at step 6, forcing Alice to wait (assuming that
+what we're signing here is a transaction out of a shared-control
+outpoint); this is addressed in the fleshed out protocol in the next
+section, though.</p>
+<p>For the remainder, we'll call the above 7 steps the 22AS protocol, so
+<code>22AS(Bob,t, Alice)</code> for Bob, secret <code>t</code>, and Alice. Bob is listed first
+because he holds <code>t</code>.</p>
+<p>Since this is the most important part of the construction, we'll
+summarize it with a schematic diagram:</p>
+<p><img src="/web/20200506162002im_/https://joinmarket.me/static/media/uploads/.thumbnails/22AS.jpg/22AS-1056x816.jpg" width="1056" height="816" alt="22AS protocol" /></p>
+<p>So this <code>22AS</code> was a protocol to swap a coin for a secret, to do atomic
+swaps we need to extend it slightly: have two transactions atomic via
+the same secret <code>t</code>.</p>
+<h3>The Atomic Swap construct, using 2-of-2 schnorr + adaptor signatures</h3>
+<p>This is now <em>fairly</em> straightforward, inheriting the main design from
+the existing "atomic swap" protocol.</p>
+<p>A. Alice and Bob agree on a pair of scriptPubkeys which are based on 2
+of 2 pubkeys using Schnorr, let's name them using <code>D</code> for destination
+address (<code>A</code> is taken by Alice): <code>D_1</code> being 2-2 on (<code>P_A1</code>, <code>P_B1</code>) and
+<code>D_2</code> being 2-2 on (<code>P_A2</code>, <code>P_B2</code>). Note that these pubkeys, and
+therefore destination addresses, are not dependent in any way on
+"adaptor" feature (which is a property only of nonces/sigs, not keys).</p>
+<p>B. Alice prepares a transaction TX1 paying 1 coin into <code>D_1</code>, shares
+txid_1, and requires backout transaction signature from Bob. Backout
+transaction pays from txid_1 to Alice's destination but has locktime
+<code>L1</code>.</p>
+<p>C. Bob does the (nearly) exact mirror image of the above: prepares TX2
+paying 1 coin into <code>D_2</code>, shares txid_2, requires backout transaction
+signature from Alice. Backout transaction pays from txid_2 to Bob's
+destination with locktime <code>L2</code> which is <em>significantly later</em> than <code>L1</code>.</p>
+<p>D. Then Alice and Bob broadcast TX1 and TX2 respectively and both sides
+wait until both confirmed. If one party fails to broadcast, the other
+uses their backout to refund.</p>
+<p>E. If both txs confirmed (N blocks), Alice and Bob follow steps 1-4 of
+<code>22AS(Bob, t, Alice)</code> (described in previous section) for some <code>t</code>, for
+both the scriptPubkeys <code>D_1</code> and <code>D_2</code>, in parallel, but with the same
+secret <code>t</code> in each case (a fact which Alice verifies by ensuring use of
+same <code>T</code> in both cases). For the first (<code>D_1</code>) case, they are signing a
+transaction spending 1 coin to Bob. For the second, <code>D_2</code>, they are
+signing a transaction spending 1 coin to Alice. Note that at the end of
+these steps Alice will possess a verified adaptor sig <code>s'</code> for <em>both</em> of
+the spend-outs from <code>D_1, D_2</code>.</p>
+<p>E(a). Any communication or verification failure in those 1-4 steps (x2),
+both sides must fall back to timelocked refunds.</p>
+<p>F. The parties then complete (steps 5-7) the first <code>22AS(Bob, t, Alice)</code>
+for the first transaction TX1, spending to <code>D_1</code> to give Bob 1 coin.
+Alice receives <code>t</code> as per step 7.</p>
+<p>F(a). As was mentioned in the previous section, Bob can jam the above
+protocol at step 6: if he does, Alice can extract her coins from her
+timelocked refund from <code>D_1</code> in the period between <code>L1</code> and <code>L2</code>. The
+fact that <code>L2</code> is (significantly) later is what prevents Bob from
+backing out his own spend into <code>D_2</code> <em>and</em> claiming Alice's coins from
+<code>D_1</code> using the signature provided in step 5. (Note this time asymmetry
+is common to all atomic swap variants).</p>
+<p>G. (Optionally Bob may transmit <code>t</code> directly over the private channel,
+else Alice has to read it from the blockchain (as per above <code>22AS</code>
+protocol) when Bob publishes his spend out of <code>D_1</code>).</p>
+<p>H. Alice can now complete the equivalent of steps 5-7 without Bob's
+involvement for the second parallel run for <code>D_2</code>: she has <code>t</code>, and adds
+it to the already provided <code>s'</code> adaptor sig for the transaction paying
+her 1 coin from <code>D_2</code> as per first 4 steps. This <code>s' + t</code> is guaranteed
+to be a valid <code>s_B</code>, so she adds it to her own <code>s_A</code> to get a valid
+<code>s_agg</code> for this spend to her of 1 coin, and broadcasts.</p>
+<h2>Summing up</h2>
+<h4>Privacy implications</h4>
+<p>In absence of backouts being published (i.e. in cooperative case), these
+scriptPubkeys will be the same as any other Schnorr type ones (N of N
+multisig will not be distinguishable from 1 of 1). The signatures will
+not reveal anything about the shared secret <code>t</code>, or the protocol carried
+out, so the 2 transaction pairs (pay-in to <code>D_1,D_2</code>, pay out from same)
+will not be tied together in that regard.</p>
+<p>This construction, then, will (at least attempt to) gain the anonymity
+set of all Schnorr sig based transactions. The nice thing about
+Schnorr's aggregation win is, even perhaps more than segwit, the
+economic incentive to use it will be strong due to the size compaction,
+so this anonymity set should be big (although this is all a bit pie in
+the sky for now; we're a way off from it being concrete).</p>
+<p>The issue of amount correlation, however, has <strong>not</strong> been in any way
+addressed by this, of course. It's a sidebar, but one interesting idea
+about amount correlation breaking was brought up by Chris Belcher
+<a href="https://github.com/AdamISZ/CoinSwapCS/issues/47">here</a>
+; this may be a fruitful avenue whatever the flavour of Coinswap we're
+discussing.</p>
+<h4>Comparison with other swaps</h4>
+<p>Since we've now, in this blog post and the previous, seen 3 distinct
+ways to do an atomic coin swap, the reader is forgiven for being
+confused. This table summarizes the 3 different cases:</p>
+<table>
+<thead>
+<tr>
+<th><strong>Type</strong></th>
+<th><strong>Privacy on-chain</strong></th>
+<th><strong>Separate "backout/refund" transactions for non-cooperation</strong></th>
+<th><strong>Requires segwit</strong></th>
+<th><strong>Requires Schnorr</strong></th>
+<th><strong>Number of transactions in cooperative case</strong></th>
+<th><strong>Number of transactions in non-cooperative case</strong></th>
+<th><strong>Space on chain</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Atomic swap</td>
+<td>None; trivially linkable</td>
+<td>None; backout is directly in script</td>
+<td>No</td>
+<td>No</td>
+<td>2 + 2</td>
+<td>2  + 2</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>CoinSwap</td>
+<td>Anonymity set: 2 of 2 transactions (+2 of 3 depending on setup)</td>
+<td>Presigned backouts using H(X) and CLTV, break privacy if used</td>
+<td>Yes</td>
+<td>No</td>
+<td>2 + 2</td>
+<td>3 + 3</td>
+<td>Large-ish</td>
+</tr>
+<tr>
+<td>Scriptless script</td>
+<td>Anonymity set: all Schnorr transactions</td>
+<td>Presigned backouts uslng locktime; semi-break privacy (other txs may use locktime)</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>2 + 2</td>
+<td>2 + 2</td>
+<td>Small</td>
+</tr>
+</tbody>
+</table>
+<p>The reason that there are "3 + 3" transactions in the non-cooperative
+case for CoinSwap is, in that case, both sides pay into a 2-of-2, then
+in non-cooperation, they must  both spend into the custom "HTLC" (IF
+hash, pub, ELSE CLTV, pub), and then redeem *out* of it.</p>
+<p>A fundamental difference for the latter 2 cases, compared with the
+first, is they must pay into shared-ownership 2 of 2 outputs in the
+pay-in transaction; this is to allow backout transactions to be arranged
+(a two-party multi-transaction contract requires this; see e.g.
+Lightning for the same thing). The first, bare atomic swap is a single
+transaction contract, with the contract condtions embedded entirely in
+that one transaction(for each side)'s scriptPubKey.</p>
+<p>Finally, size on-chain of the transactions is boiled down to
+hand-waving, because it's a bit of a complex analysis; the first type
+always uses a large redeem script but one signature on the pay-out,
+whether cooperative or non-cooperative; the second uses 2 or 3
+signatures (assuming something about how we attack the anonymity set
+problem) but no big redeem script in cooperative case, while takes up a
+*lot* of room in the non-cooperative case, the third is always compact
+(even non-cooperative backouts take no extra room).
+Schnorr-sig-scriptless-scripts are the big winner on space.</p>
+<h4>Extending to multi-hop; Lightning, Mimblewimble</h4>
+<p>The first time I think this was discussed was in the mailing list post
+<a href="https://lists.launchpad.net/mimblewimble/msg00086.html%20">here</a>,
+which discusses how conceivably one could achieve the same setup as HTLC
+for Mimblewimble lightning, using this scriptless-script-atomic-swap.
+Doubtless these ideas are a long way from being fleshed out, and I
+certainly haven't kept up with what's going on there :)</p>
+<h4>Other applications of the scriptless script concept</h4>
+<p>As a reminder, this document was just about fleshing out how the atomic
+swap gets done in a Schnorr-signature-scriptless-script world; the
+<a href="https://download.wpsoftware.net/bitcoin/wizardry/mw-slides/2017-05-milan-meetup/slides.pdf">slides</a>
+give several other ideas that are related. Multisignature via
+aggregation is of course part of it, and is already included even in the
+above protocol (for 2 of 2 as a subset of N of N); earlier ideas like
+pay-to-contract-hash and sign-to-contract-hash already exist, and don't
+require Schnorr, but share a conceptual basis; same for ZKCP, etc.</p>
+<h4>Cross chain swap</h4>
+<p>I admit to not sharing <em>quite</em> the same breathless excitement about
+cross-chain swaps as some people, but it is no doubt very interesting,
+if somewhat more challenging (not least because of different "clocks"
+(block arrivals) affecting any locktime analysis and confirmation
+depth). Poelstra has however also made the very intriguing point that it
+is <strong>not</strong> actually required for the two blockchains to be operating on
+the same elliptic curve group for the construction to work.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/about-me/"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/blog/"><i class="fa fa-Blog "></i> Blog</a></li>
+							<li><a href="https://joinmarket.me/main-page/"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (8)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+							<li><a href="https://old.reddit.com/r/joinmarket">Joinmarket reddit</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=279249.620">Original description of Coinjoin</a></li>
+							<li><a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md">My analysis of privacy in Joinmarket's (old) tumbler algorithm</a></li>
+							<li><a href="https://www.ndss-symposium.org/wp-content/uploads/2017/09/ndss201701-4RuffingPaper.pdf">Coinshuffle++ and DiceMix paper</a></li>
+							<li><a href="https://eprint.iacr.org/2016/575">Tumblebit paper</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
