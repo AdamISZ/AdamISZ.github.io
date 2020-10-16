@@ -1109,7 +1109,656 @@ is easy", Fournier claims that ECDSA can be said to have this
 EUF-CMA[VES] security guarantee, which is intended to prove,
 basically, that &lt;strong&gt;the leak of the DH key is the only leak of information
 and that the scheme is secure against forgery&lt;/strong&gt;. I can't claim to be
-able to validate this; I can only say the argument appears plausible.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Ring Signatures</title><link href="https://joinmarket.me/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-02-28T00:00:00+01:00</published><updated>2019-02-28T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-02-28:/blog/blog/ring-signatures/</id><summary type="html">&lt;p&gt;construction of several different ring signatures relevant to Bitcoin.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
+able to validate this; I can only say the argument appears plausible.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Avoiding Wagnerian Tragedies</title><link href="https://joinmarket.me/blog/blog/avoiding-wagnerian-tragedies/" rel="alternate"></link><published>2019-12-15T00:00:00+01:00</published><updated>2019-12-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-12-15:/blog/blog/avoiding-wagnerian-tragedies/</id><summary type="html">&lt;p&gt;Wagner's attack&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Avoiding Wagnerian tragedies&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;This blog post is all about
+&lt;a href="https://people.eecs.berkeley.edu/~daw/papers/genbday.html"&gt;this&lt;/a&gt;
+paper by David Wagner from 2002.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;It is a personal investigation; long, mainly because I wanted to answer
+a lot of questions for myself about it. If you are similarly motivated
+to understand the algorithm, this may provide useful guideposts. But
+there are no guarantees of accuracy.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;_________________________________________________________________________&lt;/p&gt;
+&lt;p&gt;In the Berlin Lightning Conference, Jonas Nick gave a short talk (slides
+&lt;a href="https://nickler.ninja/slides/2019-tlc.pdf"&gt;here&lt;/a&gt;)
+that included a topic that had been on my "TODO list" for some
+considerable time - the so-called Wagner attack. The talk was concise
+and well thought out, and for me it made a lot of sense, but I suspect a
+lot of the audience lost the key point, as indeed was evidenced by the
+only audience question at the end, which was something along the lines
+of "but doesn't the birthday attack mean you can only find a hash
+collision in \(\sqrt{N}\) time, where \(N\) is the size of the hash
+output?" - the questioner had, quite understandably, misunderstood
+exactly what the attack does, and remembered what he (and most people
+who take an interest in these things) saw as the key security property
+that protects how SHA2 and similar are used in cryptocurrency.&lt;/p&gt;
+&lt;p&gt;So .. should you care? If so, why? I think the main value of this
+&lt;em&gt;practically&lt;/em&gt;, if, as likely, you're reading this from the perspective
+of Bitcoin, is that it matters to various non-vanilla signing protocols:
+it can matter to blind signatures, and multisignatures, and very likely
+a whole slew of different complex contracts that might be based on such
+things. And unfortunately, it is &lt;strong&gt;not intuitive&lt;/strong&gt;, so it would be very
+easy to miss it and leave a security hole.&lt;/p&gt;
+&lt;p&gt;My goal in this blog post will be to try to provide some intuition as to
+what the hell Wagner's attack is, and why it could be dangerous.&lt;/p&gt;
+&lt;h2&gt;The Birthday Attack .. or Paradox ... (or just Party?)&lt;/h2&gt;
+&lt;p&gt;Just as the famous &lt;a href="https://en.wikipedia.org/wiki/Twin_paradox"&gt;Twin
+Paradox&lt;/a&gt;
+is not actually a paradox, nor is the perhaps even more famous &lt;a href="https://en.wikipedia.org/wiki/Birthday_problem"&gt;Birthday
+Paradox&lt;/a&gt;.
+The result shown in both of these thought experiments (and actual
+experiments - the former &lt;em&gt;has&lt;/em&gt; actually been done with atomic clocks and
+small fractions of \(c\)) is just surprising, that's all. It violates
+some simple intuitions we have. Here is it stated simply in words:&lt;/p&gt;
+&lt;p&gt;Given a set of 23 people (such as children in a classroom), it is a
+&lt;strong&gt;better than 50-50 chance&lt;/strong&gt; that at least some pair of them will share
+the exact same birthday.&lt;/p&gt;
+&lt;p&gt;The simple argument is: the probability of at least one such pair
+existing is \(1 - \) the probability \(p\) of there being &lt;em&gt;no&lt;/em&gt; such
+pair, which is the case exactly, and only, when &lt;em&gt;every child has a
+different birthday.&lt;/em&gt; Now we can easily see that \(p = 0\) when there
+are 366 children (ignore leap years), and \(p=\frac{364}{365}\) when
+there are only 2 children. The case for \(N\) children would be \(p =
+\frac{364 \times 363 \times \ldots (365-N)}{ 365 \times 365 \times
+\ldots 365}\) where here, we're using the fact that probabilities
+multiply when we want the AND of different events. This \(1 - p\),
+where \(p\) is a function of \(N\), just happens to be \(\simeq
+0.5\) when \(N=23\), hence the result.&lt;/p&gt;
+&lt;h3&gt;Why intuitions about birthdays are (slightly) wrong.&lt;/h3&gt;
+&lt;p&gt;The 23 datapoint does surprise people, usually, but it doesn't shock
+them. It just seems low. Why does it seem low? Is it because when we
+hear the problem statement, we naturally think in more specific terms:
+usually, when I am trying to make a match of two things, I am trying to
+make a match from &lt;em&gt;one specific thing&lt;/em&gt; against some other set of
+comparable things. In case of birthdays, we might look for someone with
+the same birthday as &lt;em&gt;us&lt;/em&gt;, which is a very different problem to finding
+&lt;em&gt;any pairwise match&lt;/em&gt;, as here.&lt;/p&gt;
+&lt;p&gt;Also, it's probabilistic, and people don't have good intuitions about
+probability generally.&lt;/p&gt;
+&lt;p&gt;But let's delve a little deeper than that. We're going to need to, to
+understand the meat of this blogpost, i.e. Wagner's algorithm.&lt;/p&gt;
+&lt;p&gt;To &lt;em&gt;very roughly&lt;/em&gt; quantify why there's a bit more of a chance of success
+in getting a match, than you'd expect, imagine a square grid. Every new
+child we add to the list adds another row *and* column; because this
+is a &lt;em&gt;square&lt;/em&gt;, this is a &lt;strong&gt;quadratic &lt;/strong&gt;function, or effect, or scaling.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/simplesquare5.png/simplesquare5-300x367.png" width="300" height="367" alt="Simple illustration of search space for birthday matches" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(Pictured above: simple example assuming only 3 children. The blue
+stars represent possible matches; there are 3 choose 2 for 3 children,
+i.e. 3. The lines illustrate that this is the same as 3x3/2 - 3/2. The
+bottom left squares are redundant, and those on the diagonal don't
+apply.)&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;If the set of children is \(\{L\}\), and we denote the size of the
+set (number of elements) as \(|L|\), then we can see that the size
+of the &lt;a href="https://en.wikipedia.org/wiki/Cartesian_product"&gt;&lt;strong&gt;Cartesian
+product&lt;/strong&gt;&lt;/a&gt;
+of the set with itself, is \(|L|^{2}\). Since in the problem
+statement - getting a single match - we only need one of the elements of
+this set to be a match. But let's qualify/correct a &lt;em&gt;little&lt;/em&gt; bit so our
+toy example is a little bit better defined. If Alice matches Carol on
+the top row, she'll also match in the first column (A = C means also C =
+A). Further the squares on the main diagonal don't count, A=A is not a
+solution to the problem. So for a set \(\{L\}\), if we want the
+number of chances of a 'hit' to be about the same as the number of
+possible values (the 'sample space' - which for birthdays has size 365),
+then we have this very rough approximation:&lt;/p&gt;
+&lt;p&gt;\(\frac{|L|^{2}}{2} - \frac{|L|}{2} \simeq 365\)&lt;/p&gt;
+&lt;p&gt;Notice this is a very artificial equation: there's no guarantee that
+anything magical happen exactly when the size of the sample space of
+each event (the 365) is equal to the number of 'events' (pairs of
+children, in this case, that might have the same birthday). But it does
+give us the right order of magnitude of &lt;span
+style="text-decoration: underline;"&gt;roughly how many children would be
+needed for the probability to get at least one match in the set to be
+'appreciable'&lt;/span&gt; . Clearly if \(|L|\) was &lt;em&gt;much&lt;/em&gt; bigger than the
+positive solution to the above quadratic equation, the probability is
+going to become overwhelming; eventually once it reaches 365 we must
+have a solution, by the pigeonhole principle, and the probability will
+be very close to 1 way before that. And indeed the positive solution is
+\(\simeq 28\), which is around the same as the exact answer 23, if
+our exact question is how large the set should be to get a 50%
+probability.&lt;/p&gt;
+&lt;p&gt;So while as belaboured above, the calculation above is rough and
+artificial, it conveys the key scaling information - &lt;strong&gt;the chance of
+success scales with the square of the size of the set, because we are
+comparing the set with itself&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3&gt;The birthday attack on hash functions&lt;/h3&gt;
+&lt;p&gt;This line of thinking is commonly applied to the problem of finding
+&lt;a href="https://en.wikipedia.org/wiki/Collision_(computer_science)"&gt;collisions in hash
+functions&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Suppose you had a hash function whose digests were of length 20 bytes
+(SHA1 was of this type). This is 160 bits of 'entropy' - if you assume
+it's doing a good job of producing unpredictably random output. However,
+as a reminder, there is more than one attack against a hash function
+that cryptographers worry about - finding a preimage for an output,
+finding &lt;em&gt;another&lt;/em&gt; preimage, and the third one relevant to our discussion
+- just finding &lt;strong&gt;any&lt;/strong&gt; collision, i.e. finding any two preimages giving
+the same output hash. For this, the above "birthday paradox" scenario
+applies exactly: we have a sample space of \(2^{160}\) possibilities,
+and we're going to select a set \(\{L\}\) from it, with the
+intention of finding at least one pair in the set with the same output
+value. The mathematics is identical and we need something like
+\(|L|^{2}\ \simeq 2^{160}\), or in other words, the size of the
+set we'd have to generate to get a good chance of a collision in the
+hash function, is \(\sqrt{2^{160}}=2^{80}\). Hence a common, if
+approximate, statement, is that &lt;span
+style="text-decoration: underline;"&gt;hash functions have security against
+collision of only half the bits of the output&lt;/span&gt;. So here, SHA1
+could crudely be considered as having 80 bits of security against
+collisions ... unfortunately, this statement ignores the fact that
+collisions in SHA1 have already been
+&lt;a href="https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html"&gt;found&lt;/a&gt;.
+This blog post is, however about non-broken cryptographic constructs;
+collisions are supposed to not be possible to find other than by brute
+force search, so that's a side story here.&lt;/p&gt;
+&lt;h2&gt;Wagner's algorithm&lt;/h2&gt;
+&lt;p&gt;&lt;a href="https://people.eecs.berkeley.edu/~daw/papers/genbday.html"&gt;Wagner's
+paper&lt;/a&gt;,
+"A Generalised Birthday Problem", considers the question of what happens
+if we don't just want a single match between items in a list like this,
+but if we want, instead, &lt;em&gt;a relation between a set of items&lt;/em&gt;. The
+relation considered in particular is applying bitwise XOR, hereafter
+\(\oplus\), e.g. :&lt;/p&gt;
+&lt;p&gt;\(a \oplus b \oplus c \oplus d = 0 \quad (1)\)&lt;/p&gt;
+&lt;p&gt;(this equation is only "e.g.", because we are not restricted to 4; any
+number more than 2 is considered by the paper, and for a number \(k\)
+of items, this is referred to as the &lt;span
+style="text-decoration: underline;"&gt;\(k\)-sum problem&lt;/span&gt;, but for
+now we'll keep it simple and stick to 4).&lt;/p&gt;
+&lt;p&gt;First, let's not forget the obvious: this is a trivial problem if we
+just &lt;strong&gt;choose&lt;/strong&gt; \(a, b, c, d\); just choose the first 3 at random and
+make the last one fit. What Wagner's algorithm is addressing is the
+scenario where the numbers are all drawn from a uniformly random
+distribution (this observation also applies to the children's birthdays;
+we are not &lt;em&gt;choosing&lt;/em&gt; them but getting random ones), but we can generate
+as many such randoms as is appropriate.&lt;/p&gt;
+&lt;p&gt;Next observation: this "generalised" problem is intuitively likely to be
+easier than the original problem of finding only &lt;em&gt;one&lt;/em&gt; pairwise match -
+you can think of the original birthday problem of a match being the same
+as: \(a \oplus b = 0\) (this means a perfect match between \(a\)
+and \(b\)). There, we could think of ourselves as being constrained in
+"roughly" one variable (imagine that \(a\) is fixed and you are
+hunting for \(b\), with the caveat of course that it's crucial to the
+argument of square-root scaling that that is &lt;em&gt;not&lt;/em&gt; the correct problem
+statement!). If we extend to 4 items holding a relation, as above in
+\((1)\), then we have "roughly" three degrees of freedom to work with.
+It'll always tend to be easier to find solutions to puzzles when you
+have more pieces available to play with.&lt;/p&gt;
+&lt;p&gt;However, the meat of the paper is to explain just how much this problem
+is easier than the original (pairwise) birthday problem to solve, and to
+give an explicit algorithm for how to do so. Just like with the number
+23, it is a bit surprising how effective this algorithm is.&lt;/p&gt;
+&lt;h3&gt;The algorithm&lt;/h3&gt;
+&lt;p&gt;To set the stage: suppose we are considering hash functions (so we'll
+forget about birthdays now), and the values \(a, b, c, d\) in
+\((1)\) are outputs of a hash function. Let's go with SHA256 for now,
+so they will all be bit strings of length 256.&lt;/p&gt;
+&lt;p&gt;We can generate an arbitrary number of them by just generating random
+inputs (one particularly convenient way: start with random \(x\),
+calculate \(y = \mathbb{H}(x)\), then calculate \(\mathbb{H}(y)
+\ldots \); this 'deterministic random' approach, which should still
+give a completely random sequence if the hash function is well behaved,
+can be very useful in many search algorithms, see e.g. Chapter 3 and 14
+of
+&lt;a href="https://www.math.auckland.ac.nz/~sgal018/crypto-book/crypto-book.html"&gt;Galbraith&lt;/a&gt;).
+As in earlier sections, we can call this list of such values
+\(\{L\}\).&lt;/p&gt;
+&lt;p&gt;Wagner's suggested approach is to break the problem up, in two ways:
+first, take the list of items in \(L\) and split it into 4 (or
+\(k\)) sublists \(L_1 , L_2, L_3, L_4\). Second, we will take 2
+lists in pairs and then apply the birthday problem to each of them, but
+with a twist: we'll only insist on a &lt;strong&gt;partial match&lt;/strong&gt;, not a full
+match.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;(Historical note: this idea of using a subset of values satisfying a
+simple verifying criteria is also seen in discrete log find algorithms
+as well as hash collision finding algorithms, and is often known as
+"distinguished points"; the idea seems to go back as far as the early
+80s and is due to Rivest according to 14.2.4 of
+&lt;a href="https://www.math.auckland.ac.nz/~sgal018/crypto-book/crypto-book.html"&gt;Galbraith&lt;/a&gt;.
+(Of note is that it's intriguingly analogous to Back's or Dwork's proof
+of work computation idea).)&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;The following diagram to illustrate the idea is taken directly from the
+Wagner paper:&lt;/p&gt;
+&lt;p&gt;&lt;img src="/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/wagnerpic1.png/wagnerpic1-527x472.png" width="527" height="472" alt="Wagner algorithm schematic from paper" /&gt;&lt;/p&gt;
+&lt;p&gt;The \(\bowtie\) symbol may not be familiar: it is here intended to
+represent a
+&lt;a href="https://www1.udel.edu/evelyn/SQL-Class2/SQLclass2_Join.html"&gt;join&lt;/a&gt;
+operation; the non-subscripted variant at the top is what may be called
+an 'inner join' (just, find matches between the two sets), whereas
+\(\bowtie_{l}\) represents the novel part: here, we search not for
+full matches, but only matches in the lowest \(l\) bits of the hash
+values, and we store as output the \(\oplus\) of the pair (more on
+this in a bit). A concrete example:&lt;/p&gt;
+&lt;p&gt;\(L_1 = \{\textrm{0xaabbcc}, \textrm{0x112804}, \textrm{0x1a1dee}
+\ldots \}, \quad L_2 = \{\textrm{0x8799cc}, \textrm{0x54ea3a},
+\textrm{0x76332f} \ldots \}\)&lt;/p&gt;
+&lt;p&gt;Here we're showing toy hash outputs of 3 bytes (instead of 32), written
+in hexadecimal for ease of reading. We're going to use list lengths of
+\(2^{l}\) (which will be justified later; we could have picked any
+length). If \(l\) were 8 (and the lists length 256 therefore), then
+we're searching for matches on the lowest 8 bits of the values, and we
+have:&lt;/p&gt;
+&lt;p&gt;\(L_1 \bowtie_{l} L_2 = \{(\textrm{0xaabbcc} \oplus
+\textrm{0x8799cc} = \textrm{0x2d2200}) \ldots \}\)&lt;/p&gt;
+&lt;p&gt;... plus any other matches if the lists are longer, so that the output
+on doing the low-l-bit-join on these two lists of items, produced at
+least this single item, which is the \(\oplus\) of the "partial
+match", and perforce it will always have its lowest-\(l\) bits as zero
+(because of the properties of \(\oplus\)).&lt;/p&gt;
+&lt;p&gt;Having done this first step for \(L_1 , L_2\) we then do exactly the
+same for \(L_3 , L_4\) (remember - we took an original large random
+list and split it into 4 (equal-sized) sub-lists).&lt;/p&gt;
+&lt;p&gt;That leaves us with two lists that'll look something like this:&lt;/p&gt;
+&lt;p&gt;\(L_1 \bowtie_{l} L_2 = \{\textrm{0x2d2200}, \textrm{0xab3100},
+\textrm{0x50a200}, \ldots\}\)&lt;/p&gt;
+&lt;p&gt;... and the same for \(L_3 , L_4\). Wagner's idea is now to &lt;strong&gt;solve
+the original birthday problem directly on this pair of lists&lt;/strong&gt; - this is
+the simple \(\bowtie\) operator - and he knows it will be easier
+precisely because he has reduced the number of bits to be attacked (in
+this case, by 8, from 24 to 16). To repeat, this &lt;em&gt;isn't&lt;/em&gt; a way to solve
+the original birthday problem (which we restated as \(a \oplus b = 0
+\), but it &lt;em&gt;is&lt;/em&gt; a way to solve the generalised problem of \(a \oplus
+b \oplus c \oplus d = 0\).&lt;/p&gt;
+&lt;p&gt;To give concrete completeness to the above fictitious examples, we can
+imagine:&lt;/p&gt;
+&lt;p&gt;\(L_3 \bowtie_{l} L_4 = \{\textrm{0x2da900}, \textrm{0x896f00},
+\textrm{0x50a200}, \ldots\}\)&lt;/p&gt;
+&lt;p&gt;So we've found this one positive result of the join operation (ignoring
+others from a longer list): \(\textrm{0x50a200}\). What can we deduce
+from that?&lt;/p&gt;
+&lt;h3&gt;From partial solutions to an overall solution&lt;/h3&gt;
+&lt;p&gt;The reason the above steps make any sense in unison is because of these
+key properties of the \(\oplus\) operation:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Associativity: \(a \oplus (b \oplus c) = (a \oplus b) \oplus
+    c\)&lt;/li&gt;
+&lt;li&gt;\(a = b \Rightarrow a \oplus b = 0 \)&lt;/li&gt;
+&lt;li&gt;The above two imply: \( a \oplus b = c \oplus d \Rightarrow a
+    \oplus b \oplus c \oplus d = 0\)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I hope it's clear that the third of the above is the reason why finding:&lt;/p&gt;
+&lt;p&gt;\((L_1 \bowtie_{l} L_2) \bowtie (L_3 \bowtie_{l} L_4)\)&lt;/p&gt;
+&lt;p&gt;... means exactly finding sets of 4 values matching \(a \oplus b
+\oplus c \oplus d = 0\).&lt;/p&gt;
+&lt;h2&gt;Efficiency of the algorithm&lt;/h2&gt;
+&lt;p&gt;Here's why the above idea even matters: it means that finding such
+multi-value matches can be &lt;strong&gt;much&lt;/strong&gt; faster than finding pairwise
+matches. Wagner goes through the reasoning as follows to give an
+approximate feel for how much faster:&lt;/p&gt;
+&lt;p&gt;First, we can observe that it's likely that the efficiency of following
+the above algorithm will depend on the value \(l\). Second, because
+it's hard to get it in abstract, let's stick to our concrete toy example
+where the hash function has only three bytes in the output (so 24 bits),
+and \(l=8\).&lt;/p&gt;
+&lt;p&gt;The chance of a match on &lt;em&gt;any one pair&lt;/em&gt; of elements from \(L_1 ,
+L_2\) respectively is about \(2^{-l}\) (they have to match in
+\(l\) bits and each bit is a coin flip); the number of possible
+matches is \~ \(|L_1| \times |L_2|\). But given that we
+arbitrarily chose the length of the lists as \(2^{8}\) - then we
+expect the number of matches in \(L_1 \bowtie_{l} L_2\) to be
+around \((2^{8} \times 2 ^{8} \times 2^{-8}) = 2 ^{8}\). At first it
+may sound strange to say we expect so many matches but consider a
+smaller example and it's obvious: if there are 10 possible values, and
+we have &lt;span style="text-decoration: underline;"&gt;two&lt;/span&gt; lists of 10
+items, then there are 100 possible matches and a probability 1/10 for
+each one (roughly), so we again expect 10 matches.&lt;/p&gt;
+&lt;p&gt;To complete the analysis we only have to judge how many matches there
+are likely to be between the output of \((L_1 \bowtie_{l} L_2)\)
+and that of \((L_3 \bowtie_{l} L_4)\). As shown in our toy
+example, all of those values have their lowest \(l\) bits zero; a full
+solution of \(a \oplus b \oplus c \oplus d = 0\) will therefore be
+obtained if the remaining bits of the \(\oplus\) of pairs of items
+from the two lists are also zero (keep this deduction I just slid in
+there, in mind! It will be crucial!); the probability of that for one
+pair is clearly \(2^{-(n-l)}\) which in our toy case is
+\(2^{-(24-8)}\), and since each of the lists is length
+\(2^{l}=2^{8}\), we have finally that the expected number of solutions
+from the whole process is around \(|L_{12}| \times |L_{34}|
+\times 2^{-(24-8)} = 2^{8 + 8 - (24-8)} = 1\). This was not an
+accident; we deliberately chose the lengths of the lists to make it so.
+If we call this length \(2^{k}\), and generalise back to \(l\) bits
+for the first partial match step, and \(n\) bits for the hash function
+output, then we have an expected number of solutions of \(2^{2k}
+\times 2^{-(n-l)}\). Clearly we have room for maneuver in what values
+we choose here, but if we choose both \(l\) and \(k = f(l)\) so as
+to make the expected number of matches around 1, then we can choose
+\(k=l\) and \(l = \frac{n}{3}\), as the reader can easily verify.&lt;/p&gt;
+&lt;p&gt;Note that that choice \(l=n/3\) and \(k=l\) (or, in words, have the
+4 sublists of length \(2^{l}\), and have \(l\) be one third of the
+size of the hash output) is not arbitrary, in fact: because we are
+trying to optimise our space and time usage. We discuss how this
+generalises to more than 4 items in the next section, but for 4,  this
+means that we need space to store lists of \(\simeq
+2^{\frac{n}{3}}\).&lt;/p&gt;
+&lt;p&gt;Compare this with the already-explained well-known scaling of the
+original birthday problem: the time-space usage is of the order of
+\(2^{\frac{n}{2}}\) for the same definition of \(n\). This
+difference is big: consider, if a hash function had a 150 bit output
+(let's forget that that's not a whole number of bytes!), then the
+birthday problem is 'defended' by about 75 bits, whereas the 4-list
+"generalised birthday problem" here is defended by only 50 bits (which
+isn't a reasonable level of defence, at all, with modern hardware).&lt;/p&gt;
+&lt;h3&gt;Bigger \(k\)-sum problems and bigger trees.&lt;/h3&gt;
+&lt;p&gt;Clearly while the 4-sum problem illustrated above is already quite
+powerful, it will be even more powerful if we can realise instances of
+the problem statement with more lists. If we stick with powers of 2 for
+simplicity, then, in the case of \(k=256\), we will be able to
+construct a larger, complete binary tree with depth 8, combining pairs
+of lists just as above and passing to the next level up the tree. At
+each step, the number of bits matched increases until we search for full
+matches (birthday) right at the top or root of the tree.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;This results in overall a time/space usage for these algorithms of
+roughly \(O(2^{\frac{n}{log_{2}k+1}})\). So while for our earlier
+\(k=4\) we had \(O(2^{\frac{n}{3}})\), for \(k=256\) we have
+\(O(2^{\frac{n}{9}})\), i.e. the attack could be very powerful
+indeed!&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you're still a bit bewildered as how it might be possible to so
+drastically reduce the difficulty of finding matches, just by
+constructing a tree, note that it's part of a broader theme in much
+mathematics: note what is sometime called the triangle inequality:&lt;/p&gt;
+&lt;p&gt;\(|a| + |b| \ge |a+b|\)&lt;/p&gt;
+&lt;p&gt;and in cases where a homomorphism applies, i.e. \(f(a+b) = f(a) +
+f(b)\), it can sometimes be the case that the ability to shift from one
+to the other - from "process each object individually" to "process the
+combined object" allows one to collapse down the computational
+difficulty of a problem. And that's what's happening here - the fact
+that one can process &lt;em&gt;parts&lt;/em&gt; of these objects individually - i.e., find
+matches on &lt;em&gt;subsets&lt;/em&gt; of the bits of the random numbers, and then combine
+those linearly, gives a better outcome (performance wise) than if one
+were to try to find total matches all at once.&lt;/p&gt;
+&lt;p&gt;This is just a very vague musing though; feel free to ignore it :)&lt;/p&gt;
+&lt;h2&gt;Generalising the algorithm&lt;/h2&gt;
+&lt;p&gt;First let's briefly mention the important but fairly simple point: you
+can generalise from \(a \oplus b \oplus c \oplus d = 0\) to \(a
+\oplus b \oplus c \oplus d = c\) for some non-zero \(c\); just
+replace one of the lists, e.g. \(L_4\) with a corresponding list
+where all terms are xor-ed with the value \(c\), so that the final
+result of xor-ing the 4 terms found by the above algorithm will now be
+\(c\) instead of zero.&lt;/p&gt;
+&lt;p&gt;Also let's note that we ended up finding solutions only from a small
+set: those for which there was a match in the final \(l\) bits of
+pairs of elements. This restriction can be changed from a match to an
+offset in the bit values, but it's only of minor interest here.&lt;/p&gt;
+&lt;p&gt;A far more important question though, which we will expand upon in the
+next section: can we generalise from groups with the
+\(\oplus\)-operation to groups with addition? Solving, say:&lt;/p&gt;
+&lt;p&gt;\(a+b+c+d=0\ \textrm{mod}\ 2^{n}\)&lt;/p&gt;
+&lt;p&gt;(it's a little easier mod \(2^{n}\) than for arbitrary sized additive
+groups, but that's a detail, explained in the paper).&lt;/p&gt;
+&lt;p&gt;The answer is yes, but it's worth taking a moment to consider why:&lt;/p&gt;
+&lt;p&gt;We need to slightly alter the algorithm to make it fit the properties of
+addition: to replicate the property \(a \oplus b = 0\) we replace
+\(b\) with \(-b\), and we do this in both the two "layers" of the
+algorithm for the 4 list case (see paper for details). Now what's
+crucial is that, in doing this, we preserve the property that &lt;strong&gt;a match
+in the lowest \(l\) bits in the first step is retained after
+combination in the second step&lt;/strong&gt; (the way Wagner puts it is: "The reason
+this works is that \(a \equiv b \ \textrm{mod} 2^{l}\) implies
+\((a+c \ \textrm{mod}2^{n}) \equiv (b+c\ \textrm{mod}2^{n})\
+(\textrm{mod}2^{l})\): the carry bit propagates in only one
+direction."; in other words the match is not 'polluted' by the way in
+which addition differs from xor, namely the carry of bits. This the
+reader can, and probably should, verify for themselves with toy examples
+of numbers written as bitstrings, using e.g. \(l=2, n=4\) or similar).&lt;/p&gt;
+&lt;p&gt;Because of the carry of bits (or digits) when we add, this isn't
+perfectly obvious, but in the \(\oplus\) case it really is: what
+makes the algorithm works is the preservation of a distinguishing
+property after multiple applications of the operation, to reduce a large
+set into a smaller one.&lt;/p&gt;
+&lt;h3&gt;Does it work for all groups?&lt;/h3&gt;
+&lt;p&gt;Since the above algorithm seems to be kind of generic, it's natural to
+start wondering (and worrying!) that it may apply also to other
+apparently hard collision problems. In particular, couldn't you do
+something similar with elliptic curve points?&lt;/p&gt;
+&lt;p&gt;The main point of this blog post, apart from just trying to explain the
+Wagner algorithm, was to answer this question in the negative. As we'll
+see shortly, there is a concise academic argument that the answer
+&lt;em&gt;should&lt;/em&gt; be no, but I want to give some insight as to &lt;em&gt;why&lt;/em&gt; it's no,
+that is, why you cannot use this approach to find sets of scalars which,
+when passed through the randomising function of elliptic curve scalar
+multiplication to produce points on the curve, result in a sum to a
+provided point, and thus solve the ECDLP.&lt;/p&gt;
+&lt;h3&gt;Wei Dai's argument&lt;/h3&gt;
+&lt;p&gt;Before we begin, an amusing piece of trivia: the long version of
+Wagner's paper cites both Wei Dai and Adam Back, in a curious similarity
+to ... another well known paper that came out 6 years later :)&lt;/p&gt;
+&lt;p&gt;What is cited as coming from private correspondence with Wei Dai is the
+following logic, which superficially appears fairly trivial. But it's
+nonetheless crucial. It's a &lt;strong&gt;reduction argument&lt;/strong&gt; of the type we
+discussed in some considerable detail in the last two blog posts (on
+signatures):&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;If the \(k\)-sum problem can be solved on any cyclic group \(G\)
+in time \(t\), then the discrete logarithm problem on that group can
+also be solved in time \(O(t)\).&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The words are carefully chosen here. Note that both \((\mathbb{Z}_n ,
++)\) and \((\mathbb{Z}_n , \times )\) are cyclic groups of order
+\(n\). In the former, we have already explained that the \(k\)-sum
+problem can be solved efficiently; so this is really only an important
+statement about the multiplicative group, not the additive group.&lt;/p&gt;
+&lt;p&gt;And that makes sense, because the "discrete logarithm problem" (defined
+in the broadest possible way) is only hard in the multiplicative group
+(and even then, only if \(n\) has large/very large prime factors, or
+ideally just is a prime) and not in the additive group. To illustrate:
+take the group \(G = (\mathbb{Z}_{11} , +)\), and define a
+'generator' element 3 (any element works as a generator if n is prime);
+if I were to ask you for the 'discrete log' of 7 in this group, it would
+really mean finding \(x \in G\) such that \(3x = 7\) which is
+really just the problem of finding \(x = 7 \times 3^{-1} \
+\textrm{mod} 11\), which is a trivial problem (see: the &lt;a href="https://en.m.wikipedia.org/wiki/Extended_Euclidean_algorithm"&gt;Extended
+Euclidean
+Algorithm&lt;/a&gt;),
+even if you replace 11 with a very large prime. It's for this reason
+that it would be a terribly naive error to try to do cryptography on an
+additive group of integers; basically, division, being the additive
+analog of logarithms for multiplication, is trivially easy.&lt;/p&gt;
+&lt;p&gt;But Wei Dai's argument goes a bit further than that concrete reasoning,
+because he's saying the "if-then" (which can also be reversed, by the
+way - see the paper, "Theorem 3") can be applied to any, arbitrary
+groups - and that includes elliptic curve groups. If the DLP is hard in
+that group, the \(k\)-sum problem can't be solved easily, and vice
+versa. The argument is something like (we use \(\cdot\) specifically
+to indicate &lt;em&gt;any&lt;/em&gt; group operation):&lt;/p&gt;
+&lt;p&gt;If you can find a solution to:&lt;/p&gt;
+&lt;p&gt;\(x_1 \cdot x_2 \cdot \ldots x_k = y\)&lt;/p&gt;
+&lt;p&gt;..using an efficient \(k\)-sum problem algorithm applied to uniformly
+randomly generated \(x_i\)s, and if the group's generator is written
+as \(g\), and the dlog of \(y\) in this group is \(\theta\), i.e.
+\(y=g^{\theta}\), then you can use that solution to find
+\(\theta\):&lt;/p&gt;
+&lt;p&gt;\(w_1 + w_2 + \ldots w_k = \theta\)&lt;/p&gt;
+&lt;p&gt;Thus, we have, essentially, a &lt;span
+style="text-decoration: underline;"&gt;reduction of the discrete logarithm
+problem to the k-sum problem&lt;/span&gt;.&lt;/p&gt;
+&lt;h3&gt;But why doesn't the algorithm work for DLP hard groups?&lt;/h3&gt;
+&lt;p&gt;We've already seen the key point in "Generalising the algorithm" above,
+so if you skipped the last part of that section, do read it!&lt;/p&gt;
+&lt;p&gt;To reiterate, notice that the main description of solving this problem
+with groups using \(\oplus\) or just addition required finding
+partial matches and then preserving the features of partial matches
+through repeated operations. It's precisely this that does not work in a
+multiplicative group.&lt;/p&gt;
+&lt;p&gt;Here's a concrete example of doing that, with an additive group of the
+simplest type, where we are working modulo a power of 2, let's say
+\(n=4\) and \(l=2\) so we are examining the lowest 2 bits, in
+numbers of 4 bits (i.e. modulo 16):&lt;/p&gt;
+&lt;p&gt;Take \(a=17, \ b=41\) which are both 1 mod 4. Now we apply an offset
+value \(c=9\) (can be anything). We find:&lt;/p&gt;
+&lt;p&gt;\((a+c)_{16} = 26_{16}=10,\quad (b+c)_{16}=50_{16} = 2\)&lt;/p&gt;
+&lt;p&gt;and both the answers (10 and 2) are 2 mod 4, which verifies the point:
+equality in the lowest order bits can be preserved when adding members.
+This is what allows Wagner's trick to work.&lt;/p&gt;
+&lt;p&gt;If we talk about multiplication, though, particularly in a group of
+prime order, we find we don't get these properties preserved; in such a
+group, multiplication has a strong &lt;strong&gt;scrambling effect&lt;/strong&gt;. We'll take one
+concrete example: \((\mathbb{Z}_{29}, \times)\). If I start with
+any number and just keep multiplying by itself (this is basically how
+'generators' work), we get this sequence:&lt;/p&gt;
+&lt;p&gt;\(3,9,27,23,11,4,12,7,21,5,15,16,19,28,26,20,2,6,18,25,17,22,8,24,14,13,10,1,3,\ldots
+\)&lt;/p&gt;
+&lt;p&gt;(e.g. 4th element is 23 is because 27 times 3 mod 29 = 23).&lt;/p&gt;
+&lt;p&gt;The pattern repeats after 29 steps as expected; but within the sequence
+we have an entirely random ordering. This is a direct consequence of the
+fact that the number 3 and 29 have no common factors, there's nowhere
+they can "line up".&lt;/p&gt;
+&lt;p&gt;To illustrate further, consider what happens with addition instead:
+still working modulo 29, let's see what happens if we add a number to
+itself repeatedly (note I chose 25 to be a slightly less obvious case -
+but it's still obvious enough!):&lt;/p&gt;
+&lt;p&gt;\(25,21,17,13,9,5,1,26,22,18,14,10,6,2,27,23,19,15,11,7,3,28,24,20,16,12,8,4,0,
+\ldots \)&lt;/p&gt;
+&lt;p&gt;Note that you're seeing it dropping by 4 each time because \(25 \equiv
+-4\) in mod 29. There is always such a simple pattern in these
+sequences in additive groups, and that's why division is trivial while
+discrete logarithm is not.&lt;/p&gt;
+&lt;p&gt;So, as a consequence of this scrambling effect, we also find that
+Wagner's observation about adding integers and then taking modulo
+\(l\) no longer works, in multiplicative groups, at least in general.
+Again, a concrete example using \((\mathbb{Z}_{29}, \times)\):&lt;/p&gt;
+&lt;p&gt;Let \(a=17,\ b=13\); both integers modulo 29. We'll, as before, check
+the value modulo 4, both before and after adding an offset: they are
+both 1 modulo 4. Let the offset we're going to apply to both, be 9. But
+this time we're not going to &lt;em&gt;add&lt;/em&gt; 9 but multiply it, because that is
+the group operation now; we get:&lt;/p&gt;
+&lt;p&gt;\((17\times 9)_{29} = 153_{29} = 8_{29} \quad \rightarrow 0_{4}
+\)&lt;/p&gt;
+&lt;p&gt;but:&lt;/p&gt;
+&lt;p&gt;\((13\times 9)_{29} = 117_{29} = 1_{29} \quad \rightarrow 1_{4}
+\)&lt;/p&gt;
+&lt;p&gt;and, so unlike in the additive group case, we failed (at least for this
+example, and this group - I haven't &lt;span
+style="text-decoration: underline;"&gt;proved&lt;/span&gt; anything!) to preserve
+the two low order bits (or the value mod 4, equivalently).&lt;/p&gt;
+&lt;p&gt;In summary, as far as the current state of mathematics goes, it is
+believed that there is not a way to do such a property preservation
+"through" multiplication - but specifically this statement only applies
+in groups where the discrete log is &lt;em&gt;actually&lt;/em&gt; hard.&lt;/p&gt;
+&lt;p&gt;All of the above cross-applies to elliptic curves: like in
+multiplicative groups (certain of them), the DLP is hard because the
+group operator is essentially a 'scrambler', so the preservation of
+properties, that Wagner requires, doesn't work.&lt;/p&gt;
+&lt;h2&gt;Applications to real systems&lt;/h2&gt;
+&lt;h3&gt;The OR of sigma protocols.&lt;/h3&gt;
+&lt;p&gt;This is a topic that was covered in an earlier &lt;a href="https://web.archive.org/web/20200428222140/https://joinmarket.me/blog/blog/ring-signatures/"&gt;blog
+post&lt;/a&gt;,
+so I will not give the outline here - but you'll need that context to
+understand the following. But we see here a fascinating implication of
+Wagner's idea to these protocols. Recall that the verification uses the
+following equation:&lt;/p&gt;
+&lt;p&gt;\(e_1 \oplus e_2 \ldots \oplus e_k = e\)&lt;/p&gt;
+&lt;p&gt;... look familiar at all? This of course is &lt;em&gt;exactly&lt;/em&gt; the \(k\)-sum
+problem that Wagner attacks! Therefore a dishonest prover has a much
+better chance of fooling a verifier (by providing a valid set of
+\(e_i\)-s) than one might expect naively if one hadn't thought about
+this algorithm. Fortunately, there is a huge caveat: &lt;strong&gt;this attack
+cannot be carried out if the protocol has special soundness&lt;/strong&gt;. Special
+soundness is a technical term meaning that if an extractor can generate
+two validating transcripts, it can extract the witness. In this case,
+the Wagner algorithm could not be performed &lt;em&gt;without already knowing the
+secret/witness &lt;/em&gt;(details: the attack would be to generate huge lists of
+transcripts \(R, e, s\) (notation as per previous blogs), where \(e,
+s\) are varied, keeping \(R\) fixed - but that's exactly how an
+extractor works) - so in that sense it wouldn't be an attack at all.
+However, not all zero knowledge protocols do have the special soundness
+property. So while this is very in the weeds and I am not able to
+illustrate further, it is certainly an interesting observation, and the
+discussion in the full version of the Wagner paper is worth a read.&lt;/p&gt;
+&lt;h3&gt;Musig&lt;/h3&gt;
+&lt;p&gt;Obviously Wagner did not discuss this one :) This will be a very high
+level summary of the issue in the context of
+&lt;a href="https://eprint.iacr.org/2018/068"&gt;Musig&lt;/a&gt;,
+the newly proposed scheme for constructing multisignatures via
+aggregated Schnorr signatures. Read the Musig paper for more detail.&lt;/p&gt;
+&lt;p&gt;Recall that the naive aggregation of Schnorr signatures is insecure in
+the multisig context due to what can be loosely called "related key
+attacks" or "key subtraction attacks":&lt;/p&gt;
+&lt;p&gt;\(P_1 = x_1 G\quad P_2 =x_2G\)&lt;/p&gt;
+&lt;p&gt;\(s_1 = k_1 + ex_1\ ,\ s_2 = k_2 + ex_2\quad
+s_{\textrm{agg}} = k_1 + k_2 + e(x_1+x_2)\)&lt;/p&gt;
+&lt;p&gt;fails in the multisig context of user-generated keys due to attacker
+choosing:&lt;/p&gt;
+&lt;p&gt;\(P_2 = P^{*}_2 - P_1\quad P^{*}_2 = x^{*}_2 G\)&lt;/p&gt;
+&lt;p&gt;and then the attacker is able to construct a valid signature without
+knowledge of \(x_1\).&lt;/p&gt;
+&lt;p&gt;The paper explains that a naive fix for this problem &lt;span
+style="text-decoration: underline;"&gt;is actually susceptible to Wagner's
+attack!&lt;/span&gt;&lt;/p&gt;
+&lt;p&gt;If you write each key as \(P^{*}_{i} = \mathbb{H}(P_i)P_i\), in
+words, you (scalar) multiply each key by its hash, then you still know
+the private key (just also multiply it by the same hash value), and you
+might think you have removed the key subtraction attack, because an
+attacker wants to create \(P_2\) such that it's the difference
+between a key he knows and \(P_1\); but he can't know the hash value
+before he computes it, so he will never be able to arrange for
+\(\mathbb{H}(P_2)P_2\) to be a non-random value. This same logic is
+seen in many places, e.g. in the fixing of public keys inside a basic
+Schnorr signature challenge. But here, it's not enough, because there
+are more degrees of freedom:&lt;/p&gt;
+&lt;p&gt;Suppose the attacker is all \(n-1\) keys \(P_i\) except for the
+first, \(P_1\), which the honest victim provides. Then the attacker's
+goal is to make signing work without the honest victim's participation.
+Now the aggregate key in this naive form of Musig is:&lt;/p&gt;
+&lt;p&gt;\(P_{agg} = \sum\limits_{i=1}^{n} \mathbb{H}(P_i)P_i\)&lt;/p&gt;
+&lt;p&gt;So the attacker's goal is to find all the other keys as offsets to the
+first key such that the first key is removed from the equation. He sets:&lt;/p&gt;
+&lt;p&gt;\(P_i = P_1 + y_iG \quad \forall i \in 2\ldots n\)&lt;/p&gt;
+&lt;p&gt;i.e the \(y_i\) values are just linear tweaks. Then let's see what
+the aggregated key looks like in this naive version of Musig:&lt;/p&gt;
+&lt;p&gt;\(P_{agg} = \mathbb{H}(P_1)P_1 + \sum\limits_{i=2}^{n}
+\mathbb{H}(P_1 + y_i G)(P_1 + y_i G) \)&lt;/p&gt;
+&lt;p&gt;\(P_{agg} = \mathbb{H}(P_1)P_1  + \sum\limits_{i=2}^{n}
+\mathbb{H}(P_1 + y_i G)(P_1) + \sum\limits_{i=2}^{n}
+\mathbb{H}(P_1 + y_i G)(y_i G)\)&lt;/p&gt;
+&lt;p&gt;Now, note that there are three terms and &lt;strong&gt;the last term is an
+aggregated key which the attacker controls entirely&lt;/strong&gt;. Consequently, if
+the attacker can arrange for the first and second terms to cancel out,
+he will succeed in signing without the victim's assent. Luckily that's
+exactly an instance of Wagner's \(k\)-sum problem!:&lt;/p&gt;
+&lt;p&gt;\(\sum\limits_{i=2}^{n} \mathbb{H}(P_1 + y_i G) =
+-\mathbb{H}(P_1) \)&lt;/p&gt;
+&lt;p&gt;Notice crucially that we've reduced this to an equation in &lt;strong&gt;integers&lt;/strong&gt;
+not elliptic curve points, as per the long discussions above about Wei
+Dai's observation. This will be soluble, and it will be more soluble
+(and more soluble than expected!) for arbitrarily chosen \(y_i\)-s,
+as the value of \(n\) increases. The attack requires the attacker to
+control some subset of keys (in this simple illustration, \(n-1\)
+keys, but it can actually be fewer), but since the whole point is to
+remove trust of other key-owners, this is certainly enough to reject
+this construction.&lt;/p&gt;
+&lt;p&gt;The solution is nearly obvious, if unfortunately it makes the equation a
+little more complicated: &lt;strong&gt;fix the entire keyset, not just your own key,
+in the hash&lt;/strong&gt; (notice an echo here to the discussion of ring signatures
+in an earlier blog post). By doing so, you cannot separate out the
+dependence in \(P_1\) and thus cancel it out. So replace
+\(\mathbb{H}(P_1)P_1\) with \(\mathbb{H}(P_1, P_2, \ldots ,
+P_n)P_1\). The authors of the musig construct tend to use the term
+'delinearization' specifically to describe this.&lt;/p&gt;
+&lt;h3&gt;Other examples&lt;/h3&gt;
+&lt;p&gt;In fact, probably the most striking example of how Wagner's attack may
+have implications for the security of real systems, is the attack he
+describes against Schnorr blind signatures. But it is unfortunately also
+the most complicated, so I will just briefly mention here that he shows
+that a certain kind of such blind signatures can be forged given a
+number \(k\) of parallel interactions with a signing oracle (which is
+often a realised thing in systems that actually use blind signatures;
+they are often used as kind of tokens/certificates), using the
+corresponding \(k\)-sum problem.&lt;/p&gt;
+&lt;p&gt;He shows that certain specialised hash constructions (which may well be
+outdated now, nearly 20 years later) have weaknesses exposed by this
+kind of attack.&lt;/p&gt;
+&lt;p&gt;Curiously, he discusses the case of KCDSA, a Korean variant of DSA,
+pointing out that it's possible to collide signatures (specifically the
+\(s\) in an \(r, s\) pair), in the sense of having two different
+messages with the same signature. A similar concept w.r.t. ECDSA can be
+found in &lt;a href="https://link.springer.com/content/pdf/10.1007%2F3-540-45708-9_7.pdf"&gt;this
+paper&lt;/a&gt;
+- there it exploits a simple symmetry of the algorithm, but requires
+that the public/private key pair be created as part of the 'stunt'.
+Wagner on the other hand shows his algorithm can be used to find
+"collisions" of this type in the KCDSA algorithm, but without the
+restriction of having to create a key pair specially for the purpose
+(i.e. it works for an existing key).&lt;/p&gt;
+&lt;p&gt;Several other possible applications are listed in the long version of
+the paper.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category></entry><entry><title>Ring Signatures</title><link href="https://joinmarket.me/blog/blog/ring-signatures/" rel="alternate"></link><published>2019-02-28T00:00:00+01:00</published><updated>2019-02-28T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-02-28:/blog/blog/ring-signatures/</id><summary type="html">&lt;p&gt;construction of several different ring signatures relevant to Bitcoin.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Ring signatures&lt;/h3&gt;
 &lt;h2&gt;Outline:&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Basic goal of 1-of-\(N\) ring signatures&lt;/li&gt;
