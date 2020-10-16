@@ -1180,7 +1180,7 @@ understand the meat of this blogpost, i.e. Wagner's algorithm.&lt;/p&gt;
 in getting a match, than you'd expect, imagine a square grid. Every new
 child we add to the list adds another row *and* column; because this
 is a &lt;em&gt;square&lt;/em&gt;, this is a &lt;strong&gt;quadratic &lt;/strong&gt;function, or effect, or scaling.&lt;/p&gt;
-&lt;p&gt;&lt;img src="/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/simplesquare5.png/simplesquare5-300x367.png" width="300" height="367" alt="Simple illustration of search space for birthday matches" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/simplesquare5.png/simplesquare5-300x367.png" width="300" height="367" alt="Simple illustration of search space for birthday matches" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;(Pictured above: simple example assuming only 3 children. The blue
 stars represent possible matches; there are 3 choose 2 for 3 children,
 i.e. 3. The lines illustrate that this is the same as 3x3/2 - 3/2. The
@@ -1317,7 +1317,7 @@ as well as hash collision finding algorithms, and is often known as
 of work computation idea).)&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;The following diagram to illustrate the idea is taken directly from the
 Wagner paper:&lt;/p&gt;
-&lt;p&gt;&lt;img src="/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/wagnerpic1.png/wagnerpic1-527x472.png" width="527" height="472" alt="Wagner algorithm schematic from paper" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428222140im_/https://joinmarket.me/static/media/uploads/.thumbnails/wagnerpic1.png/wagnerpic1-527x472.png" width="527" height="472" alt="Wagner algorithm schematic from paper" /&gt;&lt;/p&gt;
 &lt;p&gt;The \(\bowtie\) symbol may not be familiar: it is here intended to
 represent a
 &lt;a href="https://www1.udel.edu/evelyn/SQL-Class2/SQLclass2_Join.html"&gt;join&lt;/a&gt;
