@@ -1,5 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive - waxwings Blog</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/waxwings-blog.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2020-06-15T00:00:00+02:00</updated><entry><title>The 445BTC gridchain case</title><link href="https://joinmarket.me/blog/blog/the-445-btc-gridchain-case/" rel="alternate"></link><published>2020-06-15T00:00:00+02:00</published><updated>2020-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-06-15:/blog/blog/the-445-btc-gridchain-case/</id><summary type="html">&lt;p&gt;analysis of gridchain blockchain analysis and implications for Joinmarket usage.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive - waxwings Blog</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/waxwings-blog.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2020-10-25T00:00:00+02:00</updated><entry><title>Joinmarket update for Oct 2020</title><link href="https://joinmarket.me/blog/blog/oct-2020-update/" rel="alternate"></link><published>2020-10-25T00:00:00+02:00</published><updated>2020-10-25T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-10-25:/blog/blog/oct-2020-update/</id><summary type="html">&lt;p&gt;Joinmarket update Oct 2020&lt;/p&gt;</summary><content type="html">&lt;h2&gt;About this post&lt;/h2&gt;
+&lt;p&gt;It seems like a good idea to start using this blog to spread a little bit more information
+to users and other interested parties, about Joinmarket, in particular about how it might
+change.&lt;/p&gt;
+&lt;p&gt;First, please note this is a &lt;em&gt;personal&lt;/em&gt; blog, there is nothing "official" here (and the same
+would go for anyone else's blog about Joinmarket! - this is an open source project).&lt;/p&gt;
+&lt;p&gt;Second, please note that for years now I have been microblogging &lt;a href="https://x0f.org/web/accounts/1077"&gt;here&lt;/a&gt;; so,
+if you're interested to keep in touch with what I'm doing (and often, reading, or just thinking) day by day,
+you're welcome to follow that account. I personally like keeping track of people over RSS with &lt;a href="https://fraidyc.at"&gt;fraidyc.at&lt;/a&gt;,
+but whatever suits you. Just know that Joinmarket related announcements are often made there first (I don't and will not use any corporate-owned social media sites).&lt;/p&gt;
+&lt;h3&gt;Joinmarket status.&lt;/h3&gt;
+&lt;p&gt;0.7.1 of Joinmarket was released 12 days ago, and introduced &lt;em&gt;receiving&lt;/em&gt; BIP78 payjoins, on the GUI and on command line.&lt;/p&gt;
+&lt;p&gt;In the next few days 0.7.2 will be released. It is principally a bugfix release.&lt;/p&gt;
+&lt;p&gt;(Although there will be one small
+new feature - not-self broadcasting is finally reimplemented. You'll want to be careful about using it, especially
+to start with (since it'll only work with counterparties that also have the latest release); there will of course
+be advice about this in the release notes. Consider it an advanced feature, and consider using tor-only in your
+Core node if the base level of privacy in broadcasting transactions isn't enough for you.)&lt;/p&gt;
+&lt;p&gt;The bugs fixed are things that came out of interoperability tests on BIP78.&lt;/p&gt;
+&lt;p&gt;Over the last few weeks I, Kristaps Kaupe and some people on other dev teams have been running a variety
+of testnet, mainnet, regtest tests of Payjoin functionality between btcpayserver, Wasabi and Joinmarket.&lt;/p&gt;
+&lt;p&gt;We found various edge cases, like hex instead of base64 being transferred (not in spec but people were doing
+it anyway), incorrectly shuffled output ordering (my bad!), combinations of parameters in the HTTP request
+that &lt;em&gt;I&lt;/em&gt; interpreted the BIP as saying was not allowed, but btcpayserver was sending anyway (but: not always! -
+testing can be a real pain sometimes!) and a few more.&lt;/p&gt;
+&lt;p&gt;Remember two things about Payjoin though:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;It is a protocol designed to accept a failure to negotiate as a common event - &lt;em&gt;the payment goes through anyway, it's just a coinjoin then&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;The most common incompatibility between wallets will be different address types. Then nothing can be done, as it would be slightly silly to do a Payjoin like that - we fall back, as per (1).&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;So hopefully we will have some wallets that can send and receive Payjoins up and running by .. well, now actually! It is already possible and working, we are just smoothing out edge cases here.&lt;/p&gt;
+&lt;p&gt;If you didn't get a chance, please watch this demo video of sending and receiving payjoins between Joinmarket wallets (note: the dialog is now improved, as I comment here):&lt;/p&gt;
+&lt;p&gt;https://video.autizmo.xyz/videos/watch/7081ae10-dce0-491e-9717-389ccc3aad0d&lt;/p&gt;
+&lt;p&gt;It only has 31 views, many of which were me, so I guess not many people saw it :)&lt;/p&gt;
+&lt;p&gt;About point (2) above, note that you'll probably need to be using a Joinmarket bech32 wallet (yes, we've had them for quite a while!) if you want to send or receive with Wasabi. So, more on that next:&lt;/p&gt;
+&lt;h3&gt;Joinmarket future plans (tentative!)&lt;/h3&gt;
+&lt;h4&gt;Bech32 in 0.8.0&lt;/h4&gt;
+&lt;p&gt;We have &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/656"&gt;this&lt;/a&gt; PR open from jules23 and it represents a very impactful (but happily, not large technically) change that is proposed: to switch to a "bech32 orderbook", by which we mean making changes like this&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The default wallet changes to native segwit (bech32, bc1.. addresses)&lt;/li&gt;
+&lt;li&gt;Joinmarket coinjoins (i.e. maker/taker coinjoins) are offered as &lt;code&gt;sw0reloffer&lt;/code&gt;, &lt;code&gt;sw0absoffer&lt;/code&gt; in the trading pit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Both of these changes would not be "mandatory", just as when we switched to segwit in 2017, it was not mandatory, but would be default in the new version. The fees for coinjoins will be significantly reduced from the current "wrapped segwit" addresses, and we would gain better compatibility with Wasabi and a number of other modern wallets that default to bech32.&lt;/p&gt;
+&lt;p&gt;The general problem with these updates (which we've only done once before) is that they cause a "liquidity split" temporarily, as not everyone migrates to the new address type at the same time. This is unfortunate, but I feel less concerned about it than last time, as the amount of maker liquidity is &lt;em&gt;much&lt;/em&gt; larger (more on that below, about IRC).
+Another reason to be slightly unsure about this update is that taproot activation may be coming quite soon, but it seems unlikely that the real activation on the live network will take less than 1 year from now (does it)?, so probably we should do this anyway. That's my opinion.&lt;/p&gt;
+&lt;p&gt;The general idea would be to make a new 0.8.0 version next after this, including this change. More testing is needed, but it's mostly ready. If you have opinions about the technical implementation of this, feel free to discuss on the above github PR thread. For more general discussion I'd suggest using #joinmarket on freenode.&lt;/p&gt;
+&lt;h4&gt;New message channel implementations vs IRC&lt;/h4&gt;
+&lt;p&gt;This part is far more speculative. We have had several discussions about message channels over the years. As early as 2016/17 I abstracted out the message channel "layer" so that IRC was just an implementation (see &lt;code&gt;jmclient/jmclient/message_channel.py&lt;/code&gt;) of a few key methods. Alternative implementations have always been possible, but nobody either found time, or found a practical way, to make an alternative implementation. This issue is becoming more pressing. As a simple example, only this week we had IRC ops come to us complaining (very politely, it wasn't a disaster) that about 450 bots had suddenly shown up in our joinmarket test pit. This is in some ways less interesting than the real scalability problem: Joinmarket uses broadcast for offers, but also a sort of "anti-broadcast" mechanism: when a new Taker shows up, they ask &lt;em&gt;every&lt;/em&gt; Maker for their current offers, and the Makers &lt;em&gt;all&lt;/em&gt; send them at the same time, to that one Taker. So this doesn't scale very well and IRC as a messaging layer doesn't lie it; this is the main reason negotiation a Joinmarket coinjoin takes ~ 1 minute instead of 1-5 seconds (we have to deliberately throttle/slow down messages).&lt;/p&gt;
+&lt;p&gt;We rather badly need a more scalable messaging layer. I'd appeal for help on this, and I'd also appeal for public discussion of ideas on github (we've had such threads in the past, but nothing really happened).&lt;/p&gt;
+&lt;p&gt;Let's not forget that related to all that is DOS. Depending on implementation, DOS attacks can be a real problem. Chris Belcher's fidelity bond wallets were implemented within Joinmarket's code already, earlier this year, see &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/blob/c1f34f08c52452c229319e7421bfd930f8d70a7c/docs/fidelity-bonds.md"&gt;here&lt;/a&gt; for documentation explaining this, but implementing it as a requirement for Makers is another step, and it might be an important part of the puzzle of getting a scalable messaging layer right.&lt;/p&gt;
+&lt;p&gt;Getting this right won't just help Joinmarket coinjoins, but also various other systems we might want to integrate over time (SNICKER? CoinjoinXT? CoinSwap? something else?).&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="joinmarket"></category></entry><entry><title>The 445BTC gridchain case</title><link href="https://joinmarket.me/blog/blog/the-445-btc-gridchain-case/" rel="alternate"></link><published>2020-06-15T00:00:00+02:00</published><updated>2020-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-06-15:/blog/blog/the-445-btc-gridchain-case/</id><summary type="html">&lt;p&gt;analysis of gridchain blockchain analysis and implications for Joinmarket usage.&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The 445 BTC gridchain case&lt;/h3&gt;
 &lt;p&gt;For those time-constrained or non-technical, it may make sense to read
 only the &lt;a href="index.html#summary"&gt;Summary&lt;/a&gt; section of this article. It goes
 without saying that the details do matter, and reading the other

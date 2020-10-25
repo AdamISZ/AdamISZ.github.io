@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Joinmarket update for Oct 2020 — Joinmarket.me archive</title>
+	<meta name="description" content="Title: Joinmarket update for Oct 2020; Date: 2020-10-25; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">Joinmarket update for Oct 2020</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2020-10-25T00:00:00+02:00" itemprop="datePublished">Sun 25 October 2020</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/joinmarket.html" rel="tag">joinmarket</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h2>About this post</h2>
+<p>It seems like a good idea to start using this blog to spread a little bit more information
+to users and other interested parties, about Joinmarket, in particular about how it might
+change.</p>
+<p>First, please note this is a <em>personal</em> blog, there is nothing "official" here (and the same
+would go for anyone else's blog about Joinmarket! - this is an open source project).</p>
+<p>Second, please note that for years now I have been microblogging <a href="https://x0f.org/web/accounts/1077">here</a>; so,
+if you're interested to keep in touch with what I'm doing (and often, reading, or just thinking) day by day,
+you're welcome to follow that account. I personally like keeping track of people over RSS with <a href="https://fraidyc.at">fraidyc.at</a>,
+but whatever suits you. Just know that Joinmarket related announcements are often made there first (I don't and will not use any corporate-owned social media sites).</p>
+<h3>Joinmarket status.</h3>
+<p>0.7.1 of Joinmarket was released 12 days ago, and introduced <em>receiving</em> BIP78 payjoins, on the GUI and on command line.</p>
+<p>In the next few days 0.7.2 will be released. It is principally a bugfix release.</p>
+<p>(Although there will be one small
+new feature - not-self broadcasting is finally reimplemented. You'll want to be careful about using it, especially
+to start with (since it'll only work with counterparties that also have the latest release); there will of course
+be advice about this in the release notes. Consider it an advanced feature, and consider using tor-only in your
+Core node if the base level of privacy in broadcasting transactions isn't enough for you.)</p>
+<p>The bugs fixed are things that came out of interoperability tests on BIP78.</p>
+<p>Over the last few weeks I, Kristaps Kaupe and some people on other dev teams have been running a variety
+of testnet, mainnet, regtest tests of Payjoin functionality between btcpayserver, Wasabi and Joinmarket.</p>
+<p>We found various edge cases, like hex instead of base64 being transferred (not in spec but people were doing
+it anyway), incorrectly shuffled output ordering (my bad!), combinations of parameters in the HTTP request
+that <em>I</em> interpreted the BIP as saying was not allowed, but btcpayserver was sending anyway (but: not always! -
+testing can be a real pain sometimes!) and a few more.</p>
+<p>Remember two things about Payjoin though:</p>
+<ol>
+<li>It is a protocol designed to accept a failure to negotiate as a common event - <em>the payment goes through anyway, it's just a coinjoin then</em>.</li>
+<li>The most common incompatibility between wallets will be different address types. Then nothing can be done, as it would be slightly silly to do a Payjoin like that - we fall back, as per (1).</li>
+</ol>
+<p>So hopefully we will have some wallets that can send and receive Payjoins up and running by .. well, now actually! It is already possible and working, we are just smoothing out edge cases here.</p>
+<p>If you didn't get a chance, please watch this demo video of sending and receiving payjoins between Joinmarket wallets (note: the dialog is now improved, as I comment here):</p>
+<p>https://video.autizmo.xyz/videos/watch/7081ae10-dce0-491e-9717-389ccc3aad0d</p>
+<p>It only has 31 views, many of which were me, so I guess not many people saw it :)</p>
+<p>About point (2) above, note that you'll probably need to be using a Joinmarket bech32 wallet (yes, we've had them for quite a while!) if you want to send or receive with Wasabi. So, more on that next:</p>
+<h3>Joinmarket future plans (tentative!)</h3>
+<h4>Bech32 in 0.8.0</h4>
+<p>We have <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/656">this</a> PR open from jules23 and it represents a very impactful (but happily, not large technically) change that is proposed: to switch to a "bech32 orderbook", by which we mean making changes like this</p>
+<ul>
+<li>The default wallet changes to native segwit (bech32, bc1.. addresses)</li>
+<li>Joinmarket coinjoins (i.e. maker/taker coinjoins) are offered as <code>sw0reloffer</code>, <code>sw0absoffer</code> in the trading pit</li>
+</ul>
+<p>Both of these changes would not be "mandatory", just as when we switched to segwit in 2017, it was not mandatory, but would be default in the new version. The fees for coinjoins will be significantly reduced from the current "wrapped segwit" addresses, and we would gain better compatibility with Wasabi and a number of other modern wallets that default to bech32.</p>
+<p>The general problem with these updates (which we've only done once before) is that they cause a "liquidity split" temporarily, as not everyone migrates to the new address type at the same time. This is unfortunate, but I feel less concerned about it than last time, as the amount of maker liquidity is <em>much</em> larger (more on that below, about IRC).
+Another reason to be slightly unsure about this update is that taproot activation may be coming quite soon, but it seems unlikely that the real activation on the live network will take less than 1 year from now (does it)?, so probably we should do this anyway. That's my opinion.</p>
+<p>The general idea would be to make a new 0.8.0 version next after this, including this change. More testing is needed, but it's mostly ready. If you have opinions about the technical implementation of this, feel free to discuss on the above github PR thread. For more general discussion I'd suggest using #joinmarket on freenode.</p>
+<h4>New message channel implementations vs IRC</h4>
+<p>This part is far more speculative. We have had several discussions about message channels over the years. As early as 2016/17 I abstracted out the message channel "layer" so that IRC was just an implementation (see <code>jmclient/jmclient/message_channel.py</code>) of a few key methods. Alternative implementations have always been possible, but nobody either found time, or found a practical way, to make an alternative implementation. This issue is becoming more pressing. As a simple example, only this week we had IRC ops come to us complaining (very politely, it wasn't a disaster) that about 450 bots had suddenly shown up in our joinmarket test pit. This is in some ways less interesting than the real scalability problem: Joinmarket uses broadcast for offers, but also a sort of "anti-broadcast" mechanism: when a new Taker shows up, they ask <em>every</em> Maker for their current offers, and the Makers <em>all</em> send them at the same time, to that one Taker. So this doesn't scale very well and IRC as a messaging layer doesn't lie it; this is the main reason negotiation a Joinmarket coinjoin takes ~ 1 minute instead of 1-5 seconds (we have to deliberately throttle/slow down messages).</p>
+<p>We rather badly need a more scalable messaging layer. I'd appeal for help on this, and I'd also appeal for public discussion of ideas on github (we've had such threads in the past, but nothing really happened).</p>
+<p>Let's not forget that related to all that is DOS. Depending on implementation, DOS attacks can be a real problem. Chris Belcher's fidelity bond wallets were implemented within Joinmarket's code already, earlier this year, see <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/blob/c1f34f08c52452c229319e7421bfd930f8d70a7c/docs/fidelity-bonds.md">here</a> for documentation explaining this, but implementing it as a requirement for Makers is another step, and it might be an important part of the puzzle of getting a scalable messaging layer right.</p>
+<p>Getting this right won't just help Joinmarket coinjoins, but also various other systems we might want to integrate over time (SNICKER? CoinjoinXT? CoinSwap? something else?).</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/about-me/"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/blog/"><i class="fa fa-Blog "></i> Blog</a></li>
+							<li><a href="https://joinmarket.me/main-page/"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (11)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+							<li><a href="https://old.reddit.com/r/joinmarket">Joinmarket reddit</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=279249.620">Original description of Coinjoin</a></li>
+							<li><a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md">My analysis of privacy in Joinmarket's (old) tumbler algorithm</a></li>
+							<li><a href="https://www.ndss-symposium.org/wp-content/uploads/2017/09/ndss201701-4RuffingPaper.pdf">Coinshuffle++ and DiceMix paper</a></li>
+							<li><a href="https://eprint.iacr.org/2016/575">Tumblebit paper</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
