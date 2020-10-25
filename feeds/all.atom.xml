@@ -1638,7 +1638,7 @@ group operator is essentially a 'scrambler', so the preservation of
 properties, that Wagner requires, doesn't work.&lt;/p&gt;
 &lt;h2&gt;Applications to real systems&lt;/h2&gt;
 &lt;h3&gt;The OR of sigma protocols.&lt;/h3&gt;
-&lt;p&gt;This is a topic that was covered in an earlier &lt;a href="https://web.archive.org/web/20200428222140/https://joinmarket.me/blog/blog/ring-signatures/"&gt;blog
+&lt;p&gt;This is a topic that was covered in an earlier &lt;a href="https://joinmarket.me/blog/blog/ring-signatures/"&gt;blog
 post&lt;/a&gt;,
 so I will not give the outline here - but you'll need that context to
 understand the following. But we see here a fascinating implication of
@@ -4067,7 +4067,213 @@ storage wallet. I would see the technique described on this blog post as
 fitting into that medium-large sized funds transfer situation. CoinJoin
 of the pure "intrinsic fungibility" type, done in repeated rounds or
 at least in very large anonymity sets, is the other alternative (and
-perhaps the best) for large sizes.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="bitcoin"></category></entry><entry><title>Flipping the scriptless script on Schnorr</title><link href="https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/" rel="alternate"></link><published>2018-03-15T00:00:00+01:00</published><updated>2018-03-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-03-15:/blog/blog/flipping-the-scriptless-script-on-schnorr/</id><summary type="html">&lt;p&gt;using scriptless scripts for atomic swaps&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Flipping the scriptless script on Schnorr&lt;/h3&gt;
+perhaps the best) for large sizes.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="bitcoin"></category></entry><entry><title>The Steganographic Principle</title><link href="https://joinmarket.me/blog/blog/the-steganographic-principle/" rel="alternate"></link><published>2018-04-15T00:00:00+02:00</published><updated>2018-04-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-04-15:/blog/blog/the-steganographic-principle/</id><summary type="html">&lt;p&gt;a framework for thinking about blockchain privacy issues&lt;/p&gt;</summary><content type="html">&lt;h3&gt;The steganographic principle&lt;/h3&gt;
+&lt;h1&gt;The Steganographic Principle&lt;/h1&gt;
+&lt;p&gt;Some time ago I wrote
+&lt;a href="https://gist.github.com/AdamISZ/83a17befd84992a7ad74"&gt;this&lt;/a&gt;
+gist, which is an ill-formed technical concept about a way you could do
+steganography leveraging randomness in existing network protocols; but I
+also called it a "manifesto", jokingly, because I realised the thinking
+behind it is inherently political.&lt;/p&gt;
+&lt;h2&gt;Cryptography is for terrorists, too&lt;/h2&gt;
+&lt;p&gt;There are a few reasons why the phrase "If you have nothing to hide, you
+have nothing to fear" is wrong and insidiously so. One of the main ones
+is simply this: my threat model is &lt;strong&gt;not only my government&lt;/strong&gt;, even if
+my government is perfect and totally legitimate (to me). But no
+government is perfect, and some of them are literally monstrous.&lt;/p&gt;
+&lt;p&gt;So while it's true that there are uses of cryptography harmonious with a
+PG13 version of the world - simply protecting obviously sensitive data
+&lt;em&gt;within&lt;/em&gt; the control of authorities - there are plenty where it is
+entirely ethically right and necessary to make that protection
+&lt;strong&gt;absolute&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The question then arises, as was raised in the above gist, what are the
+properties of algorithms that satisfy the requirement of defence even
+against hostile authorities?&lt;/p&gt;
+&lt;p&gt;The modern tradition of cryptography uses Kerckhoff's Law as one of its
+axioms, and steganography does not fit into this model. But that's
+because the tradition is built by people in industry who are fine with
+people &lt;strong&gt;knowing they are using cryptography&lt;/strong&gt;. In an environment where
+that is not acceptable, steganography is not on a list of options - it's
+more like the sine qua non.&lt;/p&gt;
+&lt;h2&gt;Steganography on blockchains&lt;/h2&gt;
+&lt;p&gt;On a blockchain, we have already understood this "freedom fighter"
+model. It's an essential part of how the thing was even created, and why
+it exists. And there are essentially two principal complaints about
+Bitcoin and its blockchain, both of which are somewhat related to this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Privacy&lt;/li&gt;
+&lt;li&gt;Scalability&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The first is obvious - if we don't create "steganographic" transactions,
+then governments, and everyone else, may get to know at least
+&lt;em&gt;something&lt;/em&gt; about our transactions. The second is less so - but in the
+absence of scale we have a small anonymity set. Smaller payment network
+effects and smaller anonymity sets obviously hamper use of these systems
+by a "freedom fighter". But remember the scale limitations come directly
+out of the design of the system with censorship resistance and
+independent verification in mind.&lt;/p&gt;
+&lt;p&gt;Attempts to improve the privacy by altering the &lt;em&gt;way&lt;/em&gt; in which
+transactions are done have a tendency to make the scalability worse -
+the obvious example being CoinJoin, which with unblinded amounts
+inevitably involves larger numbers of outputs and larger numbers of
+transactions even.&lt;/p&gt;
+&lt;p&gt;A less obvious example is Confidential Transcations; when we blind
+outputs we need to use up more space to create the necessary guarantees
+about the properties of the amounts - see the range proof, which with
+Borromean ring signatures or bulletproofs need a lot of extra space. The
+same is true of ring signature approaches generally to confidentiality.&lt;/p&gt;
+&lt;p&gt;You can trade off space usage for computation though - e.g. zkSNARKs
+which are quite compact in space but take a lot of CPU time to create
+(and in a way they take a lot of space in a different sense - memory
+usage for proof creation).&lt;/p&gt;
+&lt;h2&gt;Localised trust&lt;/h2&gt;
+&lt;p&gt;You can improve this situation by localising trust in space or time.
+There are obvious models - the bank of the type set up by digicash. See
+the concept of &lt;a href="https://en.wikipedia.org/wiki/Blind_signature"&gt;Chaumian
+tokens&lt;/a&gt;
+generally. One project that looked into creating such things was
+&lt;a href="https://github.com/Open-Transactions/"&gt;OpenTransactions&lt;/a&gt;,
+another was Loom, also see Truledger.&lt;/p&gt;
+&lt;p&gt;Trust can be localised in time as well - and the aforementioned zkSnarks
+are an example; they use a trusted setup as a bootstrap. This trust can
+be ameliorated with a multiparty computation protocol such that trust is
+reduced by requiring all participants to be corrupt for the final result
+to be corrupt; but it is still trust.&lt;/p&gt;
+&lt;h2&gt;The tension between privacy and security&lt;/h2&gt;
+&lt;p&gt;For any attribute which is perfectly (or computationally) hidden, we
+have a corresponding security downgrade. If attribute A is required to
+satisfy condition C by the rules of protocol P, and attribute A is
+blinded to A* by a privacy mechanism M, in such a way that we use the
+fact that C* is guaranteed by A*, then we can say that P's security is
+"downgraded" by M in the specific sense that the C-guarantee has been
+changed to the C*-guarantee, where (inevitably) the C* guarantee is
+not as strong, since it requires the soundess of M as well as whatever
+assumptions already existed for the soundness of C.&lt;/p&gt;
+&lt;p&gt;However, the situation is worse - precisely because M is a privacy
+mechanism, it reduces public verifiability, and specifically
+verifiability of the condition C, meaning that if the C* guarantee
+(which we &lt;em&gt;can&lt;/em&gt; publically verify) fails to provide C, there will be no
+public knowledge of that failure.&lt;/p&gt;
+&lt;p&gt;To give a concrete example of the above template, consider what happens
+to Bitcoin under Confidential Transactions with Pedersen commitments
+(set aside the range proof for a moment). Since Pedersen commitments are
+perfectly hiding but only computationally binding, we have:&lt;/p&gt;
+&lt;p&gt;P = Bitcoin&lt;/p&gt;
+&lt;p&gt;A = Bitcoin amounts of outputs&lt;/p&gt;
+&lt;p&gt;C = amount balance in transactions&lt;/p&gt;
+&lt;p&gt;M = CT with Pedersen commitments&lt;/p&gt;
+&lt;p&gt;A* = Pedersen commitments of outputs&lt;/p&gt;
+&lt;p&gt;C* = Pedersen commitment balance in transactions&lt;/p&gt;
+&lt;p&gt;Here the downgrade in security is specifically the computational binding
+of Pedersen commitments (note: that's assuming both ECDLP intractability
+*and* NUMS-ness of a curve point). Without Pedersen/CT, there are
+*no* assumptions about amount balance, since integers are "perfectly
+binding" :) With it, any failure of the computational binding is
+catastrophic, since we won't see it.&lt;/p&gt;
+&lt;h2&gt;The tension between privacy and scalability&lt;/h2&gt;
+&lt;p&gt;For any attribute A which is obfuscated by a privacy mechanism M in
+protocol P (note: I'm choosing the word "obfuscation" here to indicate
+that the hiding is not perfect - note the contrast with the previous
+section), we have a corresponding scalability failure. M may obfuscate
+an attribute A by expanding the set of possible values/states from A to
+A[N]. To commit to the obfuscation soundly it must publish data of
+order \~ N x size(A). Also note that it is &lt;em&gt;possible&lt;/em&gt; for the
+obfuscation goal to be achieved without an increase in space usage, if
+multiple parties can coordinate their transactions, but here we ignore
+this possibility because it requires all parties to agree that all
+attributes except A to be identical (example: multiple participants must
+accept their newly created outputs are equal value). This is not really
+a "transaction" in the normal sense.&lt;/p&gt;
+&lt;p&gt;A concrete example: equal-sized Coinjoin in Bitcoin:&lt;/p&gt;
+&lt;p&gt;P = Bitcoin&lt;/p&gt;
+&lt;p&gt;A = receiver of funds in a transaction&lt;/p&gt;
+&lt;p&gt;A[N] = set of N outputs of equal size&lt;/p&gt;
+&lt;p&gt;M = Coinjoin&lt;/p&gt;
+&lt;p&gt;A less obvious example but fitting the same pattern; ElGamal commitment
+based Confidential Transactions (as opposed to Pedersen commitments
+based)&lt;/p&gt;
+&lt;p&gt;P = Bitcoin&lt;/p&gt;
+&lt;p&gt;A = output amount in a transaction&lt;/p&gt;
+&lt;p&gt;A[N] = ElGamal commitment to amount, here 2 curve points, N=2&lt;/p&gt;
+&lt;p&gt;M = ElGamal commitments&lt;/p&gt;
+&lt;p&gt;Here N=2 requires some explaining. An ElGamal commitment is perfectly
+binding, and to achieve that goal the commitment must have 2 points, as
+the input has two values (scalars), one for blinding and the other for
+binding the amount. So we see in this case the expansion in practice is
+more than just a single integer, it's from a single bitcoin-encoded
+integer to two curve points. But the details obviously vary; the general
+concept is to whatever extent we obfuscate, without throwing in extra
+security assumptions, we require more data.&lt;/p&gt;
+&lt;h2&gt;Verification - public or private?&lt;/h2&gt;
+&lt;p&gt;The structure above is trying to make an argument, which I believe is
+pretty strong - that this represents searching for privacy, in a
+blockchain context, in slightly the wrong way.&lt;/p&gt;
+&lt;p&gt;If we try to make the &lt;em&gt;blockchain&lt;/em&gt; itself private, we are slightly
+pushing against its inherent nature. Its crucial feature is
+&lt;strong&gt;public verifiability&lt;/strong&gt;, and
+while it's true that this does not require all attributes properties to
+be "unblinded" nor "unobfuscated", we see above that introducing
+blinding or obfuscation is problematic; you either degrade security in a
+way that's not acceptable because it introduces invisible breaks, or you
+degrade scalability (such as using a perfectly binding commitment
+requiring no compression, or a zero knowledge proof taking up a lot of
+space or computation time), or you degrade trustlessness (see: trusted
+setup zkps). I have no absolute theorem that says that you cannot get
+rid of all of these problems simultaneously; but it certainly seems
+hard!&lt;/p&gt;
+&lt;p&gt;This is where the idea of a "steganographic blockchain" comes in; if
+instead of trying to hide attributes of transactions, we try to make the
+&lt;em&gt;meaning&lt;/em&gt; of transactions be something not explicit to the chain, but
+agreed upon by arbitrary participants using mechanisms outside it. This
+allows one to leverage the blockchain's principal feature - censorship
+resistant proof of state changes, in public, without inheriting its main
+bugs - lack of privacy and scalability, and without degrading its own
+security.&lt;/p&gt;
+&lt;p&gt;Examples:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Colored coins&lt;/li&gt;
+&lt;li&gt;Crude example: atomic swaps&lt;/li&gt;
+&lt;li&gt;Lightning and second-layer&lt;/li&gt;
+&lt;li&gt;Chaumian tokens&lt;/li&gt;
+&lt;li&gt;Client-side validation (single use seals)&lt;/li&gt;
+&lt;li&gt;Scriptless scripts&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;High bandwidth steganography&lt;/h2&gt;
+&lt;p&gt;The biggest practical problem with steganography has always been
+bandwidth; if you use non-random data such as images or videos, which
+are often using compression algorithms to maximise their signal to noise
+ratio, you have the problem of getting sufficient "cover traffic" over
+your hidden message.&lt;/p&gt;
+&lt;p&gt;Note that this problem does not occur &lt;strong&gt;at all&lt;/strong&gt; in cases where your
+hidden message is embedded into another message which is random. This is
+the case with digital signatures; ECDSA and Schnorr for example are both
+publish as two random values each of which is about 32 bytes.&lt;/p&gt;
+&lt;p&gt;To go back to the previously mentioned example of scriptless scripts, we
+can see that the atomic swap protocol based on it as described in my
+&lt;a href="https://web.archive.org/web/20200603112526/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/"&gt;blog
+post&lt;/a&gt;,
+exploits this directly. On chain we see two (not obviously related)
+transactions with Schnorr signatures that are, to the outside observer,
+in no way related; the hiding of the connection is perfect, but the
+binding/atomicity of the two payments is still secure, just not
+perfectly so (it's based on the ECDLP hardness assumption, but then so
+are ordinary payments).&lt;/p&gt;
+&lt;p&gt;Note how this is a different philosophy/approach to hiding/privacy:
+since such a swap leaves no fingerprint on-chain, the concept of
+anonymity set blurs; it's strictly all transactions (assuming Schnorr in
+future, or ECDSA-2PC now), even if most people do not use the technique.
+To get that same effect with an enforced privacy overlay mechanism M for
+all participants, we tradeoff the security or scalability issues
+mentioned above.&lt;/p&gt;
+&lt;p&gt;This is the reason for my slightly click-baity-y subtitle "High
+Bandwidth Steganography". A big chunk of the Bitcoin blockchain is
+random (as those who've tried to compress it have learned to their
+chagrin), and so it's not quite as hard to usual to hide transaction
+semantics (the ideal case will be inside signatures using scriptless
+script type constructs), so in a sense we can get a very high bandwidth
+of data communicated client to client without using any extra space on
+chain, and without "polluting" the chain with extra security
+assumptions.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="bitcoin"></category><category term="cryptography"></category></entry><entry><title>Flipping the scriptless script on Schnorr</title><link href="https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/" rel="alternate"></link><published>2018-03-15T00:00:00+01:00</published><updated>2018-03-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-03-15:/blog/blog/flipping-the-scriptless-script-on-schnorr/</id><summary type="html">&lt;p&gt;using scriptless scripts for atomic swaps&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Flipping the scriptless script on Schnorr&lt;/h3&gt;
 &lt;h2&gt;Outline&lt;/h2&gt;
 &lt;p&gt;It's by now very well known in the community of Bitcoin enthusiasts that
 the &lt;a href="https://en.wikipedia.org/wiki/Schnorr_signature"&gt;Schnorr

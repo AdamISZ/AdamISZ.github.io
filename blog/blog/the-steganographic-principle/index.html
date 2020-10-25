@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>The Steganographic Principle — Joinmarket.me archive</title>
+	<meta name="description" content="Title: The Steganographic Principle; Date: 2018-04-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">The Steganographic Principle</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2018-04-15T00:00:00+02:00" itemprop="datePublished">Sun 15 April 2018</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/cryptography.html" rel="tag">cryptography</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>The steganographic principle</h3>
+<h1>The Steganographic Principle</h1>
+<p>Some time ago I wrote
+<a href="https://gist.github.com/AdamISZ/83a17befd84992a7ad74">this</a>
+gist, which is an ill-formed technical concept about a way you could do
+steganography leveraging randomness in existing network protocols; but I
+also called it a "manifesto", jokingly, because I realised the thinking
+behind it is inherently political.</p>
+<h2>Cryptography is for terrorists, too</h2>
+<p>There are a few reasons why the phrase "If you have nothing to hide, you
+have nothing to fear" is wrong and insidiously so. One of the main ones
+is simply this: my threat model is <strong>not only my government</strong>, even if
+my government is perfect and totally legitimate (to me). But no
+government is perfect, and some of them are literally monstrous.</p>
+<p>So while it's true that there are uses of cryptography harmonious with a
+PG13 version of the world - simply protecting obviously sensitive data
+<em>within</em> the control of authorities - there are plenty where it is
+entirely ethically right and necessary to make that protection
+<strong>absolute</strong>.</p>
+<p>The question then arises, as was raised in the above gist, what are the
+properties of algorithms that satisfy the requirement of defence even
+against hostile authorities?</p>
+<p>The modern tradition of cryptography uses Kerckhoff's Law as one of its
+axioms, and steganography does not fit into this model. But that's
+because the tradition is built by people in industry who are fine with
+people <strong>knowing they are using cryptography</strong>. In an environment where
+that is not acceptable, steganography is not on a list of options - it's
+more like the sine qua non.</p>
+<h2>Steganography on blockchains</h2>
+<p>On a blockchain, we have already understood this "freedom fighter"
+model. It's an essential part of how the thing was even created, and why
+it exists. And there are essentially two principal complaints about
+Bitcoin and its blockchain, both of which are somewhat related to this:</p>
+<ul>
+<li>Privacy</li>
+<li>Scalability</li>
+</ul>
+<p>The first is obvious - if we don't create "steganographic" transactions,
+then governments, and everyone else, may get to know at least
+<em>something</em> about our transactions. The second is less so - but in the
+absence of scale we have a small anonymity set. Smaller payment network
+effects and smaller anonymity sets obviously hamper use of these systems
+by a "freedom fighter". But remember the scale limitations come directly
+out of the design of the system with censorship resistance and
+independent verification in mind.</p>
+<p>Attempts to improve the privacy by altering the <em>way</em> in which
+transactions are done have a tendency to make the scalability worse -
+the obvious example being CoinJoin, which with unblinded amounts
+inevitably involves larger numbers of outputs and larger numbers of
+transactions even.</p>
+<p>A less obvious example is Confidential Transcations; when we blind
+outputs we need to use up more space to create the necessary guarantees
+about the properties of the amounts - see the range proof, which with
+Borromean ring signatures or bulletproofs need a lot of extra space. The
+same is true of ring signature approaches generally to confidentiality.</p>
+<p>You can trade off space usage for computation though - e.g. zkSNARKs
+which are quite compact in space but take a lot of CPU time to create
+(and in a way they take a lot of space in a different sense - memory
+usage for proof creation).</p>
+<h2>Localised trust</h2>
+<p>You can improve this situation by localising trust in space or time.
+There are obvious models - the bank of the type set up by digicash. See
+the concept of <a href="https://en.wikipedia.org/wiki/Blind_signature">Chaumian
+tokens</a>
+generally. One project that looked into creating such things was
+<a href="https://github.com/Open-Transactions/">OpenTransactions</a>,
+another was Loom, also see Truledger.</p>
+<p>Trust can be localised in time as well - and the aforementioned zkSnarks
+are an example; they use a trusted setup as a bootstrap. This trust can
+be ameliorated with a multiparty computation protocol such that trust is
+reduced by requiring all participants to be corrupt for the final result
+to be corrupt; but it is still trust.</p>
+<h2>The tension between privacy and security</h2>
+<p>For any attribute which is perfectly (or computationally) hidden, we
+have a corresponding security downgrade. If attribute A is required to
+satisfy condition C by the rules of protocol P, and attribute A is
+blinded to A* by a privacy mechanism M, in such a way that we use the
+fact that C* is guaranteed by A*, then we can say that P's security is
+"downgraded" by M in the specific sense that the C-guarantee has been
+changed to the C*-guarantee, where (inevitably) the C* guarantee is
+not as strong, since it requires the soundess of M as well as whatever
+assumptions already existed for the soundness of C.</p>
+<p>However, the situation is worse - precisely because M is a privacy
+mechanism, it reduces public verifiability, and specifically
+verifiability of the condition C, meaning that if the C* guarantee
+(which we <em>can</em> publically verify) fails to provide C, there will be no
+public knowledge of that failure.</p>
+<p>To give a concrete example of the above template, consider what happens
+to Bitcoin under Confidential Transactions with Pedersen commitments
+(set aside the range proof for a moment). Since Pedersen commitments are
+perfectly hiding but only computationally binding, we have:</p>
+<p>P = Bitcoin</p>
+<p>A = Bitcoin amounts of outputs</p>
+<p>C = amount balance in transactions</p>
+<p>M = CT with Pedersen commitments</p>
+<p>A* = Pedersen commitments of outputs</p>
+<p>C* = Pedersen commitment balance in transactions</p>
+<p>Here the downgrade in security is specifically the computational binding
+of Pedersen commitments (note: that's assuming both ECDLP intractability
+*and* NUMS-ness of a curve point). Without Pedersen/CT, there are
+*no* assumptions about amount balance, since integers are "perfectly
+binding" :) With it, any failure of the computational binding is
+catastrophic, since we won't see it.</p>
+<h2>The tension between privacy and scalability</h2>
+<p>For any attribute A which is obfuscated by a privacy mechanism M in
+protocol P (note: I'm choosing the word "obfuscation" here to indicate
+that the hiding is not perfect - note the contrast with the previous
+section), we have a corresponding scalability failure. M may obfuscate
+an attribute A by expanding the set of possible values/states from A to
+A[N]. To commit to the obfuscation soundly it must publish data of
+order \~ N x size(A). Also note that it is <em>possible</em> for the
+obfuscation goal to be achieved without an increase in space usage, if
+multiple parties can coordinate their transactions, but here we ignore
+this possibility because it requires all parties to agree that all
+attributes except A to be identical (example: multiple participants must
+accept their newly created outputs are equal value). This is not really
+a "transaction" in the normal sense.</p>
+<p>A concrete example: equal-sized Coinjoin in Bitcoin:</p>
+<p>P = Bitcoin</p>
+<p>A = receiver of funds in a transaction</p>
+<p>A[N] = set of N outputs of equal size</p>
+<p>M = Coinjoin</p>
+<p>A less obvious example but fitting the same pattern; ElGamal commitment
+based Confidential Transactions (as opposed to Pedersen commitments
+based)</p>
+<p>P = Bitcoin</p>
+<p>A = output amount in a transaction</p>
+<p>A[N] = ElGamal commitment to amount, here 2 curve points, N=2</p>
+<p>M = ElGamal commitments</p>
+<p>Here N=2 requires some explaining. An ElGamal commitment is perfectly
+binding, and to achieve that goal the commitment must have 2 points, as
+the input has two values (scalars), one for blinding and the other for
+binding the amount. So we see in this case the expansion in practice is
+more than just a single integer, it's from a single bitcoin-encoded
+integer to two curve points. But the details obviously vary; the general
+concept is to whatever extent we obfuscate, without throwing in extra
+security assumptions, we require more data.</p>
+<h2>Verification - public or private?</h2>
+<p>The structure above is trying to make an argument, which I believe is
+pretty strong - that this represents searching for privacy, in a
+blockchain context, in slightly the wrong way.</p>
+<p>If we try to make the <em>blockchain</em> itself private, we are slightly
+pushing against its inherent nature. Its crucial feature is
+<strong>public verifiability</strong>, and
+while it's true that this does not require all attributes properties to
+be "unblinded" nor "unobfuscated", we see above that introducing
+blinding or obfuscation is problematic; you either degrade security in a
+way that's not acceptable because it introduces invisible breaks, or you
+degrade scalability (such as using a perfectly binding commitment
+requiring no compression, or a zero knowledge proof taking up a lot of
+space or computation time), or you degrade trustlessness (see: trusted
+setup zkps). I have no absolute theorem that says that you cannot get
+rid of all of these problems simultaneously; but it certainly seems
+hard!</p>
+<p>This is where the idea of a "steganographic blockchain" comes in; if
+instead of trying to hide attributes of transactions, we try to make the
+<em>meaning</em> of transactions be something not explicit to the chain, but
+agreed upon by arbitrary participants using mechanisms outside it. This
+allows one to leverage the blockchain's principal feature - censorship
+resistant proof of state changes, in public, without inheriting its main
+bugs - lack of privacy and scalability, and without degrading its own
+security.</p>
+<p>Examples:</p>
+<ul>
+<li>Colored coins</li>
+<li>Crude example: atomic swaps</li>
+<li>Lightning and second-layer</li>
+<li>Chaumian tokens</li>
+<li>Client-side validation (single use seals)</li>
+<li>Scriptless scripts</li>
+</ul>
+<h2>High bandwidth steganography</h2>
+<p>The biggest practical problem with steganography has always been
+bandwidth; if you use non-random data such as images or videos, which
+are often using compression algorithms to maximise their signal to noise
+ratio, you have the problem of getting sufficient "cover traffic" over
+your hidden message.</p>
+<p>Note that this problem does not occur <strong>at all</strong> in cases where your
+hidden message is embedded into another message which is random. This is
+the case with digital signatures; ECDSA and Schnorr for example are both
+publish as two random values each of which is about 32 bytes.</p>
+<p>To go back to the previously mentioned example of scriptless scripts, we
+can see that the atomic swap protocol based on it as described in my
+<a href="https://web.archive.org/web/20200603112526/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">blog
+post</a>,
+exploits this directly. On chain we see two (not obviously related)
+transactions with Schnorr signatures that are, to the outside observer,
+in no way related; the hiding of the connection is perfect, but the
+binding/atomicity of the two payments is still secure, just not
+perfectly so (it's based on the ECDLP hardness assumption, but then so
+are ordinary payments).</p>
+<p>Note how this is a different philosophy/approach to hiding/privacy:
+since such a swap leaves no fingerprint on-chain, the concept of
+anonymity set blurs; it's strictly all transactions (assuming Schnorr in
+future, or ECDSA-2PC now), even if most people do not use the technique.
+To get that same effect with an enforced privacy overlay mechanism M for
+all participants, we tradeoff the security or scalability issues
+mentioned above.</p>
+<p>This is the reason for my slightly click-baity-y subtitle "High
+Bandwidth Steganography". A big chunk of the Bitcoin blockchain is
+random (as those who've tried to compress it have learned to their
+chagrin), and so it's not quite as hard to usual to hide transaction
+semantics (the ideal case will be inside signatures using scriptless
+script type constructs), so in a sense we can get a very high bandwidth
+of data communicated client to client without using any extra space on
+chain, and without "polluting" the chain with extra security
+assumptions.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/about-me/"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/blog/"><i class="fa fa-Blog "></i> Blog</a></li>
+							<li><a href="https://joinmarket.me/main-page/"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (10)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+							<li><a href="https://old.reddit.com/r/joinmarket">Joinmarket reddit</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=279249.620">Original description of Coinjoin</a></li>
+							<li><a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md">My analysis of privacy in Joinmarket's (old) tumbler algorithm</a></li>
+							<li><a href="https://www.ndss-symposium.org/wp-content/uploads/2017/09/ndss201701-4RuffingPaper.pdf">Coinshuffle++ and DiceMix paper</a></li>
+							<li><a href="https://eprint.iacr.org/2016/575">Tumblebit paper</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
