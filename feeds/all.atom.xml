@@ -5203,4 +5203,157 @@ least plausible (see
 &lt;a href="https://en.bitcoin.it/wiki/OP_CHECKSIG#Procedure_for_Hashtype_SIGHASH_SINGLE"&gt;here&lt;/a&gt;),
 although it's not exactly heartening that no one ever uses
 &lt;code&gt;SIGHASH_SINGLE&lt;/code&gt; (and its rules are arcane and restrictive), not to even
-speak of watermarking. Hopefully the idea expressed here is better.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="bitcoin"></category></entry></feed>
+speak of watermarking. Hopefully the idea expressed here is better.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="coinjoin"></category><category term="bitcoin"></category></entry><entry><title>P(o)ODLE</title><link href="https://joinmarket.me/blog/blog/poodle/" rel="alternate"></link><published>2016-06-15T00:00:00+02:00</published><updated>2016-06-15T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2016-06-15:/blog/blog/poodle/</id><summary type="html">&lt;p&gt;DLEQ proofs as tokens for anti-snooping in coinjoin&lt;/p&gt;</summary><content type="html">&lt;h3&gt;P(o)ODLE&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;Here is a purse of monies ... which I am not going to give to you.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;- &lt;a href="https://en.wikipedia.org/wiki/Bells_(Blackadder)"&gt;Edmund
+Blackadder&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="/web/20200712194227im_/https://joinmarket.me/static/media/uploads/.thumbnails/poodle.jpeg/poodle-225x308.jpeg" width="225" height="308" /&gt;&lt;/p&gt;
+&lt;h3&gt;P(o)ODLE, not POODLE&lt;/h3&gt;
+&lt;p&gt;This post, fortunately, has nothing to do with faintly ridiculous &lt;a href="https://en.wikipedia.org/wiki/POODLE"&gt;SSL 3
+downgrade
+attacks&lt;/a&gt;.
+Irritatingly, our usage here has no made-up need for the parenthetical
+(o), but on the other hand "podle" is not actually a word.&lt;/p&gt;
+&lt;h3&gt;The problem&lt;/h3&gt;
+&lt;p&gt;You're engaging in a protocol (like Joinmarket) where you're using
+bitcoin utxos regularly. We want to enforce some scarcity; you can't use
+the same utxo more than once, let's say. Utxos can be created all the
+time, but at some cost of time and money; so it can be seen as a kind of
+rate limiting.&lt;/p&gt;
+&lt;p&gt;So: you have a bitcoin utxo. You'd like someone else to know that you
+have it, &lt;strong&gt;and that you haven't used it before, with them or anyone
+else&lt;/strong&gt;, &lt;strong&gt;in this protocol,&lt;/strong&gt; but you don't want to show it to them. For
+that second property (hiding), you want to make a &lt;em&gt;commitment&lt;/em&gt; to the
+utxo. Later on in the protocol you will open the commitment and reveal
+the utxo.&lt;/p&gt;
+&lt;p&gt;Now, a &lt;a href="https://en.wikipedia.org/wiki/Commitment_scheme"&gt;cryptographic
+commitment&lt;/a&gt;
+is a standard kind of protocol, usually it works something like:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;Alice-&amp;gt;Bob: commit: h := hash(secret, nonce)&lt;/span&gt;
+&lt;span class="err"&gt;(do stuff)&lt;/span&gt;
+&lt;span class="err"&gt;Alice-&amp;gt;Bob: open: reveal secret, nonce&lt;/span&gt;
+&lt;span class="c"&gt;Bob: verify: h =?= hash(secret, nonce)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Hashing a secret is &lt;em&gt;not&lt;/em&gt; enough to keep it secret, at least in general:
+because the verifier might be able to guess, especially if the data is
+from a small-ish set (utxos in bitcoin being certainly a small enough
+set; and that list is public). So usually, this protocol, with a
+large-enough random nonce, would be enough for the purposes of proving
+you own a bitcoin utxo without revealing it.&lt;/p&gt;
+&lt;p&gt;But in our case it doesn't suffice - because of the bolded sentence in
+the problem description. You could pretend to commit to &lt;em&gt;different&lt;/em&gt;
+utxos at different times, simply by using different nonces. If you tried
+to do that &lt;em&gt;just with me&lt;/em&gt;, well, no big deal - I'll just block your
+second use. But you &lt;em&gt;could &lt;/em&gt;use the same utxos with different
+counterparties, and they would be none the wiser, unless they all shared
+all private information with each other. Which we certainly don't want.&lt;/p&gt;
+&lt;p&gt;Contrariwise, if you ditch the nonce and just use Hash(utxo) every time
+to every counterparty, you have the failure-to-hide-the-secret problem
+mentioned above.&lt;/p&gt;
+&lt;p&gt;In case you didn't get that: Alice wants to prove to Bob and Carol and
+... that she owns utxo \(U\), and she never used it before. Bob and
+Carol etc. are keeping a public list of all previously used commitments
+(which shouldn't give away what the utxo is, for privacy). If she just
+makes a commitment: Hash(\(U +\) nonce) and sends it to Bob and Carol,
+they will check and see it isn't on the public list of commitments and
+if not, OK, she can open the commitment later and prove honest action.
+But her conversations with Bob and Carol are separate, on private
+messaging channels. How can Bob know she didn't use &lt;em&gt;the same utxo as
+previously used with Carol, but with a different nonce&lt;/em&gt;?&lt;/p&gt;
+&lt;h3&gt;The solution&lt;/h3&gt;
+&lt;p&gt;This is a bit of a headscratcher; after several IRC discussions, Greg
+Maxwell suggested the idea of &lt;strong&gt;proof of discrete logarithm
+equivalence&lt;/strong&gt; (hence the title), and pointed me at &lt;a href="http://crypto.stackexchange.com/questions/15758/how-can-we-prove-that-two-discrete-logarithms-are-equal"&gt;this
+crypo.stackexchange
+thread&lt;/a&gt;.
+It's a cool idea (although note that that description is based on DL
+rather than ECDL seen here): "shift" the EC point to a new
+base/generator point, so that nobody else can read (crudely put), then
+append a Schnorr signature acting as proof that the two points have the
+same discrete logarithm (= private key) with respect to the two base
+points. In detail, consider a Bitcoin private, public keypair \((x,
+P)\) for the usual base point/generator \(G\), and consider a
+&lt;a href="https://en.wikipedia.org/wiki/Nothing_up_my_sleeve_number"&gt;NUMS&lt;/a&gt;
+alternative generator \(J\) ( a little more on this later).&lt;/p&gt;
+&lt;p&gt;$$P = xG$$&lt;/p&gt;
+&lt;p&gt;$$P_2 = xJ$$&lt;/p&gt;
+&lt;p&gt;Next, Alice will provide her commitment as \(H(P_2)\) in the
+handshake initiation stage of the protocol. Then, when it comes time for
+Alice to request private information from Bob, on their private message
+channel, she will have to open her commitment with this data:&lt;/p&gt;
+&lt;p&gt;$$P, U, P_2, s, e$$&lt;/p&gt;
+&lt;p&gt;Here \(s,e\) are a Schnorr signature proving equivalence of the
+private key (we called it \(x\) above) with respect to \(G,J\), but
+of course without revealing that private key. It is constructed, after
+choosing a random nonce \(k\), like this:&lt;/p&gt;
+&lt;p&gt;$$K_G = kG$$&lt;/p&gt;
+&lt;p&gt;$$K_J = kJ$$&lt;/p&gt;
+&lt;p&gt;$$e = H(K_G || K_J || P || P_2)$$&lt;/p&gt;
+&lt;p&gt;$$s = k + xe$$&lt;/p&gt;
+&lt;p&gt;Then Bob, receiving this authorisation information, proceeds to verify
+the commitment before exchanging private information:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Does \(H(P_2)\) equal the previously provided commitment? If yes:&lt;/li&gt;
+&lt;li&gt;Check that the commitment is not repeated on the public list (or
+    whatever the policy is)&lt;/li&gt;
+&lt;li&gt;Verify via the blockchain that \(P\) matches the utxo \(U\)&lt;/li&gt;
+&lt;li&gt;\(K_G = sG - eP\)&lt;/li&gt;
+&lt;li&gt;\(K_J = sJ - eP_2\)&lt;/li&gt;
+&lt;li&gt;Schnorr sig verify operation: Does \(H(K_G || K_J || P ||
+    P_2) = e\) ?&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Bob now knows that the utxo \(U\) has not been repeated (the simplest
+policy) but Alice has not been exposed to a potential public leakage of
+information about the utxo. (It should be noted of course! Bob knows the
+utxo from now on, but that's for another discussion about Coinjoin
+generally...)&lt;/p&gt;
+&lt;h3&gt;Why an alternate generator point \(J\)?&lt;/h3&gt;
+&lt;p&gt;Publishing \(H(P_2)\) gives no information about \(P\), the actual
+Bitcoin pubkey that Alice wants to use; in that sense it's the same as
+using a nonce in the commitment. But it also gives her no degree of
+freedom, as a nonce does, to create different public values for the same
+hidden pubkey. No one not possessing \(x\) can deduce \(P\) from
+\(P_2\) (or vice versa, for that matter) - &lt;strong&gt;unless&lt;/strong&gt; they have the
+private key/discrete log of \(J\) with respect to \(G\). If anyone
+had this number \(x^*\) such that \(J = x^{*}G\), then it would be
+easy to make the shift from one to the other:&lt;/p&gt;
+&lt;p&gt;$$P_2 = xJ = x(x^{*}G) = x^{*}(xG) = x^{*}P$$&lt;/p&gt;
+&lt;p&gt;and apply a modular inverse if necessary.&lt;/p&gt;
+&lt;p&gt;This is why the concept of NUMS is critical. The construction of a NUMS
+alternate generator is discussed in &lt;a href="https://elementsproject.org/elements/confidential-transactions/"&gt;the same CT doc as
+above&lt;/a&gt;,
+and also in &lt;a href="https://github.com/AdamISZ/ConfidentialTransactionsDoc/blob/master/essayonCT.pdf"&gt;my CT
+overview&lt;/a&gt;,
+at the end of section 2.2. Note I use \(J\) here in place of \(H\)
+to avoid confusion with hash functions.&lt;/p&gt;
+&lt;h3&gt;Code and thoughts on implementation&lt;/h3&gt;
+&lt;p&gt;I did an abbreviated write up of the concept of this post in &lt;a href="https://gist.github.com/AdamISZ/9cbba5e9408d23813ca8#defence-2-committing-to-a-utxo-in-publicplaintext-at-the-start-of-the-handshake"&gt;this
+gist&lt;/a&gt;,
+as one of three possible ways of attacking the problem in Joinmarket:
+&lt;a href="https://github.com/JoinMarket-Org/joinmarket/issues/156"&gt;how can we prevent people initiating transactions over and over again
+to collect information on
+utxos&lt;/a&gt;?
+This algorithm is not intended as a &lt;em&gt;complete&lt;/em&gt; solution to that issue,
+but it's very interesting in its own right and may have a variety of
+applications, perhaps.&lt;/p&gt;
+&lt;p&gt;The algorithm was fairly simple to code, at least in a naive way, and I
+did it some time ago using Bitcoin's
+&lt;a href="https://github.com/bitcoin-core/secp256k1"&gt;libsecp256k1&lt;/a&gt;
+with the &lt;a href="https://github.com/ludbb/secp256k1-py"&gt;Python binding by
+ludbb&lt;/a&gt;.
+An initial version of my Python "podle" module is
+&lt;a href="https://github.com/JoinMarket-Org/joinmarket/blob/90ec05329e06beed0fbc09528ef6fb3d2c5d03ba/lib/bitcoin/podle.py"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;There are lots of tricky things to think about in implementing this; I
+think the most obvious issue is how would publishing/maintaining a
+public list work? If we just want each utxo to be allowed only one use,
+any kind of broadcast mechanism would be fine; other participants can
+know as soon as any \(H(P_2)\) is used, or at least to a reasonable
+approximation. Even in a multi-party protocol like Joinmarket, the utxo
+would be broadcast as "used" only after its first usage by each party,
+so it would from then on be on what is effectively a blacklist. But if
+the policy were more like "only allow re-use 3 times" this doesn't seem
+to work without some kind of unrealistic honesty assumption.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="bitcoin"></category><category term="cryptography"></category><category term="joinmarket"></category></entry></feed>

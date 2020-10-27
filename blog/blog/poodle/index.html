@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>P(o)ODLE — Joinmarket.me archive</title>
+	<meta name="description" content="Title: P(o)ODLE; Date: 2016-06-15; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">P(o)ODLE</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2016-06-15T00:00:00+02:00" itemprop="datePublished">Wed 15 June 2016</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/cryptography.html" rel="tag">cryptography</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/joinmarket.html" rel="tag">joinmarket</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><h3>P(o)ODLE</h3>
+<blockquote>
+<p><em>Here is a purse of monies ... which I am not going to give to you.</em></p>
+</blockquote>
+<p>- <a href="https://en.wikipedia.org/wiki/Bells_(Blackadder)">Edmund
+Blackadder</a></p>
+<p><img src="/web/20200712194227im_/https://joinmarket.me/static/media/uploads/.thumbnails/poodle.jpeg/poodle-225x308.jpeg" width="225" height="308" /></p>
+<h3>P(o)ODLE, not POODLE</h3>
+<p>This post, fortunately, has nothing to do with faintly ridiculous <a href="https://en.wikipedia.org/wiki/POODLE">SSL 3
+downgrade
+attacks</a>.
+Irritatingly, our usage here has no made-up need for the parenthetical
+(o), but on the other hand "podle" is not actually a word.</p>
+<h3>The problem</h3>
+<p>You're engaging in a protocol (like Joinmarket) where you're using
+bitcoin utxos regularly. We want to enforce some scarcity; you can't use
+the same utxo more than once, let's say. Utxos can be created all the
+time, but at some cost of time and money; so it can be seen as a kind of
+rate limiting.</p>
+<p>So: you have a bitcoin utxo. You'd like someone else to know that you
+have it, <strong>and that you haven't used it before, with them or anyone
+else</strong>, <strong>in this protocol,</strong> but you don't want to show it to them. For
+that second property (hiding), you want to make a <em>commitment</em> to the
+utxo. Later on in the protocol you will open the commitment and reveal
+the utxo.</p>
+<p>Now, a <a href="https://en.wikipedia.org/wiki/Commitment_scheme">cryptographic
+commitment</a>
+is a standard kind of protocol, usually it works something like:</p>
+<div class="highlight"><pre><span></span><span class="err">Alice-&gt;Bob: commit: h := hash(secret, nonce)</span>
+<span class="err">(do stuff)</span>
+<span class="err">Alice-&gt;Bob: open: reveal secret, nonce</span>
+<span class="c">Bob: verify: h =?= hash(secret, nonce)</span>
+</pre></div>
+
+
+<p>Hashing a secret is <em>not</em> enough to keep it secret, at least in general:
+because the verifier might be able to guess, especially if the data is
+from a small-ish set (utxos in bitcoin being certainly a small enough
+set; and that list is public). So usually, this protocol, with a
+large-enough random nonce, would be enough for the purposes of proving
+you own a bitcoin utxo without revealing it.</p>
+<p>But in our case it doesn't suffice - because of the bolded sentence in
+the problem description. You could pretend to commit to <em>different</em>
+utxos at different times, simply by using different nonces. If you tried
+to do that <em>just with me</em>, well, no big deal - I'll just block your
+second use. But you <em>could </em>use the same utxos with different
+counterparties, and they would be none the wiser, unless they all shared
+all private information with each other. Which we certainly don't want.</p>
+<p>Contrariwise, if you ditch the nonce and just use Hash(utxo) every time
+to every counterparty, you have the failure-to-hide-the-secret problem
+mentioned above.</p>
+<p>In case you didn't get that: Alice wants to prove to Bob and Carol and
+... that she owns utxo \(U\), and she never used it before. Bob and
+Carol etc. are keeping a public list of all previously used commitments
+(which shouldn't give away what the utxo is, for privacy). If she just
+makes a commitment: Hash(\(U +\) nonce) and sends it to Bob and Carol,
+they will check and see it isn't on the public list of commitments and
+if not, OK, she can open the commitment later and prove honest action.
+But her conversations with Bob and Carol are separate, on private
+messaging channels. How can Bob know she didn't use <em>the same utxo as
+previously used with Carol, but with a different nonce</em>?</p>
+<h3>The solution</h3>
+<p>This is a bit of a headscratcher; after several IRC discussions, Greg
+Maxwell suggested the idea of <strong>proof of discrete logarithm
+equivalence</strong> (hence the title), and pointed me at <a href="http://crypto.stackexchange.com/questions/15758/how-can-we-prove-that-two-discrete-logarithms-are-equal">this
+crypo.stackexchange
+thread</a>.
+It's a cool idea (although note that that description is based on DL
+rather than ECDL seen here): "shift" the EC point to a new
+base/generator point, so that nobody else can read (crudely put), then
+append a Schnorr signature acting as proof that the two points have the
+same discrete logarithm (= private key) with respect to the two base
+points. In detail, consider a Bitcoin private, public keypair \((x,
+P)\) for the usual base point/generator \(G\), and consider a
+<a href="https://en.wikipedia.org/wiki/Nothing_up_my_sleeve_number">NUMS</a>
+alternative generator \(J\) ( a little more on this later).</p>
+<p>$$P = xG$$</p>
+<p>$$P_2 = xJ$$</p>
+<p>Next, Alice will provide her commitment as \(H(P_2)\) in the
+handshake initiation stage of the protocol. Then, when it comes time for
+Alice to request private information from Bob, on their private message
+channel, she will have to open her commitment with this data:</p>
+<p>$$P, U, P_2, s, e$$</p>
+<p>Here \(s,e\) are a Schnorr signature proving equivalence of the
+private key (we called it \(x\) above) with respect to \(G,J\), but
+of course without revealing that private key. It is constructed, after
+choosing a random nonce \(k\), like this:</p>
+<p>$$K_G = kG$$</p>
+<p>$$K_J = kJ$$</p>
+<p>$$e = H(K_G || K_J || P || P_2)$$</p>
+<p>$$s = k + xe$$</p>
+<p>Then Bob, receiving this authorisation information, proceeds to verify
+the commitment before exchanging private information:</p>
+<ol>
+<li>Does \(H(P_2)\) equal the previously provided commitment? If yes:</li>
+<li>Check that the commitment is not repeated on the public list (or
+    whatever the policy is)</li>
+<li>Verify via the blockchain that \(P\) matches the utxo \(U\)</li>
+<li>\(K_G = sG - eP\)</li>
+<li>\(K_J = sJ - eP_2\)</li>
+<li>Schnorr sig verify operation: Does \(H(K_G || K_J || P ||
+    P_2) = e\) ?</li>
+</ol>
+<p>Bob now knows that the utxo \(U\) has not been repeated (the simplest
+policy) but Alice has not been exposed to a potential public leakage of
+information about the utxo. (It should be noted of course! Bob knows the
+utxo from now on, but that's for another discussion about Coinjoin
+generally...)</p>
+<h3>Why an alternate generator point \(J\)?</h3>
+<p>Publishing \(H(P_2)\) gives no information about \(P\), the actual
+Bitcoin pubkey that Alice wants to use; in that sense it's the same as
+using a nonce in the commitment. But it also gives her no degree of
+freedom, as a nonce does, to create different public values for the same
+hidden pubkey. No one not possessing \(x\) can deduce \(P\) from
+\(P_2\) (or vice versa, for that matter) - <strong>unless</strong> they have the
+private key/discrete log of \(J\) with respect to \(G\). If anyone
+had this number \(x^*\) such that \(J = x^{*}G\), then it would be
+easy to make the shift from one to the other:</p>
+<p>$$P_2 = xJ = x(x^{*}G) = x^{*}(xG) = x^{*}P$$</p>
+<p>and apply a modular inverse if necessary.</p>
+<p>This is why the concept of NUMS is critical. The construction of a NUMS
+alternate generator is discussed in <a href="https://elementsproject.org/elements/confidential-transactions/">the same CT doc as
+above</a>,
+and also in <a href="https://github.com/AdamISZ/ConfidentialTransactionsDoc/blob/master/essayonCT.pdf">my CT
+overview</a>,
+at the end of section 2.2. Note I use \(J\) here in place of \(H\)
+to avoid confusion with hash functions.</p>
+<h3>Code and thoughts on implementation</h3>
+<p>I did an abbreviated write up of the concept of this post in <a href="https://gist.github.com/AdamISZ/9cbba5e9408d23813ca8#defence-2-committing-to-a-utxo-in-publicplaintext-at-the-start-of-the-handshake">this
+gist</a>,
+as one of three possible ways of attacking the problem in Joinmarket:
+<a href="https://github.com/JoinMarket-Org/joinmarket/issues/156">how can we prevent people initiating transactions over and over again
+to collect information on
+utxos</a>?
+This algorithm is not intended as a <em>complete</em> solution to that issue,
+but it's very interesting in its own right and may have a variety of
+applications, perhaps.</p>
+<p>The algorithm was fairly simple to code, at least in a naive way, and I
+did it some time ago using Bitcoin's
+<a href="https://github.com/bitcoin-core/secp256k1">libsecp256k1</a>
+with the <a href="https://github.com/ludbb/secp256k1-py">Python binding by
+ludbb</a>.
+An initial version of my Python "podle" module is
+<a href="https://github.com/JoinMarket-Org/joinmarket/blob/90ec05329e06beed0fbc09528ef6fb3d2c5d03ba/lib/bitcoin/podle.py">here</a>.</p>
+<p>There are lots of tricky things to think about in implementing this; I
+think the most obvious issue is how would publishing/maintaining a
+public list work? If we just want each utxo to be allowed only one use,
+any kind of broadcast mechanism would be fine; other participants can
+know as soon as any \(H(P_2)\) is used, or at least to a reasonable
+approximation. Even in a multi-party protocol like Joinmarket, the utxo
+would be broadcast as "used" only after its first usage by each party,
+so it would from then on be on what is effectively a blacklist. But if
+the policy were more like "only allow re-use 3 times" this doesn't seem
+to work without some kind of unrealistic honesty assumption.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/about-me/"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/blog/"><i class="fa fa-Blog "></i> Blog</a></li>
+							<li><a href="https://joinmarket.me/main-page/"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (12)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+							<li><a href="https://old.reddit.com/r/joinmarket">Joinmarket reddit</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=279249.620">Original description of Coinjoin</a></li>
+							<li><a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md">My analysis of privacy in Joinmarket's (old) tumbler algorithm</a></li>
+							<li><a href="https://www.ndss-symposium.org/wp-content/uploads/2017/09/ndss201701-4RuffingPaper.pdf">Coinshuffle++ and DiceMix paper</a></li>
+							<li><a href="https://eprint.iacr.org/2016/575">Tumblebit paper</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>
