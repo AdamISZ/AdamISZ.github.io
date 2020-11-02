@@ -1895,15 +1895,15 @@ thinking this through:&lt;/p&gt;
     for recent research in this area.).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3&gt;Illustrations comparing CoinJoin, CoinSwap and multiparty S6:&lt;/h3&gt;
-&lt;p&gt;&lt;img src="/web/20200429002041im_/https://joinmarket.me/static/media/uploads/.thumbnails/screenshot_from_2019-01-18_15-00-33.png/screenshot_from_2019-01-18_15-00-33-813x436.png" width="813" height="436" alt="Typical coinjoin" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../images/screenshot_from_2019-01-18_15-00-33-813x436.png" width="813" height="436" alt="Typical coinjoin" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Typical CoinJoin transaction - it's very obvious because of equal
 output amounts; the histories of coins are not disconnected, but fused&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;&lt;img src="/web/20200429002041im_/https://joinmarket.me/static/media/uploads/.thumbnails/realcoinswap2.png/realcoinswap2-792x65.png" width="792" height="65" /&gt;&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;&lt;img src="/web/20200429002041im_/https://joinmarket.me/static/media/uploads/.thumbnails/realcoinswap1.png/realcoinswap1-799x67.png" width="799" height="67" /&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;img src="../../images/realcoinswap2-792x65.png" width="792" height="65" /&gt;&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;&lt;img src="../../images/realcoinswap1-799x67.png" width="799" height="67" /&gt;&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Typical 2-party CoinSwap transactions; they are entirely separate on
 the blockchain, with different timestamps they could be extremely
 difficult to find.&lt;/em&gt;&lt;/p&gt;
-&lt;p&gt;*&lt;img src="/web/20200429002041im_/https://joinmarket.me/static/media/uploads/.thumbnails/s6basic.png/s6basic-1053x745.png" width="1053" height="745" /&gt;
+&lt;p&gt;*&lt;img src="../../images/s6basic.png/s6basic-1053x745.png" width="1053" height="745" /&gt;
 *&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;A &lt;strong&gt;very&lt;/strong&gt; simplified multiparty S6 as envisaged: note that Oscar to
 Peter shows on a diagonal a simple transaction of the type used in
