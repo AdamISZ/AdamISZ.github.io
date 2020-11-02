@@ -81,7 +81,7 @@ thinking this through:</p>
     primitive (see
     <a href="https://web.archive.org/web/20200429002041/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">here</a>
     or Poelstra and Nick's writeup
-    <a href="https://web.archive.org/web/20200429002041/https://github.com/apoelstra/scriptless-scripts/blob/master/md/atomic-swap.md">here</a>,
+    <a href="https://github.com/apoelstra/scriptless-scripts/blob/master/md/atomic-swap.md">here</a>,
     or the following sections for more on this), to achieve the goal via
     multisig outputs that look like other outputs.</li>
 <li>They do effectively a "multiparty swap" or "shuffle" to achieve this
@@ -133,19 +133,19 @@ thinking this through:</p>
     on Schnorr for indistinguishable multisig <em>and</em> for adaptor
     signatures, unless ECDSA-n-party computation is a thing, which I
     doubt is currently a thing for more than 2 parties, but see e.g.
-    <a href="https://web.archive.org/web/20200429002041/https://eprint.iacr.org/2018/987.pdf">this</a>
+    <a href="https://eprint.iacr.org/2018/987.pdf">this</a>
     for recent research in this area.).</li>
 </ul>
 <h3>Illustrations comparing CoinJoin, CoinSwap and multiparty S6:</h3>
-<p><img src="../../images/screenshot_from_2019-01-18_15-00-33-813x436.png" width="813" height="436" alt="Typical coinjoin" /></p>
+<p><img src="../../../images/screenshot_from_2019-01-18_15-00-33-813x436.png" width="813" height="436" alt="Typical coinjoin" /></p>
 <p><em>Typical CoinJoin transaction - it's very obvious because of equal
 output amounts; the histories of coins are not disconnected, but fused</em></p>
-<p><em><img src="../../images/realcoinswap2-792x65.png" width="792" height="65" /></em></p>
-<p><em><img src="../../images/realcoinswap1-799x67.png" width="799" height="67" /></em></p>
+<p><em><img src="../../../images/realcoinswap2-792x65.png" width="792" height="65" /></em></p>
+<p><em><img src="../../../images/realcoinswap1-799x67.png" width="799" height="67" /></em></p>
 <p><em>Typical 2-party CoinSwap transactions; they are entirely separate on
 the blockchain, with different timestamps they could be extremely
 difficult to find.</em></p>
-<p>*<img src="../../images/s6basic.png/s6basic-1053x745.png" width="1053" height="745" />
+<p>*<img src="../../../images/s6basic.png/s6basic-1053x745.png" width="1053" height="745" />
 *</p>
 <p><em>A <strong>very</strong> simplified multiparty S6 as envisaged: note that Oscar to
 Peter shows on a diagonal a simple transaction of the type used in
@@ -158,7 +158,7 @@ linked on the blockchain.</em></p>
 <p>Achieving the goals above is crucially dependent on the concept of an
 adaptor signature as developed by Andrew Poelstra (see some detailed
 descriptions as mentioned
-<a href="https://web.archive.org/web/20200429002041/https://github.com/apoelstra/scriptless-scripts/blob/master/md/atomic-swap.md">here</a>)
+<a href="https://github.com/apoelstra/scriptless-scripts/blob/master/md/atomic-swap.md">here</a>)
 in his work on "scriptless scripts". A large part of the <a href="https://web.archive.org/web/20200429002041/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">earlier blog
 post</a>
 on the topic of the scriptless script based swap, was explaining this
@@ -174,9 +174,9 @@ the curve corresponding). We shorten the hash function
 <p>Schnorr signatures are linear in the keys, in that:</p>
 <p>\(\sigma_1 + \sigma_2 = (k_1 + k_2) + e (x_1+x_2)\)</p>
 <p><strong>Combining signatures in this way is unsafe in many contexts, in
-particular multisignature in Bitcoin. See the <a href="https://web.archive.org/web/20200429002041/https://eprint.iacr.org/2018/068">paper on
+particular multisignature in Bitcoin. See the <a href="https://eprint.iacr.org/2018/068">paper on
 Musig</a>
-and <a href="https://web.archive.org/web/20200429002041/https://github.com/ElementsProject/secp256k1-zkp/blob/secp256k1-zkp/src/modules/musig/musig.md">this
+and <a href="https://github.com/ElementsProject/secp256k1-zkp/blob/secp256k1-zkp/src/modules/musig/musig.md">this
 summary</a>
 for the details on how the weakness (basically, potential of key
 subtraction) is addressed in detail, using interactivity between the
