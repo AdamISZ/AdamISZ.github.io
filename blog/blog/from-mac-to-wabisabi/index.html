@@ -54,17 +54,45 @@
 		</span>
 	</div>
 	<div itemprop="articleBody" class="article-body"><h2>From MAC to Wabisabi</h2>
+<!-- vim-markdown-toc GFM -->
+
 <ul>
-<li>
-<p><a href="#preamble-big-and-randomized">Preamble</a></p>
+<li><a href="#preamble---big-and-randomized">Preamble - big-and-randomized</a></li>
+<li><a href="#wabisabi-from-the-ground-up">Wabisabi, from the ground up.</a><ul>
+<li><a href="#what-the-wabisabi-paper-and-this-article-do-not-cover">What the Wabisabi paper, and this article, do not cover</a></li>
+</ul>
 </li>
-<li>
-<p><a href="#wabisabi-from-the-ground-up">Wabisabi - from the ground up</a></p>
+<li><a href="#signatures-keyed-macs-and-credentials">Signatures, keyed MACs and credentials</a><ul>
+<li><a href="#creating-a-mac">Creating a MAC</a></li>
+<li><a href="#algebraic-macs">Algebraic MACs</a></li>
+<li><a href="#security-notions-needed-for-algebraic-macs-used-for-anonymous-credentials">Security notions needed for algebraic MACs used for anonymous credentials</a><ul>
+<li><a href="#algebraic-mac-attempt-1">Algebraic MAC attempt 1</a></li>
+<li><a href="#algebraic-mac-attempt-2">Algebraic MAC attempt 2</a></li>
+<li><a href="#algebraic-mac-attempt-3">Algebraic MAC attempt 3</a></li>
+<li><a href="#algebraic-mac-attempt-4">Algebraic MAC attempt 4</a></li>
+</ul>
 </li>
-<li>
-<p><a href="#signatures-keyed-macs-and-credentials">Signatures, keyed MACs and credentials</a></p>
+<li><a href="#mac-ggm---a-vector-of-messages-different-security-arguments">MAC-GGM - a vector of messages; different security arguments</a></li>
+</ul>
+</li>
+<li><a href="#key-verified-anonymous-credentials-kvac">Key-Verified Anonymous Credentials (KVAC)</a><ul>
+<li><a href="#how-does-issuance-work">How does issuance work?</a><ul>
+<li><a href="#without-any-blinding">Without any blinding:</a></li>
+<li><a href="#side-note-what-are-these-mysterious-zero-knowledge-proofs">Side note: what are these mysterious "zero knowledge proofs"?</a></li>
+<li><a href="#with-blinding-of-attributes">With blinding of attributes:</a></li>
+</ul>
 </li>
 </ul>
+</li>
+<li><a href="#chase-perrin-zaverucha-2019">Chase-Perrin-Zaverucha 2019</a></li>
+<li><a href="#wabisabi-credentials-on-amounts-with-splitting">Wabisabi: credentials on amounts with splitting</a><ul>
+<li><a href="#range-proofs">Range proofs</a></li>
+</ul>
+</li>
+<li><a href="#final-thoughts-on-the-security-and-functionality-proposed-in-wabisabi">Final thoughts on the security and functionality proposed in Wabisabi</a></li>
+</ul>
+<!-- vim-markdown-toc -->
+
 <p><em>Thanks to nothingmuch for answering several questions about the mechanics of Wabisabi.</em></p>
 <h3>Preamble - big-and-randomized</h3>
 <p>First, assume we think it's valuable to have big coinjoins with random amounts for all the inputs and outputs, and probably for this one specific reason: we want to make payments <em>from</em> coinjoins and, possibly, to make payments <em>within</em> coinjoins (the latter is literally what is meant by payjoin, so that is part of this discussion, note however we'd be talking about payjoin batched together with other sub-transactions, so a lot of earlier analysis of payjoin doesn't apply).</p>
