@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive - waxwings Blog</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/waxwings-blog.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2020-11-05T00:00:00+01:00</updated><entry><title>From MAC to Wabisabi</title><link href="https://joinmarket.me/blog/blog/from-mac-to-wabisabi/" rel="alternate"></link><published>2020-11-05T00:00:00+01:00</published><updated>2020-11-05T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-11-05:/blog/blog/from-mac-to-wabisabi/</id><summary type="html">&lt;p&gt;new coinjoin coordination mechanism based on MACs&lt;/p&gt;</summary><content type="html">&lt;h2&gt;From MAC to Wabisabi&lt;/h2&gt;
-&lt;p&gt;DRAFT - this article is not finished!&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="#preamble-big-and-randomized"&gt;Preamble&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="#wabisabi-from-the-ground-up"&gt;Wabisabi - from the ground up&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="#signatures-keyed-macs-and-credentials"&gt;Signatures, keyed MACs and credentials&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;em&gt;Thanks to nothingmuch for answering several questions about the mechanics of Wabisabi.&lt;/em&gt;&lt;/p&gt;
 &lt;h3&gt;Preamble - big-and-randomized&lt;/h3&gt;
 &lt;p&gt;First, assume we think it's valuable to have big coinjoins with random amounts for all the inputs and outputs, and probably for this one specific reason: we want to make payments &lt;em&gt;from&lt;/em&gt; coinjoins and, possibly, to make payments &lt;em&gt;within&lt;/em&gt; coinjoins (the latter is literally what is meant by payjoin, so that is part of this discussion, note however we'd be talking about payjoin batched together with other sub-transactions, so a lot of earlier analysis of payjoin doesn't apply).&lt;/p&gt;
 &lt;p&gt;Second let's &lt;em&gt;partially&lt;/em&gt; address why this is, at least superficially, a bad idea, even a terrible one: previous discussion of the subset sum problem pointed out that &lt;em&gt;some of the time&lt;/em&gt; (being deliberately vague about how much of the time!) a coinjoin with non-equal amounts can be easily analyzed to find the sub-transactions which are really happening, removing any privacy boost. So that's not good.&lt;/p&gt;
@@ -41,6 +52,13 @@ On the other hand, let's not have &lt;em&gt;too&lt;/em&gt; simple of a mental mo
 &lt;p&gt;attributes - a credential could in its simplest form be simply binary: you are allowed to do X if you have the credential, and not otherwise. But sometimes attaching metadata inside the credential (think of e.g. a signature from a server that proved you should have access, but also that you are a level 3 user not a level 1 user, by including the level in the message that was signed).&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
+&lt;h4&gt;What the Wabisabi paper, and this article, do not cover&lt;/h4&gt;
+&lt;p&gt;What follows is a detailed review of the crypto constructions leading to the possibility of building a coinjoin system, with such a credential system. A full protocol however must cover other things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The rules for transaction construction&lt;/li&gt;
+&lt;li&gt;Valid choices of amounts for inputs and outputs&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is not covered here, other than some general thoughts as outlined above.&lt;/p&gt;
 &lt;h3&gt;Signatures, keyed MACs and credentials&lt;/h3&gt;
 &lt;p&gt;Digital signatures are probably very familiar to any reader of this blog, and there is a detailed discussion of some fundamentals in &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;this&lt;/a&gt; post. MACs, or Message Authentication Codes can be thought of as the symmetric crypto equivalent. In symmetric crypto, there is only a secret key, no public key, and that means there is no such thing as "public verification". The owner or owners of such a secret key can create a (probably unique; this is a nuance of the theory) "tag" on a message, which only a holder of the same key can verify.&lt;/p&gt;
 &lt;p&gt;On its face, such tagging might seem pointless without public verifiability, but the classic use case is for point to point communications over the public internet, in which both endpoints of the communication hold the secret key; by tagging messages in this way, integrity is assured, and the message is authenticated as coming from the intended source. Such secret keys can be pre-shared over a public communication channel using techniques like &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman"&gt;ECDH&lt;/a&gt;.&lt;/p&gt;
@@ -161,6 +179,8 @@ This encryption must then be blinded, but that's easy, by adding extra randomnes
 &lt;p&gt;However the paper is careful to build up to what it calls a "unified registration protocol" where it generalises the whole process of both creating and redeeming these credentials, and makes the interaction more efficient.&lt;/p&gt;
 &lt;h4&gt;Range proofs&lt;/h4&gt;
 &lt;p&gt;Any former student of the ideas behind &lt;a href="https://en.bitcoin.it/wiki/Confidential_transactions"&gt;Confidential Transactions&lt;/a&gt; will find this part obvious. Simply presenting &lt;em&gt;commitments&lt;/em&gt; to integer amounts (in satoshis, say) doesn't provide the intended security: since in modular arithmetic, a very large integer is mathematically equivalent to a small negative integer, it would be easy for users to cheat the amounts they get out by requesting commitments on (effectively) negative amounts. The way round this is again a ZKP, of a particular flavor known as a range proof: you prove that the integer \(a\) is between say 1 and \(2^{32}\) or whatever suits. This can be done e.g. with &lt;a href="https://eprint.iacr.org/2017/1066"&gt;Bulletproofs&lt;/a&gt; but also the range proof can be embedded as another statement in the overall ZKP provided by the user.&lt;/p&gt;
+&lt;p&gt;A relevant question, though, and one worth pondering: are the range proofs actually necessary? As discussed in the next section, there isn't a risk of funds loss in the basic coinjoin construct, with or without this extra crypto magic of credentials. So a malicious user constructing credentials in invalid negative amounts is not going to be able to claim more money, but this does represent a DOS vector, one that is usually addressed just with the requirement of users to provide and sign off on a valid utxo.&lt;/p&gt;
+&lt;p&gt;However there still may be further room for thought here; the range proof could be provided as part of a blame phase of a protocol, and avoided in the happy path of correct coinjoins being presented for signing. Apparently ZmnSCPxj has suggested this.&lt;/p&gt;
 &lt;h3&gt;Final thoughts on the security and functionality proposed in Wabisabi&lt;/h3&gt;
 &lt;p&gt;This article has just been a survey of some of the technical (cryptographic) underpinnings; the paper itself is specifically more about the theoretical construct, and not a fully fleshed out system spec as would be needed for a full software instantiation.&lt;/p&gt;
 &lt;ul&gt;
@@ -174,12 +194,15 @@ This encryption must then be blinded, but that's easy, by adding extra randomnes
 &lt;ul&gt;
 &lt;li&gt;How much defence against the issuer is there, i.e. is trust in the coordinator required for privacy?&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;The paper notes the following:&lt;/p&gt;
-&lt;p&gt;"A malicious coordinator may also tag users by providing them with different issuer parameters. When
+&lt;p&gt;This is actually a fairly tricky point. Restricting the coordinator's ability to tag (pun intended) or selectively censor is quite critical, and non trivial.&lt;/p&gt;
+&lt;p&gt;The splitting into multiple credentials helps; it is less easy for the malicious coordinator to figure out how to jam individual participants if they are going through multiple rounds of credential issuance and redemption. From conversations with nothingmuch it appears that quite a lot of thought is being put into this aspect of the protocol; those interested may want to read &lt;a href="https://github.com/zkSNACKs/WabiSabi/blob/master/protocol.md"&gt;this&lt;/a&gt; protocol spec document for the latest. Also along the same lines, the paper notes:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;A malicious coordinator may also tag users by providing them with different issuer parameters. When
 registering inputs a proof of ownership must be provided. If signatures are used, by covering the issuer
 parameters and a unique round identifier these proofs allow other participants to verify that everyone was
-given the same parameters."&lt;/p&gt;
-&lt;p&gt;This seems like an important point, that should be fleshed out more.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category><category term="coinjoin"></category></entry><entry><title>Joinmarket update for Oct 2020</title><link href="https://joinmarket.me/blog/blog/oct-2020-update/" rel="alternate"></link><published>2020-10-25T00:00:00+02:00</published><updated>2020-10-25T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-10-25:/blog/blog/oct-2020-update/</id><summary type="html">&lt;p&gt;Joinmarket update Oct 2020&lt;/p&gt;</summary><content type="html">&lt;h2&gt;About this post&lt;/h2&gt;
+given the same parameters.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Basically what is going on here is that there is a kind of "public" aspect to input registration; users sign the issuer parameters for the round, and then these signatures, at a certain point in the negotiation, are broadcast to all participants (with encryption), so that a malicious coordinator can be prevented from tagging users by giving them all different round issuer parameters.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category><category term="coinjoin"></category></entry><entry><title>Joinmarket update for Oct 2020</title><link href="https://joinmarket.me/blog/blog/oct-2020-update/" rel="alternate"></link><published>2020-10-25T00:00:00+02:00</published><updated>2020-10-25T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-10-25:/blog/blog/oct-2020-update/</id><summary type="html">&lt;p&gt;Joinmarket update Oct 2020&lt;/p&gt;</summary><content type="html">&lt;h2&gt;About this post&lt;/h2&gt;
 &lt;p&gt;It seems like a good idea to start using this blog to spread a little bit more information
 to users and other interested parties, about Joinmarket, in particular about how it might
 change.&lt;/p&gt;

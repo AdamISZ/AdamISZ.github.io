@@ -54,7 +54,18 @@
 		</span>
 	</div>
 	<div itemprop="articleBody" class="article-body"><h2>From MAC to Wabisabi</h2>
-<p>DRAFT - this article is not finished!</p>
+<ul>
+<li>
+<p><a href="#preamble-big-and-randomized">Preamble</a></p>
+</li>
+<li>
+<p><a href="#wabisabi-from-the-ground-up">Wabisabi - from the ground up</a></p>
+</li>
+<li>
+<p><a href="#signatures-keyed-macs-and-credentials">Signatures, keyed MACs and credentials</a></p>
+</li>
+</ul>
+<p><em>Thanks to nothingmuch for answering several questions about the mechanics of Wabisabi.</em></p>
 <h3>Preamble - big-and-randomized</h3>
 <p>First, assume we think it's valuable to have big coinjoins with random amounts for all the inputs and outputs, and probably for this one specific reason: we want to make payments <em>from</em> coinjoins and, possibly, to make payments <em>within</em> coinjoins (the latter is literally what is meant by payjoin, so that is part of this discussion, note however we'd be talking about payjoin batched together with other sub-transactions, so a lot of earlier analysis of payjoin doesn't apply).</p>
 <p>Second let's <em>partially</em> address why this is, at least superficially, a bad idea, even a terrible one: previous discussion of the subset sum problem pointed out that <em>some of the time</em> (being deliberately vague about how much of the time!) a coinjoin with non-equal amounts can be easily analyzed to find the sub-transactions which are really happening, removing any privacy boost. So that's not good.</p>
@@ -95,6 +106,13 @@ On the other hand, let's not have <em>too</em> simple of a mental model of Wasab
 <p>attributes - a credential could in its simplest form be simply binary: you are allowed to do X if you have the credential, and not otherwise. But sometimes attaching metadata inside the credential (think of e.g. a signature from a server that proved you should have access, but also that you are a level 3 user not a level 1 user, by including the level in the message that was signed).</p>
 </li>
 </ul>
+<h4>What the Wabisabi paper, and this article, do not cover</h4>
+<p>What follows is a detailed review of the crypto constructions leading to the possibility of building a coinjoin system, with such a credential system. A full protocol however must cover other things:</p>
+<ul>
+<li>The rules for transaction construction</li>
+<li>Valid choices of amounts for inputs and outputs</li>
+</ul>
+<p>This is not covered here, other than some general thoughts as outlined above.</p>
 <h3>Signatures, keyed MACs and credentials</h3>
 <p>Digital signatures are probably very familiar to any reader of this blog, and there is a detailed discussion of some fundamentals in <a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/">this</a> post. MACs, or Message Authentication Codes can be thought of as the symmetric crypto equivalent. In symmetric crypto, there is only a secret key, no public key, and that means there is no such thing as "public verification". The owner or owners of such a secret key can create a (probably unique; this is a nuance of the theory) "tag" on a message, which only a holder of the same key can verify.</p>
 <p>On its face, such tagging might seem pointless without public verifiability, but the classic use case is for point to point communications over the public internet, in which both endpoints of the communication hold the secret key; by tagging messages in this way, integrity is assured, and the message is authenticated as coming from the intended source. Such secret keys can be pre-shared over a public communication channel using techniques like <a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman">ECDH</a>.</p>
@@ -215,6 +233,8 @@ This encryption must then be blinded, but that's easy, by adding extra randomnes
 <p>However the paper is careful to build up to what it calls a "unified registration protocol" where it generalises the whole process of both creating and redeeming these credentials, and makes the interaction more efficient.</p>
 <h4>Range proofs</h4>
 <p>Any former student of the ideas behind <a href="https://en.bitcoin.it/wiki/Confidential_transactions">Confidential Transactions</a> will find this part obvious. Simply presenting <em>commitments</em> to integer amounts (in satoshis, say) doesn't provide the intended security: since in modular arithmetic, a very large integer is mathematically equivalent to a small negative integer, it would be easy for users to cheat the amounts they get out by requesting commitments on (effectively) negative amounts. The way round this is again a ZKP, of a particular flavor known as a range proof: you prove that the integer \(a\) is between say 1 and \(2^{32}\) or whatever suits. This can be done e.g. with <a href="https://eprint.iacr.org/2017/1066">Bulletproofs</a> but also the range proof can be embedded as another statement in the overall ZKP provided by the user.</p>
+<p>A relevant question, though, and one worth pondering: are the range proofs actually necessary? As discussed in the next section, there isn't a risk of funds loss in the basic coinjoin construct, with or without this extra crypto magic of credentials. So a malicious user constructing credentials in invalid negative amounts is not going to be able to claim more money, but this does represent a DOS vector, one that is usually addressed just with the requirement of users to provide and sign off on a valid utxo.</p>
+<p>However there still may be further room for thought here; the range proof could be provided as part of a blame phase of a protocol, and avoided in the happy path of correct coinjoins being presented for signing. Apparently ZmnSCPxj has suggested this.</p>
 <h3>Final thoughts on the security and functionality proposed in Wabisabi</h3>
 <p>This article has just been a survey of some of the technical (cryptographic) underpinnings; the paper itself is specifically more about the theoretical construct, and not a fully fleshed out system spec as would be needed for a full software instantiation.</p>
 <ul>
@@ -228,12 +248,15 @@ This encryption must then be blinded, but that's easy, by adding extra randomnes
 <ul>
 <li>How much defence against the issuer is there, i.e. is trust in the coordinator required for privacy?</li>
 </ul>
-<p>The paper notes the following:</p>
-<p>"A malicious coordinator may also tag users by providing them with different issuer parameters. When
+<p>This is actually a fairly tricky point. Restricting the coordinator's ability to tag (pun intended) or selectively censor is quite critical, and non trivial.</p>
+<p>The splitting into multiple credentials helps; it is less easy for the malicious coordinator to figure out how to jam individual participants if they are going through multiple rounds of credential issuance and redemption. From conversations with nothingmuch it appears that quite a lot of thought is being put into this aspect of the protocol; those interested may want to read <a href="https://github.com/zkSNACKs/WabiSabi/blob/master/protocol.md">this</a> protocol spec document for the latest. Also along the same lines, the paper notes:</p>
+<blockquote>
+<p>A malicious coordinator may also tag users by providing them with different issuer parameters. When
 registering inputs a proof of ownership must be provided. If signatures are used, by covering the issuer
 parameters and a unique round identifier these proofs allow other participants to verify that everyone was
-given the same parameters."</p>
-<p>This seems like an important point, that should be fleshed out more.</p></div>
+given the same parameters.</p>
+</blockquote>
+<p>Basically what is going on here is that there is a kind of "public" aspect to input registration; users sign the issuer parameters for the round, and then these signatures, at a certain point in the negotiation, are broadcast to all participants (with encryption), so that a malicious coordinator can be prevented from tagging users by giving them all different round issuer parameters.</p></div>
 	<hr>
 	<h2>Comments</h2>
 </div>
