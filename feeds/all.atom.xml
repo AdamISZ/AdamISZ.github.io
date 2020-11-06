@@ -4018,7 +4018,593 @@ particular:&lt;/p&gt;
 guarantee of covering all that, the security arguments follow similar
 lines to the discussion in this post. Of course ring signatures have
 their own unique features and foibles, so I will hopefully cover that a
-bit, as well as the security question.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category></entry><entry><title>Payjoin</title><link href="https://joinmarket.me/blog/blog/payjoin/" rel="alternate"></link><published>2018-12-15T00:00:00+01:00</published><updated>2018-12-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-12-15:/blog/blog/payjoin/</id><summary type="html">&lt;p&gt;coinjoins in payments&lt;/p&gt;</summary><content type="html">&lt;h3&gt;PayJoin&lt;/h3&gt;
+bit, as well as the security question.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category></entry><entry><title>Finessing commitments</title><link href="https://joinmarket.me/blog/blog/finessing-commitments/" rel="alternate"></link><published>2019-01-15T00:00:00+01:00</published><updated>2019-01-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2019-01-15:/blog/blog/finessing-commitments/</id><summary type="html">&lt;p&gt;discussion of properties of commitment schemes as applied to Bitcoin&lt;/p&gt;</summary><content type="html">&lt;h3&gt;Finessing commitments&lt;/h3&gt;
+&lt;h2&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;This post was mostly prompted by a long series of discussions had online
+and in person with many people, including in particular Adam Back and
+Tim Ruffing (but lots of others!) - and certainly not restricted to
+discussions I took part in - about the tradeoffs in a version of Bitcoin
+that does actually use Confidential Transactions.&lt;/p&gt;
+&lt;p&gt;The topic that keeps recurring is: exactly what level of safety against
+&lt;em&gt;hidden inflation&lt;/em&gt; does CT offer, in principle and in practice; this is
+closely related to what level of privacy it offers, too, but the hidden
+inflation is what gets people thinking, first and foremost.&lt;/p&gt;
+&lt;p&gt;My goal here is to explain to people who are not completely up to speed
+with what causes this discussion; to explain, in detail but without
+assuming &lt;em&gt;too&lt;/em&gt; much pre-knowledge, what the heart of the tradeoff is,
+and in the last couple of sections, how we might get around it. How we
+might "have our cake and eat it" so to speak.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;You'll find a lot of the ideas in first three sections of this blog
+post, although not all of them, in my write up on
+&lt;a href="https://github.com/AdamISZ/from0k2bp"&gt;Bulletproofs&lt;/a&gt;
+section 3, and I also went over the basics in the early part of my
+London talk on the &lt;a href="https://www.youtube.com/watch?v=mLZ7qVwKalE"&gt;Schnorr
+signature&lt;/a&gt;
+(since they're not visible, you'd want to see the
+&lt;a href="https://web.archive.org/web/20200428225915/https://joinmarket.me/static/schnorrplus.pdf"&gt;slides&lt;/a&gt;
+for that talk if you watch it).&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;You should have &lt;/em&gt;&lt;em&gt;some&lt;/em&gt;&lt;em&gt; general idea about what Confidential
+Transactions is, in order to understand the second half - in particular
+you should understand that amounts are hidden under Pedersen
+commitments, although we'll go through some of it here in the early
+sections.&lt;/em&gt;&lt;/p&gt;
+&lt;h2&gt;Commitments - the basic ideas&lt;/h2&gt;
+&lt;p&gt;A commitment fixes a value in advance, without revealing it. Think of
+flipping a coin and covering it with your hand as part of a gamble or
+game. Covering it with your hand means it's invisible. The visibility of
+your hand not moving, and pressed against a surface over the coin, on
+the other hand, ensures you can't cheat, because you can't flip the coin
+under your hand. This is the physical representation of the two ideas of
+a commitment; everything that cryptographers call a commitment has those
+two properties, but defended by very strong mathematical "guarantees"
+(more on those quote marks shortly!), instead of by a crappy physical
+analogue like a pressed-down hand:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Hiding&lt;/code&gt; - nobody but the committer can see or infer the actual
+    value being committed&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Binding&lt;/code&gt; - the committer can't change the value after the
+    commitment is published.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The most "vanilla" way to implement this primitive is to use a
+cryptographically secure hash function, say \(\mathbb{H}\). You'd
+make up a random number \(r\) and combine it with your secret value
+\(x\), and the commitment would just be something like
+\(\mathbb{H}(x||r)\), where || indicates just concatenating the
+data together.&lt;/p&gt;
+&lt;p&gt;For background, commitments are usually defined in the literature as a
+tuple of three algorithms: Setup, Commit and Verify/Open, where the last
+one needs the committing party to give what's called the "opening" of
+the commitment as input. It should be clear what is meant when I say
+that the "opening" of the above commitment is just literally the two
+values \(x\) and \(r\). (It's like taking your hand off the coin in
+our analogue).&lt;/p&gt;
+&lt;p&gt;Because (cryptographically secure) hash-functions are
+collision-resistant (avoiding technical definitions for brevity here),
+you can't open a commitment you already made to \(x\), with a
+different value \(x'\), i.e. as committer you can't cheat, because
+even though you're free to make your cheating opening operation with any
+\(r'\) you like (it wasn't published in advance), you just can't find
+any combination \(x',r'\) such that
+\(\mathbb{H}(x||r)=\mathbb{H}(x'||r')\). That's why you need a
+proper, strong hash function - to make that computationally infeasible.&lt;/p&gt;
+&lt;h2&gt;Homomorphic commitments&lt;/h2&gt;
+&lt;p&gt;The strict definition of homomorphism requires going into group theory a
+bit, which isn't needed here, but basically a homomorphism should be
+thought of as a function that takes you from one group into another
+while keeping the group operation intact (so it's closely related to
+symmetry). A toy example would be the homomorphism from the group of
+integers under addition (\(\mathbb{Z},+)\) to the group of integers
+modulo two \(\mathbb{Z}_2\) (a very simple group!: two members: 0,
+1; each is self-inverse; 0+1=1+0 = 1, 0+0=1+1 =0). What is that
+homomorphism? It's just a function that returns 0 if the input integer
+is even, and 1 if the input integer is odd. We lost everything about the
+integers except their evenness/oddness but we kept the group operation.
+Call that function \(f()\) and we clearly have \(f(a+b)=f(a)+f(b)\)
+because even + odd = odd, odd + even = odd, even + even = odd + odd =
+even.&lt;/p&gt;
+&lt;p&gt;But homomorphisms need not collapse a larger group into a smaller one,
+the "throw away everything except X" can still conceivably mean throwing
+away nothing, i.e. mapping from one group to another with the same order
+- and the homomorphism that's relevant to this discussion fits that
+description: it translates members of the group of integers modulo
+\(N\) under addition, to the group of elliptic curve points of order
+\(N\), under elliptic curve point addition: \(a \in \mathbb{Z}_N
+\ ; a \rightarrow aG\), where \(G\) is the so-called generator
+point of the elliptic curve (exactly which point on the curve is taken
+for this role is irrelevant, but the definition has to include one, and
+we call it \(G\)), and implicit in the notation \(aG\) is the fact
+that it means a &lt;em&gt;scalar multiplication&lt;/em&gt; of \(G\) by \(a\), i.e.
+\(G\) added to itself \(a\) times.&lt;/p&gt;
+&lt;p&gt;In Bitcoin, the curve in question is secp256k1, but that's not important
+here (except perhaps the fact that \(N\) is prime, meaning both groups
+are isomorphic to the cyclic group of order \(N\)).&lt;/p&gt;
+&lt;p&gt;So this is all getting technical, but all it really boils down to is
+\((a+b)G = aG + bG\) is an equation that holds, here.&lt;/p&gt;
+&lt;p&gt;What about commitments? We can treat the above homomorphism as &lt;em&gt;similar&lt;/em&gt;
+to a cryptographic hash function, in that we can &lt;em&gt;assume&lt;/em&gt; that it's not
+possible to derive the integer \(a\) given only the curve point
+\(aG\) - this assumes that the "elliptic curve discrete logarithm
+problem" is hard (ECDLP for short; also, that's kind of the definition
+of that problem).&lt;/p&gt;
+&lt;p&gt;In making that assumption, we can go ahead and apply the same paradigm:
+take a random \(r\) for hiding, then take a second generator point
+\(H\) and write our commitment as \(xG + rH\) (addition not
+concatenation; publishing the two curve points separately would defeat
+the purpose; \(r\) is supposed to be helping to hide \(x\)!).&lt;/p&gt;
+&lt;p&gt;And we note how the homomorphism between an integer and the scalar
+multiple of \(G\) by that integer carries over to this composite case
+of the sum of two points: \(x_{1}G + r_{1}H + x_{2}G + r_{2}H =
+(x_{1}+x_{2})G + (r_{1}+r_{2})H\).&lt;/p&gt;
+&lt;p&gt;So it means the commitments, which we can denote \(C(x, r)\) for
+brevity, &lt;strong&gt;are homomorphic&lt;/strong&gt; too. The sum of two commitments is equal to
+the commitment to the sum (in this sentence, notice how "sum" refers to
+the sum of two integers; but the homomorphism allows that to "carry
+over" to "sum" as in elliptic curve point addition). Algebraically we
+can condense it to: \(C(x_1,r_1)+C(x_2,r_2) =
+C(x_{1}+x_{2},r_{1}+r_{2})\).&lt;/p&gt;
+&lt;p&gt;This specific form of commitment is known as the &lt;strong&gt;Pedersen
+commitment&lt;/strong&gt;. It is most commonly referred to in the finite field, non
+elliptic curve form (where \(C=g^{x}h^{r}\) rather than \(C=xG +
+rH\)), but it's the same thing.&lt;/p&gt;
+&lt;p&gt;And to re-emphasise what at this point should be obvious - &lt;strong&gt;none&lt;/strong&gt; of
+the above applies to commitments built with cryptographic hash
+functions.&lt;/p&gt;
+&lt;h2&gt;Imperfect commitments&lt;/h2&gt;
+&lt;p&gt;The first imperfection in the idea above of the Pedersen commitment: the
+second generator point \(H\). In practice it has been calculated in a
+&lt;a href="https://en.wikipedia.org/wiki/Nothing_up_my_sleeve_number"&gt;NUMS&lt;/a&gt;
+way, using some kind of hash of the defined generator point \(G\). The
+idea is that if this hash function \(\mathbb{H}\) is secure as
+described above, \(H\) cannot be reverse-engineered such that its
+discrete log (that's to say, \(\gamma\) s.t. \(H=\gamma G\)). And
+while this seems like a side-note, we can use this to lead in to the
+subtleties which are the main topic of this blog post.&lt;/p&gt;
+&lt;p&gt;Consider (and this is an excellent exercise for those &lt;em&gt;somewhat&lt;/em&gt;
+familiar with basic elliptic curve operations as used in Bitcoin and
+similar, but not yet seasoned in it): if you secretly knew that
+\(\gamma\) and no one else did, and Pedersen commitments were being
+used, how could you use this knowledge to gain advantage?&lt;/p&gt;
+&lt;p&gt;(Spoiler space)&lt;/p&gt;
+&lt;p&gt;.&lt;/p&gt;
+&lt;p&gt;.&lt;/p&gt;
+&lt;p&gt;.&lt;/p&gt;
+&lt;p&gt;.&lt;/p&gt;
+&lt;p&gt;The answer is that the a commitment would lose its &lt;strong&gt;binding&lt;/strong&gt; property.
+Remember: the binding property is the defence the receiver/verifier of
+the commitment has against the creator/committer. So you would be able
+to make a commitment randomly - just take any random "private key", call
+it \(y\), and publish its "public key" point \(yG\) as \(C\). Then
+when asked to verify later, you could pretend that you had bound this
+commitment to any \(x\) as follows: Take your newly chosen \(x\),
+and calculate what \(r\) has to be for that to work:&lt;/p&gt;
+&lt;p&gt;\(xG + rH = C\)
+\(xG + r\gamma G = yG\)
+\(\therefore\)
+\(r = \gamma^{-1}(y-x)\)&lt;/p&gt;
+&lt;p&gt;There are two thoughts that may spring out of this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A Pedersen commitment then, is only sound in as much as the relative
+    discrete log between \(H\) and \(G\) is unknown. And as is often
+    discussed, the aforementioned ECDLP is almost certainly broken by a
+    sufficiently powerful quantum computer (although there might
+    conceivably other ways to compute a discrete log quickly, as yet
+    unknown to mathematicians). We say that Pedersen commitments are
+    only &lt;span style="text-decoration: underline;"&gt;computationally
+    binding&lt;/span&gt; - this means, only binding inasmuch as breaking their
+    binding requires an unrealistic amount of computational power - to
+    an adversary with infinite computing power, they are &lt;strong&gt;not&lt;/strong&gt;
+    binding, at all.&lt;/li&gt;
+&lt;li&gt;You may think - what about hiding? Surely knowing this "secret
+    unlocking key" \(\gamma\) can break that as well. The answer is
+    an emphatic &lt;strong&gt;no&lt;/strong&gt; - but what might be really surprising is: &lt;em&gt;the
+    answer is no in the case of hiding for exactly the same reason that
+    the answer is yes, in the case of binding!&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I'm first going to explain that formally, but then we'll take a step
+back, and use a picture and perhaps some examples to flesh out what's
+really going on here, because it's the heart of the story we're telling.&lt;/p&gt;
+&lt;p&gt;The reason hiding is not lost is because an adversary on the
+receiving/verifying side who wants to "sneak peek" inside \(C\) to
+find out the real \(x\) faces an insurmountable problem: &lt;span
+style="text-decoration: underline;"&gt;there isn't only one answer!&lt;/span&gt;.
+If the answer is \(x\) then the \(r\) value is, as already
+explained, \(\gamma^{-1}(y-x)\). Remember, a computationally unbound
+attacker can find those discrete logs - can get \(y\) from \(C\),
+and can get \(\gamma\) from \(H\). So &lt;em&gt;any&lt;/em&gt; \(x\) will have a
+corresponding \(r\). And of course you can flip it backwards - if he
+fixes a particular \(r\) he can get the corresponding \(x\). Where
+is this slipperiness coming from? What's it's fundamental cause?&lt;/p&gt;
+&lt;p&gt;Think about functions. They take inputs to outputs of course, and we
+generalise by talking about input spaces and output spaces (by "space"
+here I mean something like "the set of all..."). The technical terms
+used are domain/range and sometimes preimage space and image space. The
+input space for the private-&amp;gt;public key "function" in Bitcoin is of
+course the set of all integers modulo \(N\). And then output space is
+the set of all public keys, which is the set of all points on the curve
+secp256k1. Here we have what's called a "one-one" mapping (technically
+it's both "one-one" and also "onto", since all points in the output
+space are mapped to). But only "nice" functions are like that, not all
+are. Some, in particular, have &lt;strong&gt;more than one input corresponding to
+the same output&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;And that's exactly what's happening with the Pedersen commitment;
+moreover, there's a very concrete reason &lt;em&gt;why&lt;/em&gt; the Pedersen commitment
+has that property of having multiple inputs for the same output - it
+logically has to! Consider this diagram:&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428225915im_/https://joinmarket.me/static/media/uploads/.thumbnails/InputOutput1.png/InputOutput1-689x487.png" width="689" height="487" alt="Input space larger than output space" /&gt;&lt;/p&gt;
+&lt;p&gt;By the &lt;a href="https://en.wikipedia.org/wiki/Pigeonhole_principle"&gt;pigeonhole
+principle&lt;/a&gt;,
+because there are more inputs than outputs, it's impossible for it &lt;em&gt;not&lt;/em&gt;
+to be the case that at least some outputs have more than one
+corresponding input - they wouldn't all "fit" otherwise. And it's for
+this reason that &lt;span style="text-decoration: underline;"&gt;a commitment
+scheme where the input space is larger than the output space can have
+perfect hiding.&lt;/span&gt; (notice "can", not "will" - for the hiding to be
+*perfect* we need to be leaking zero information about which element
+of the input space is being hidden; that needs it to be the case that we
+can demonstrate that *any* element of some very large subset of the
+input space is part of a valid opening of a given commitment \(C\);
+that's true here in Pedersen, but certainly not for some other
+commitment schemes).&lt;/p&gt;
+&lt;p&gt;And for the exact same reason, the binding is only computational - there
+are bound to be at least some outputs with more than one input, and so
+if nothing else, by exhaustive search, the computationally unbounded
+attacker can simply search and find the other input corresponding to the
+same output (as per the diagram, if the attacker had the value \(k\)
+as commitment, he could find \(x_2, r_2\) even if the commitment was
+originally to \(x_1, r_1\). At least that'll be true for &lt;em&gt;some&lt;/em&gt;
+outputs (in Pedersen, for every output, in fact).&lt;/p&gt;
+&lt;p&gt;So the Pedersen commitment falls neatly into this category; it has an
+input space of 512 bits if the message \(x\) and randomness \(r\)
+are both the same size as the group elements and an output space of 256
+bits (almost exactly); the outputs \(C\) are the points on the
+secp256k1 curve.&lt;/p&gt;
+&lt;p&gt;(You'll notice how technically "exhaustive search" may not be the actual
+process - there can be shortcuts depending on how the commitment is
+structured; in the case of Pedersen, because it hinges on the unknown
+discrete log \(\gamma\), the attacker can leverage that - he can use
+that knowledge to find these "other inputs" directly instead of by
+exhaustive search).&lt;/p&gt;
+&lt;p&gt;What if the input space is &lt;em&gt;smaller&lt;/em&gt; than the output space? It takes a
+moment of reflection to realise that this idea doesn't make sense. A
+function has a single output by definition (note that doesn't mean the
+output can't be multiple "things", e.g. it could be 4 integers or 6
+curve points or 5 triangles, whatever - but each of them is a single
+output). So a function with 10 inputs can't have more than 10 outputs.
+Which means we have one case remaining:&lt;/p&gt;
+&lt;p&gt;What if the input space is &lt;em&gt;the same size as &lt;/em&gt;the output space?&lt;/p&gt;
+&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428225915im_/https://joinmarket.me/static/media/uploads/.thumbnails/InputOutput2.png/InputOutput2-688x487.png" width="688" height="487" alt="Input and output space equal size" /&gt;&lt;/p&gt;
+&lt;p&gt;In this case we must have a one-one mapping - again by the pigeonhole
+principle (Remember, we are defining the output space as the space of
+actual possible outputs, not some larger set; this will usually require
+justification - you can justify it here by first considering the second
+commitment point \(C_2=rG\) - note that the lines are horizontal for
+a reason!). And by the same reasoning as above, but in reverse, we see
+that this gives &lt;strong&gt;perfect&lt;/strong&gt; binding, and &lt;strong&gt;at best
+computational (imperfect) hiding.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;What's neat about this reasoning is that none of it is specific to
+anything elliptic curve, or discrete log related, or anything - it
+applies to &lt;em&gt;any&lt;/em&gt; commitment scheme, including the hash-based one we
+introduced right at the start. The only difference between the Pedersen
+and hash-based case is because of the messiness mathematically of hash
+functions, we can't really talk about perfection; it's only the
+limitations, the negative parts of the above logic, that are the same:&lt;/p&gt;
+&lt;p&gt;If your output space is the space of SHA256 outputs, then it's 256 bits.
+Now according to specification, that hash function can take extremely
+large input (I forget exactly, but vastly larger than 256 bits), which
+means it is in the first category - its input space is vastly larger
+than its output space, so it &lt;strong&gt;cannot&lt;/strong&gt; be perfectly binding. But that
+&lt;em&gt;doesn't&lt;/em&gt; mean that it's perfectly hiding, unfortunately - that would
+require that a given output leaks precisely zero information about the
+corresponding input. But it's certainly not the case that we have some
+theorem about SHA256 that ensures that every input is equiprobable,
+given an arbitrary output. So at &lt;em&gt;best&lt;/em&gt; we have computational hiding,
+and that's based on the idea tha the hash function is well designed. See
+&lt;a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function"&gt;Wikipedia&lt;/a&gt;
+for a reminder on the key properties of cryptographic hash functions.
+These properties are also what provides the argument for at least a
+computational binding. But again, it's certainly not perfectly either
+hiding &lt;em&gt;or&lt;/em&gt; binding.&lt;/p&gt;
+&lt;p&gt;So let's summarize the key insight:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;It's LOGICALLY impossible for a commitment scheme to be both perfectly
+hiding and perfectly binding, no matter what algorithm or mathematical
+architecture is used to construct it.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Why "logically"? Because we've demonstrated the two ideas are
+fundamental contradictions of each other; it is only confusion to think
+you can get both at the same time. Another way to say it (slightly more
+dynamic description):&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A commitment scheme which has been constructed to have perfect binding
+will at BEST achieve computational hiding, while a scheme constructed to
+achieve perfect hiding will at BEST achieve computational binding.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Here we're emphasizing that these are the limits, only achieved by well
+designed algorithms; a badly designed or not-fit-for-purpose commitment
+scheme may not be perfect in &lt;em&gt;either&lt;/em&gt; sense, and for example may not
+even manage to be computationally hiding, e.g. an adversary may very
+feasibly be able to break the hiding property without excessive
+computational resources. This is just a description of the &lt;em&gt;best&lt;/em&gt; we can
+do.&lt;/p&gt;
+&lt;h2&gt;From hidden to bound&lt;/h2&gt;
+&lt;p&gt;We'll get into the Bitcoin-related application shortly, but for now note
+that is not unreasonable to prefer binding over hiding in the trade-off.
+Since clearly Pedersen doesn't fit there, what does?&lt;/p&gt;
+&lt;p&gt;Let's start with an almost-obvious idea: suppose I want to commit to a
+value \(x\) and have it be perfectly binding. Can I just use
+\(C=xG\) as the commitment?&lt;/p&gt;
+&lt;p&gt;If you've been following along, you'll probably be a little uncertain,
+because .. the "hiding" part doesn't seem to have been implemented.
+You're right to be uncertain, because the answer is really "formally no,
+but it kinda depends".&lt;/p&gt;
+&lt;p&gt;There are two scenarios: if the set of values you might commit to is
+restricted in some way, e.g. a number between 1 and \(2^{25}\) then
+the lack of hiding makes the commitment a complete failure, because a
+computer could just find it by brute force guessing. And if your \(x\)
+was a random value in the entire range \(2^{256}\) of elements of the
+group - this kind of construction &lt;em&gt;is&lt;/em&gt; sometimes used as a commitment,
+but it doesn't count as a proper, generic commitment &lt;em&gt;scheme&lt;/em&gt;, because
+it doesn't have even computational hiding in the general case; if I
+&lt;em&gt;think&lt;/em&gt; I know what your \(x\) is (or know the range of it), I can
+just check if I'm right; there is no blinding value \(r\) to prevent
+that.&lt;/p&gt;
+&lt;p&gt;This naturally leads us to the &lt;a href="https://en.wikipedia.org/wiki/ElGamal_encryption"&gt;ElGamal encryption
+scheme&lt;/a&gt;,
+re-purposed as a commitment scheme (this can be done with any
+cryptosystem, by the way):&lt;/p&gt;
+&lt;p&gt;Take our usual suspects \((x, r)\) and construct &lt;strong&gt;two&lt;/strong&gt; elliptic
+curve points: \((xG+rH, rG)\). This is the ElGamal commitment (with
+all notation as for Pedersen). Wait, I hear you cry - you're just
+regurgitating the Pedersen commitment, but adding \(rG\)? What does
+that mean? Well, we're taking the slightly broken idea above and
+applying it &lt;em&gt;in conjunction with&lt;/em&gt; the idea of the Pedersen commitment.
+We "commit" to the value \(r\) using \(rG\), and that's OK
+specifically because \(r\) is a random number in the range (a bit like
+a "nonce") used just for this commitment, so there is no guessing it
+outside the standard brute force or breaking ECDLP; by doing so we've
+increased the &lt;strong&gt;output space&lt;/strong&gt; from Pedersen's set of single curve
+points to the Cartesian product of 2 sets of curve points. And we by
+doing so arrive at the second of the two scenarios described in the two
+diagrams above; now, for each input tuple \((x, r)\), there is an
+output tuple \((C_1,C_2) = (xG+rH,rG)\) - guaranteed distinct
+because the mapping from \(r\) to \(rG\) is one-one - so the mapping
+is one-one and is perfectly binding. More simply: the task of the
+adversary who wants to break the commmitment by opening it to a
+different value than originally chosen is now impossible: for \(rG\)
+there is precisely one and only one \(r\), and once \(r\) is set,
+there is only one \(x\): it's the discrete log of \(C_1 -rH\) which
+is now uniquely defined, once \(r\) is.&lt;/p&gt;
+&lt;p&gt;And, following our insights above, it is now decidely unsurprising to
+learn that the described ElGamal commitment is only computationally
+hiding: because \(rG\) is published as a separate curve point
+\(C_2\) and not folded into the single curve point as with Pedersen,
+an attacker with the ability to solve the discrete log problem can
+extract, from that, \(r\) and then follow up by extracting from
+\(C_1 - rH=xG\), the supposedly hidden committed value \(x\).&lt;/p&gt;
+&lt;p&gt;But let's be clear: it &lt;em&gt;is&lt;/em&gt; computationally hiding, unlike our toy
+"quasi-commitment" \(xG\) which fails at that task (imagine committing
+to the value "2"). And that can be expressed formally with what's called
+a "reduction proof"; a rather weird but also very clever concept often
+used in cryptography:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;The ElGamal commitment is hiding if the DDH problem is hard,&lt;/span&gt;
+&lt;span class="err"&gt;because an adversary who can violate the hiding property of the ElGamal&lt;/span&gt;
+&lt;span class="err"&gt;commitment can use that algorithm to solve the DDH problem.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;DDH refers to the &lt;a href="https://en.wikipedia.org/wiki/Decisional_Diffie%E2%80%93Hellman_assumption"&gt;Decisional Diffie Hellman
+problem&lt;/a&gt;
+- in words, it's that you can't distinguish  \(abG\) from a random
+curve point, even if you already know the values of \(A,B\) where
+\(A=aG, B=bG\).&lt;/p&gt;
+&lt;p&gt;The intended consequence of this reasoning (and notice how slippery this
+logic is!) is to say: DDH is &lt;em&gt;actually&lt;/em&gt; hard, therefore ElGamal is
+computationally hiding. Or: since it &lt;em&gt;is&lt;/em&gt; believed that DDH is hard, it
+follows that "we" (some undefined group of cryptographers) believe that
+ElGamal, as a commitment scheme, is computationally hiding.&lt;/p&gt;
+&lt;h3&gt;Brief observation: ElGamal is homomorphic&lt;/h3&gt;
+&lt;p&gt;Notice how the description of the homomorphic (with respect to addition)
+property of the Pedersen commitment cross applies here; even though we
+have two curve points here, not one, the same linearity exists:&lt;/p&gt;
+&lt;p&gt;\(C_{EG}(x_1, r_1) + C_{EG}(x_2, r_2) = \)&lt;/p&gt;
+&lt;p&gt;\((x_1G + r_1H, r_1G) + (x_2G + r_2H, r_2G)\)&lt;/p&gt;
+&lt;p&gt;\( = ((x_1 + x_2)G + (r_1+r_2)H, (r_1+r_2)G)\)&lt;/p&gt;
+&lt;p&gt;\( = C_{EG}(x_1+x_2, r_1+r_2)\)&lt;/p&gt;
+&lt;h2&gt;An unpalatable tradeoff?&lt;/h2&gt;
+&lt;p&gt;So all of the above is the "behind the scenes" of the discussion you'll
+often see in public about &lt;a href="https://elementsproject.org/features/confidential-transactions/investigation"&gt;Confidential
+Transactions&lt;/a&gt;
+in Bitcoin, specifically (not that the tradeoff doesn't apply in other
+systems like Monero of course).&lt;/p&gt;
+&lt;p&gt;We naturally choose the Pedersen commitment for Confidential
+Transactions, because it's more compact (remember - size of output
+space!). It's only one curve point as output. Confidential Transactions
+take up a non-trivial amount of extra space in a transaction, so it's
+natural to prefer Pedersen to ElGamal for that reason, even though,
+importantly, &lt;span style="text-decoration: underline;"&gt;both have the
+necessary homomorphic property&lt;/span&gt; as already outlined.&lt;/p&gt;
+&lt;p&gt;Moreover (and more importantly, actually), a CT output needs a &lt;em&gt;range
+proof&lt;/em&gt; (as explained in great detail e.g.
+&lt;a href="https://github.com/AdamISZ/ConfidentialTransactionsDoc/"&gt;here&lt;/a&gt;,
+see also bulletproofs e.g.
+&lt;a href="https://eprint.iacr.org/2017/1066.pdf"&gt;here&lt;/a&gt;
+and
+&lt;a href="https://github.com/AdamISZ/from0k2bp"&gt;here&lt;/a&gt;),
+which itself requires a &lt;em&gt;lot&lt;/em&gt; of space - the range proofs described in
+the link, especially bulletproofs, go to a lot of trouble to condense
+this data to the greatest extent possible, since it must be published on
+the blockchain for all to verify, but that space usage is a serious
+issue.&lt;/p&gt;
+&lt;p&gt;The previous links point to all the work done on space optimisation for
+Pedersen; if we switched to ElGamal we'd lose that (I'm not exactly sure
+&lt;em&gt;where&lt;/em&gt; we'd be in terms of how much space a CT style output would take
+up, but it would definitely be considerably more. While writing this
+I've noticed Andreev has written up an ElGamal range proof
+&lt;a href="https://blog.chain.com/preparing-for-a-quantum-future-45535b316314"&gt;here&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;Hence the title of the subsection; our choice in CT for something like
+Bitcoin seems to be:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Continue on the existing path - highly space optimised Pedersen
+    commitments with perfect hiding and computational binding under the
+    ECDLP assumption.&lt;/li&gt;
+&lt;li&gt;Switch to ElGamal commitments, with much more bloaty range proofs
+    and commitments, which however have perfect binding and
+    computational hiding (under DDH assumption).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Some people might argue that there is just too much fuss and worry about
+this. Computational is good enough, if our crypto hardness assumptions
+are good enough, and they are kind of industry standard already. However
+there's a big problem with this reasoning, and it was explained in the
+"tradeoffs" section of
+&lt;a href="https://joinmarket.me/blog/blog/the-steganographic-principle"&gt;this&lt;/a&gt;
+earlier blog post. To avoid getting sidetracked on that now, let me
+summarize simply:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;A break in the binding assumption of Confidential Transactions can
+result in the attacker being able to print money in arbitrary amounts
+at any time, with absolutely no knowledge by the outside world.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;As I was at pains to point out in the linked blog post, this problem is
+not CT-specific; it's generic to any blinding mechanism relying on
+cryptographic hardness assumptions (i.e. without &lt;strong&gt;perfect binding&lt;/strong&gt; or
+something analogous where even an infinitely powerful adversary cannot
+violate the binding of the blinded amount).&lt;/p&gt;
+&lt;p&gt;But here (for the rest of this blog post) we'll focus specifically on
+the CT version of the problem.&lt;/p&gt;
+&lt;h2&gt;The unexcluded middle&lt;/h2&gt;
+&lt;p&gt;If perfect binding and hiding are logically incompatible in a
+commitment, our only choice to violate the principle of the excluded
+middle is to step outside the boundaries of the problem described, and
+the most natural way to do that is to use two different commitments.&lt;/p&gt;
+&lt;p&gt;Using both Pedersen and ElGamal concurrently makes so little sense as to
+be incoherent, not least because an ElGamal commitment &lt;em&gt;contains&lt;/em&gt; a
+Pedersen commitment. But the key word you could have skipped over in
+that sentence was &lt;strong&gt;concurrently&lt;/strong&gt;. Ruffing and Malavolta in &lt;a href="https://eprint.iacr.org/2017/237.pdf"&gt;this
+paper&lt;/a&gt;
+suggest spreading the problem over time:&lt;/p&gt;
+&lt;h2&gt;Switch commitments&lt;/h2&gt;
+&lt;p&gt;The idea here is deceptively simple: what if you use an ElGamal
+commitment, but don't verify the non-Pedersen component (the second
+point \(rG\) to use consistent notation) initially. If there is some
+time \(T\) at which all participants in the system agree that the
+ECDLP has "fallen" to quantum computing (the most well discussed failure
+vector of elliptic curve crypto), it could be required that after that
+flag day, spending of coins (presumably into some safer new cryptosystem
+defined by consensus; spending into current-style Bitcoin outputs would
+probably not make sense, here) is only valid if the verification/opening
+(and the range proof) were applied to the full ElGamal commitment
+\(xG+rH, rG\) and not just \(xG+rH\) as was allowed before \(T\).&lt;/p&gt;
+&lt;p&gt;There are two critiques that may immediately spring to mind, one obvious
+and one not:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Not necessarily a realistic scenario - the break may be very public
+    or not, it may be very gradual or not. Declaring a flag day is
+    mostly assuming it being public. So it's not a panacea.&lt;/li&gt;
+&lt;li&gt;If you've been reading closely all this time, you'll be alert to a
+    serious drawback: publishing an ElGamal commitment will not actually
+    be hiding, if ECDLP is "cracked" (you remember that it requires DDH
+    hardness, but it's easy to see that if you "crack" ECDLP you also
+    crack DDH).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Taking a more positive perspective, though: it's not as if \(T\) has
+to be a "panic stations day". Just as hash functions and TLS versions
+are sometimes retired because they &lt;em&gt;start&lt;/em&gt; to show just a &lt;em&gt;tiny&lt;/em&gt; bit of
+weakness, it would similarly make perfect sense for Bitcoin to be
+similarly prompt in making a switch to a post-quantum cryptosystem once
+EC came into question, and not wait to be attacked. Not to say it would
+be easy!&lt;/p&gt;
+&lt;p&gt;This approach is sometimes called "cryptographic agility" - awkward as
+it seems, we do kinda want the ability to upgrade cryptographic
+protocols "in-flight", while they are being used.&lt;/p&gt;
+&lt;p&gt;So at this point we have an ingenious and smart &lt;em&gt;amelioration&lt;/em&gt; to the
+problem, but it can't be called a complete solution, I think - and
+principally because of the (admittedly tiny) possibility of a private
+break by some lone genius or similar.&lt;/p&gt;
+&lt;h3&gt;We put a commitment inside your commitment, so ...&lt;/h3&gt;
+&lt;p&gt;The authors and collaborators of the switch commitment paper and idea
+(Ruffing, Malavolta, Wuille, Poelstra, others .. I'm not actually sure)
+found a way to slightly improve the properties of such switch
+commitments: a structure they call the &lt;strong&gt;opt-in switch commitment&lt;/strong&gt;
+which looks something like this:&lt;/p&gt;
+&lt;p&gt;\(xG + (r+\mathbb{H}(xG+rH || rG))H = xG + r'H\)&lt;/p&gt;
+&lt;p&gt;The idea is to tweak the blinding component of a standard Pedersen
+commitment with the hash of an ElGamal commitment to the same value
+(insert old meme as appropriate). Those of you aware of such things may
+instantly recognize a close parallel with ideas like pay-to-contract and
+&lt;a href="https://bitcoinmagazine.com/articles/taproot-coming-what-it-and-how-it-will-benefit-bitcoin/"&gt;taproot&lt;/a&gt;
+(the latter was inspired by the former, so no surprise there). We're
+effectively committing to a "contract" which here is a promise to open
+to an ElGamal commitment &lt;em&gt;later,&lt;/em&gt; if the consensus calls for it, while
+for now not revealing that contract, as it's hidden/blinded with the
+value \(r\).&lt;/p&gt;
+&lt;p&gt;As noted &lt;a href="https://lists.launchpad.net/mimblewimble/msg00479.html"&gt;on the mimblewimble mailing
+list&lt;/a&gt;
+by Ruffing, this has a couple of very important advantages over the
+non-opt-in version:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;It preserves the perfect hiding of the Pedersen commitment for as
+    long as the flag day \(T\) isn't reached (it's exactly a Pedersen
+    commitment until then).&lt;/li&gt;
+&lt;li&gt;It doesn't use up another curve point on the blockchain - you only
+    publish the single curve point as per Pedersen, and not two as per
+    ElGamal.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;(Another useful feature - you can derive the value of \(r\) from your
+private key deterministically to make it more practical).&lt;/p&gt;
+&lt;p&gt;Of course one must prove it's secure (under the random oracle model) but
+for now I'll take that as a given (it's too much detail for here). But
+clearly this is a neat way to encapsulate that "switch" idea; modulo
+security proofs, it's an unqualified and very substantial improvement
+over the "naked ElGamal" version.&lt;/p&gt;
+&lt;h3&gt;A hard decision for the sleepy or lazy&lt;/h3&gt;
+&lt;p&gt;There is still an area of imperfection even in this souped-up "opt-in"
+switch commitment case. After the flag day \(T\) if you still have not
+moved coins from existing outputs, you can publish the ElGamal
+"contract" (commitment) inside the hash, thus keeping the binding
+property, so that the envisioned attacker-possessing-a-quantum-computer
+will still not be able to print money, but in so doing, you give up the
+hiding (the value is revealed &lt;em&gt;at least to such attackers&lt;/em&gt; because they
+can break the DDH problem). So thus a person failing to take action
+before said deadline \(T\) has at least to risk, and probably lose,
+one of those two: their privacy of amount or their money.&lt;/p&gt;
+&lt;h2&gt;Have your cake and eat it?&lt;/h2&gt;
+&lt;p&gt;Is it possible to do better than such a transition approach, as
+envisaged in the switch commitments paradigm?&lt;/p&gt;
+&lt;p&gt;As was earlier discussed, it suffers from not covering every threat
+scenario, in particular, it does not cover the scenario of a private and
+unexpected break.&lt;/p&gt;
+&lt;p&gt;Unfortunately this is where this very long blog post trails off ...
+because I don't know, and currently I don't think anyone else does.&lt;/p&gt;
+&lt;p&gt;My personal feeling was that the switch commitment paradigm suggests
+there might be a way to finesse this tradeoff about using commitments.
+And it also seems to be something which Adam Back seems to have gone
+some way to thinking through - the fact that a single commitment scheme
+can't provide perfect hiding and binding for a single value doesn't
+imply that it is impossible to get this property, &lt;strong&gt;as long you're not
+working with the same value&lt;/strong&gt;. For example, what if you could provide an
+ElGamal commitment for the money created in a Bitcoin &lt;em&gt;block&lt;/em&gt;, while
+providing Pedersen commitments as in the current design of CT for the
+individual transactions? This means that a quantum or ECDLP breaking
+attacker can "snoop" into the overall value created in a block, but this
+should either be already known or uninteresting, while although he could
+in theory violate the binding property of individual transactions, this
+would in turn violate the binding of the block-level commitment which is
+supposed to be impossible?&lt;/p&gt;
+&lt;p&gt;I suspect my original line of thinking is somehow incoherent (how,
+mathematically, are the block-level and transaction-level commitments
+related?), but Dr Back seems to have in mind something involving
+coinjoin-like interactivity. I am leaving it here without attempting to
+describe further, because the question seems to continue to be
+interesting and if there &lt;em&gt;is&lt;/em&gt; a solution (even perhaps if it involves
+interactivity), it would be a hugely important fact, making CT a much
+more plausible technology for a global money.&lt;/p&gt;
+&lt;h3&gt;Build the wall?&lt;/h3&gt;
+&lt;p&gt;We could also take the Trumpian approach - it's far from infeasible to
+imagine that there is a mechanism that prevents CT coins arriving back
+into plaintext area without allowing any hidden inflation that &lt;em&gt;might&lt;/em&gt;
+occur to "infect". This is essentially the sidechain model, except it
+could be implemented in a variety of different ways. In fact, this
+&lt;strong&gt;model already does exist&lt;/strong&gt; in the sidechain
+&lt;a href="https://blockstream.com/liquid/"&gt;Liquid&lt;/a&gt;,
+which uses CT. But there have also been proposals to implement CT as a
+kind of extension block (which has slightly different tradeoffs to a
+sidechain), for example see ZmnSCPxj's note
+&lt;a href="https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-January/016605.html"&gt;here&lt;/a&gt;&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Payjoin</title><link href="https://joinmarket.me/blog/blog/payjoin/" rel="alternate"></link><published>2018-12-15T00:00:00+01:00</published><updated>2018-12-15T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2018-12-15:/blog/blog/payjoin/</id><summary type="html">&lt;p&gt;coinjoins in payments&lt;/p&gt;</summary><content type="html">&lt;h3&gt;PayJoin&lt;/h3&gt;
 &lt;h2&gt;PayJoin.&lt;/h2&gt;
 &lt;p&gt;You haven't read any other blog posts here? No worries, here's what
 you need to know (&lt;em&gt;unless you're an expert, read them anyway...&lt;/em&gt;):&lt;/p&gt;
