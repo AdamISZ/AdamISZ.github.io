@@ -4041,7 +4041,7 @@ section 3, and I also went over the basics in the early part of my
 London talk on the &lt;a href="https://www.youtube.com/watch?v=mLZ7qVwKalE"&gt;Schnorr
 signature&lt;/a&gt;
 (since they're not visible, you'd want to see the
-&lt;a href="https://web.archive.org/web/20200428225915/https://joinmarket.me/static/schnorrplus.pdf"&gt;slides&lt;/a&gt;
+&lt;a href="../../../images/schnorrplus.pdf"&gt;slides&lt;/a&gt;
 for that talk if you watch it).&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;You should have &lt;/em&gt;&lt;em&gt;some&lt;/em&gt;&lt;em&gt; general idea about what Confidential
 Transactions is, in order to understand the second half - in particular
