@@ -81,12 +81,11 @@ the utxo.</p>
 <p>Now, a <a href="https://en.wikipedia.org/wiki/Commitment_scheme">cryptographic
 commitment</a>
 is a standard kind of protocol, usually it works something like:</p>
-<div class="highlight"><pre><span></span><span class="err">Alice-&gt;Bob: commit: h := hash(secret, nonce)</span>
+<div class="highlight"><pre><span></span><code><span class="err">Alice-&gt;Bob: commit: h := hash(secret, nonce)</span>
 <span class="err">(do stuff)</span>
 <span class="err">Alice-&gt;Bob: open: reveal secret, nonce</span>
 <span class="c">Bob: verify: h =?= hash(secret, nonce)</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>Hashing a secret is <em>not</em> enough to keep it secret, at least in general:
 because the verifier might be able to guess, especially if the data is

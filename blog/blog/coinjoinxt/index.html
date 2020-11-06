@@ -187,13 +187,12 @@ advance, with all of them having the funding transaction as the root.</p>
 transaction, but using the above model they can do the same to a funding
 transaction, but then pre-sign a set of more than one spending
 transaction. Here's a simple schematic:</p>
-<div class="highlight"><pre><span></span><span class="err">A 1btc ---&gt;</span>
+<div class="highlight"><pre><span></span><code><span class="err">A 1btc ---&gt;</span>
 <span class="err">              F (2,2,A,B) --+</span>
 <span class="err">B 1btc ---&gt;                 |</span>
 <span class="err">                            |</span>
 <span class="err">                            +--&gt;[Proposed transaction graph (PTG) e.g. -&gt;TX1-&gt;TX2-&gt;TX3 ..]</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>In human terms, you can envisage that: Alice and Bob would like to start
 to negotiate a set of conditional contracts about what happens to their
@@ -236,7 +235,7 @@ above): that an individual transaction could transfer funds to one
 party, without risks to the other. To address this problem, we call
 these additional inputs <strong>promise utxos</strong> and make use of <strong>refund
 transactions</strong>.</p>
-<div class="highlight"><pre><span></span><span class="err">A 1btc ---&gt;</span>
+<div class="highlight"><pre><span></span><code><span class="err">A 1btc ---&gt;</span>
 <span class="err">              F (2,2,A,B) ---</span>
 <span class="err">B 1btc ---&gt;                 |       +--&gt; external payout 0.5 btc to Bob</span>
 <span class="err">                            |       |</span>
@@ -247,8 +246,7 @@ transactions</strong>.</p>
 <span class="err">                                         |       +--- utxo A1</span>
 <span class="err">                                         |</span>
 <span class="err">                                         +--&gt; refund locktime M, pay out *remaining* funds to A: 1btc, B: 0.5btc</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>In words: if, between the negotiation time and the time of broadcast of
 TX3, Alice spends A1 in some other transaction, Bob will still be safe;
@@ -381,15 +379,14 @@ amplification of off-chain privacy to on-chain.</strong></p>
 effect from just the dual-funded Lightning channel; if you consider
 change outputs in such a single funding transaction, you see the same
 effect:</p>
-<div class="highlight"><pre><span></span><span class="err">Alice</span>
+<div class="highlight"><pre><span></span><code><span class="err">Alice</span>
 <span class="err">2.46</span>
 <span class="err">       -&gt; Lightning funding 0.1</span>
 <span class="err">       -&gt; Change 2.41</span>
 <span class="err">       -&gt; Change 2.37</span>
 <span class="err">2.42</span>
 <span class="err">Bob</span>
-</pre></div>
-
+</code></pre></div>
 
 <p>It's easy to see that there is no delinking effect on the change-outs
 <em>if</em> we know that the funding is equal on both sides. However, there's

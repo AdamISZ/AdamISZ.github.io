@@ -225,9 +225,8 @@ counterparty's pubkey by adding a point that <em>you</em> know the private key
 for, but you still won't know the private key of the sum". Thus in
 this case, Alice, given Bob's existing pubkey <code>PB</code>, which is the one
 she is using to encrypt the message, can construct a new pubkey:</p>
-<div class="highlight"><pre><span></span><span class="err">PB2 = PB + k*G</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="err">PB2 = PB + k*G</span>
+</code></pre></div>
 
 <p>for some 32 byte random value <code>k</code>.</p>
 <p>Alice will include the value of <code>k</code> in the encrypted message, so Bob can
@@ -251,12 +250,15 @@ he chooses), sign and broadcast the coinjoin transaction.</p>
     Construct a standard formatted message; here is a simple suggestion
     although in no way definitive:</li>
 </ol>
-<p><code>{=html}
-&lt;!-- --&gt;</code>
-        8(?) magic bytes and 2 version bytes for the message type
-        k-value 32 bytes
-        Partially signed transaction in standard Bitcoin serialization
-        (optionally padding to some fixed length)</p>
+<div class="highlight"><pre><span></span><code><span class="err">&lt;!-- --&gt;</span>
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="err">    8(?) magic bytes and 2 version bytes for the message type</span>
+<span class="err">    k-value 32 bytes</span>
+<span class="err">    Partially signed transaction in standard Bitcoin serialization</span>
+<span class="err">    (optionally padding to some fixed length)</span>
+</code></pre></div>
+
 <p>We defer discussing how in practice Bob will get access to the message
 later; but note that if he has done this, he already knows the value of
 <code>P_B</code> and will thus know also <code>U_B</code>. He ECIES-decrypts it, and
@@ -471,9 +473,8 @@ signing key and the transaction. This provides us with exactly the same
 scenario as in the first version; Bob knows the private key of <code>R</code>, so
 Alisa can send a proposal encrypted to that public key, and can derive a
 new address for Bob's destination using the same formula:</p>
-<div class="highlight"><pre><span></span><span class="err">PB2 = R + k&#39;G</span>
-</pre></div>
-
+<div class="highlight"><pre><span></span><code><span class="err">PB2 = R + k&#39;G</span>
+</code></pre></div>
 
 <p>Here I used <code>k'</code> to disambiguate from the signature nonce <code>k</code>, but it's
 exactly the same as before. As before, Bob, in order to spend the output

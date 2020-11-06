@@ -3,22 +3,22 @@
 &lt;!-- vim-markdown-toc GFM --&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;a href="#preamble---big-and-randomized"&gt;Preamble - big-and-randomized&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#preamble"&gt;Preamble - big-and-randomized&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#wabisabi-from-the-ground-up"&gt;Wabisabi, from the ground up.&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;&lt;a href="#what-the-wabisabi-paper-and-this-article-do-not-cover"&gt;What the Wabisabi paper, and this article, do not cover&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#do-not-cover"&gt;What the Wabisabi paper, and this article, do not cover&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="#signatures-keyed-macs-and-credentials"&gt;Signatures, keyed MACs and credentials&lt;/a&gt;&lt;ul&gt;
 &lt;li&gt;&lt;a href="#creating-a-mac"&gt;Creating a MAC&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href="#algebraic-macs"&gt;Algebraic MACs&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#security-notions-needed-for-algebraic-macs-used-for-anonymous-credentials"&gt;Security notions needed for algebraic MACs used for anonymous credentials&lt;/a&gt;&lt;ul&gt;
-&lt;li&gt;&lt;a href="#algebraic-mac-attempt-1"&gt;Algebraic MAC attempt 1&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#algebraic-mac-attempt-2"&gt;Algebraic MAC attempt 2&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#algebraic-mac-attempt-3"&gt;Algebraic MAC attempt 3&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href="#algebraic-mac-attempt-4"&gt;Algebraic MAC attempt 4&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#security-notions"&gt;Security notions needed for algebraic MACs used for anonymous credentials&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#mac-1"&gt;Algebraic MAC attempt 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mac-2"&gt;Algebraic MAC attempt 2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mac-3"&gt;Algebraic MAC attempt 3&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mac-4"&gt;Algebraic MAC attempt 4&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;a href="#mac-ggm---a-vector-of-messages-different-security-arguments"&gt;MAC-GGM - a vector of messages; different security arguments&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#mac-ggm"&gt;MAC-GGM - a vector of messages; different security arguments&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;&lt;a href="#key-verified-anonymous-credentials-kvac"&gt;Key-Verified Anonymous Credentials (KVAC)&lt;/a&gt;&lt;ul&gt;
@@ -39,7 +39,8 @@
 &lt;/ul&gt;
 &lt;!-- vim-markdown-toc --&gt;
 
-&lt;p&gt;&lt;em&gt;Thanks to nothingmuch for answering several questions about the mechanics of Wabisabi.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Thanks to nothingmuch for answering several questions about the mechanics of Wabisabi.&lt;/em&gt;
+&lt;a href="preamble"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;Preamble - big-and-randomized&lt;/h3&gt;
 &lt;p&gt;First, assume we think it's valuable to have big coinjoins with random amounts for all the inputs and outputs, and probably for this one specific reason: we want to make payments &lt;em&gt;from&lt;/em&gt; coinjoins and, possibly, to make payments &lt;em&gt;within&lt;/em&gt; coinjoins (the latter is literally what is meant by payjoin, so that is part of this discussion, note however we'd be talking about payjoin batched together with other sub-transactions, so a lot of earlier analysis of payjoin doesn't apply).&lt;/p&gt;
 &lt;p&gt;Second let's &lt;em&gt;partially&lt;/em&gt; address why this is, at least superficially, a bad idea, even a terrible one: previous discussion of the subset sum problem pointed out that &lt;em&gt;some of the time&lt;/em&gt; (being deliberately vague about how much of the time!) a coinjoin with non-equal amounts can be easily analyzed to find the sub-transactions which are really happening, removing any privacy boost. So that's not good.&lt;/p&gt;
@@ -47,7 +48,8 @@
 &lt;p&gt;This point is expanded on in some detail in the &lt;a href="https://github.com/cashshuffle/spec/blob/master/CASHFUSION.md"&gt;cashfusion writeup&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;However the point is definitely controversial, basically because brute force is not the only way to approach an attempt to deanonymize a coinjoin. A simple thing like a rounded value (0.25000000 BTC) substantially (sort of exponentially) reduces the search space.&lt;/p&gt;
 &lt;p&gt;Those who completely dismiss this approach based on the idea "well sure, it's worst case impossible to analyze, but not average, typical case!" should notice a really key subtlety though: the claim is not &lt;em&gt;only&lt;/em&gt; that such constructions are computationally impractical to analyze - it's also that they have &lt;strong&gt;multiple, and in fact a huge number of mathematically valid solutions&lt;/strong&gt;, at least when we scale up to very large numbers of utxos. Moreover &lt;a href="https://www.comsys.rwth-aachen.de/fileadmin/papers/2017/2017-maurer-trustcom-coinjoin.pdf"&gt;this&lt;/a&gt; paper from 2017 tries to construct a framework for deliberately creating such obfuscation (with the same goal - unequal sized coinjoins, allowing payment).&lt;/p&gt;
-&lt;p&gt;This deserves more argument and discussion, see e.g. &lt;a href="https://www.mail-archive.com/bitcoin-dev@lists.linuxfoundation.org/msg08575.html"&gt;this&lt;/a&gt; discussion on the bitcoin mailing list from February this year. But we are going to move on to other elements of this story.&lt;/p&gt;
+&lt;p&gt;This deserves more argument and discussion, see e.g. &lt;a href="https://www.mail-archive.com/bitcoin-dev@lists.linuxfoundation.org/msg08575.html"&gt;this&lt;/a&gt; discussion on the bitcoin mailing list from February this year. But we are going to move on to other elements of this story.
+&lt;a href="wabisabi-from-the-ground-up"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;Wabisabi, from the ground up.&lt;/h3&gt;
 &lt;p&gt;The paper is &lt;a href="https://github.com/zkSNACKs/WabiSabi/releases/download/build-70d01424bbce06389d2f0536ba155776eb1d8344/WabiSabi.pdf"&gt;here&lt;/a&gt; for those who don't need context. I suspect that group is quite small though!&lt;/p&gt;
 &lt;p&gt;So let's say we buy into the basic idea: a large coinjoin, we'll say for simplicity, 50 inputs and 50 outputs, where the users are not constrained to use specific amounts for any of their inputs, nor crucially, their outputs. Some of them will just be mixing and some will be paying someone for a specific good or service, with the output. Probably rarer, but particularly cool, will be if Alice is paying Bob but Bob also participates in the coinjoin, i.e. he is also contributing input utxos to the coinjoin, but gets more out and Alice gets less, effecting a payjoin.&lt;/p&gt;
@@ -77,7 +79,8 @@ On the other hand, let's not have &lt;em&gt;too&lt;/em&gt; simple of a mental mo
 &lt;p&gt;credential - this term is used in cryptography for any of a number of schemes that give rights to holders. The rights are usually &lt;em&gt;with respect to&lt;/em&gt; some centralized entity, usually holding a private key that allows them to create such credentials (modulo a nuance about who is verifying them; we'll get in to that).&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;attributes - a credential could in its simplest form be simply binary: you are allowed to do X if you have the credential, and not otherwise. But sometimes attaching metadata inside the credential (think of e.g. a signature from a server that proved you should have access, but also that you are a level 3 user not a level 1 user, by including the level in the message that was signed).&lt;/p&gt;
+&lt;p&gt;attributes - a credential could in its simplest form be simply binary: you are allowed to do X if you have the credential, and not otherwise. But sometimes attaching metadata inside the credential (think of e.g. a signature from a server that proved you should have access, but also that you are a level 3 user not a level 1 user, by including the level in the message that was signed).
+&lt;a href="do-not-cover"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;What the Wabisabi paper, and this article, do not cover&lt;/h4&gt;
@@ -86,28 +89,33 @@ On the other hand, let's not have &lt;em&gt;too&lt;/em&gt; simple of a mental mo
 &lt;li&gt;The rules for transaction construction&lt;/li&gt;
 &lt;li&gt;Valid choices of amounts for inputs and outputs&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;This is not covered here, other than some general thoughts as outlined above.&lt;/p&gt;
+&lt;p&gt;This is not covered here, other than some general thoughts as outlined above.
+&lt;a href="signatures-keyed-macs-and-credentials"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;Signatures, keyed MACs and credentials&lt;/h3&gt;
 &lt;p&gt;Digital signatures are probably very familiar to any reader of this blog, and there is a detailed discussion of some fundamentals in &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;this&lt;/a&gt; post. MACs, or Message Authentication Codes can be thought of as the symmetric crypto equivalent. In symmetric crypto, there is only a secret key, no public key, and that means there is no such thing as "public verification". The owner or owners of such a secret key can create a (probably unique; this is a nuance of the theory) "tag" on a message, which only a holder of the same key can verify.&lt;/p&gt;
-&lt;p&gt;On its face, such tagging might seem pointless without public verifiability, but the classic use case is for point to point communications over the public internet, in which both endpoints of the communication hold the secret key; by tagging messages in this way, integrity is assured, and the message is authenticated as coming from the intended source. Such secret keys can be pre-shared over a public communication channel using techniques like &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman"&gt;ECDH&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;On its face, such tagging might seem pointless without public verifiability, but the classic use case is for point to point communications over the public internet, in which both endpoints of the communication hold the secret key; by tagging messages in this way, integrity is assured, and the message is authenticated as coming from the intended source. Such secret keys can be pre-shared over a public communication channel using techniques like &lt;a href="https://en.wikipedia.org/wiki/Elliptic-curve_Diffie%E2%80%93Hellman"&gt;ECDH&lt;/a&gt;.
+&lt;a href="creating-a-mac"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h4&gt;Creating a MAC&lt;/h4&gt;
 &lt;p&gt;A simple and currently very common way of making a MAC is to use a cryptographic hash function as a PRF: just hash the key &lt;em&gt;and&lt;/em&gt; message together (&lt;a href="https://en.wikipedia.org/wiki/HMAC"&gt;HMAC&lt;/a&gt; is a bit more complicated than this, but that's the basic idea): H(message || key).&lt;/p&gt;
 &lt;p&gt;At first sight it may seem weird that I'm talking about this construct - how is this related to credentials?&lt;/p&gt;
 &lt;p&gt;The most natural way to create a credential of the type described above, is to use a signature, which simply signs the rights of the holder. That's effectively what Wasabi's original design ("Chaumian coinjoin") does, but with the crucial extra feature that the signature is &lt;em&gt;blind&lt;/em&gt;, so that the credential's redemption is not linked to its creation. Early ecash designs (indeed, from David Chaum as well as others) were heavily sophisticated variants of that basic idea. Just as original Wasabi uses fixed denominations, so did those ecash designs.&lt;/p&gt;
 &lt;p&gt;This is where we get some interesting twists, which bring in MAC as an alternative to signatures, here.&lt;/p&gt;
 &lt;p&gt;First, traditionally, MACs were preferable to signatures for performance reasons: they use hash functions, not expensive crypto math operations like RSA or - less expensive but still a lot more so than hashes - elliptic curve calculations. This is less a consideration today, but still relevant. Second, the more restrictive model of the MAC w.r.t. verification does create a different effect: such MACs are repudiable, whereas digital signatures are not repudiable (if you think about it, this is the same property as transferrability, which is of course a key property of signatures).&lt;/p&gt;
-&lt;p&gt;This plain vanilla style of MAC though (hash based), trades off functionality in favour of performance - hashes like SHA256 are intrinsically black boxy and not "algebraic". They are functions which do not allow composition; as I've had occasion to remark many times before, there is no such formula as \(H(a+b) = H(a) + H(b)\) for these traditional hash functions.&lt;/p&gt;
+&lt;p&gt;This plain vanilla style of MAC though (hash based), trades off functionality in favour of performance - hashes like SHA256 are intrinsically black boxy and not "algebraic". They are functions which do not allow composition; as I've had occasion to remark many times before, there is no such formula as \(H(a+b) = H(a) + H(b)\) for these traditional hash functions.
+&lt;a href="algebraic-macs"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h4&gt;Algebraic MACs&lt;/h4&gt;
 &lt;p&gt;The &lt;em&gt;other&lt;/em&gt; approach to building a MAC might be to use discrete log or elliptic curve hardness assumptions, for example in the crudest case take \(\textrm{MAC}_{k}(m) = m^{k} \textrm{mod} p\) for the discrete log case. Comparing the two approaches, Dodis et al in &lt;a href="https://eprint.iacr.org/2012/059"&gt;Mesage Authentication, Revisited&lt;/a&gt; have this to say:&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;The former have the speed advantage, but cannot be reduced to simple number-theoretic hardness assumptions (such as the DDH assumption for NR-PRF), and are not friendly to efficient zero-knowledge proofs about authenticated messages and/or their tags, which are needed in some important applications, such as compact e-cash [12]. On the other hand, the latter are comparably inefficient due to their reliance on number theory.&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;Here NR-PRF refers to the &lt;a href="https://en.wikipedia.org/wiki/Naor%E2%80%93Reingold_pseudorandom_function"&gt;Naor-Reingold&lt;/a&gt;. construction for a pseudorandom function.&lt;/p&gt;
-&lt;p&gt;The point about zero knowledge proofs is the trump card though: in building something like a &lt;em&gt;anonymous credential with attributes&lt;/em&gt;, you are perforce required to be able to make attestations, using such proofs, in zero knowledge.&lt;/p&gt;
+&lt;p&gt;The point about zero knowledge proofs is the trump card though: in building something like a &lt;em&gt;anonymous credential with attributes&lt;/em&gt;, you are perforce required to be able to make attestations, using such proofs, in zero knowledge.
+&lt;a href="security-notions"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h4&gt;Security notions needed for algebraic MACs used for anonymous credentials&lt;/h4&gt;
 &lt;p&gt;MACs generally want to have something called UF-CMA (unforgeability under chosen message attack) ; something we already discussed for signatures &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;here&lt;/a&gt;. There are several nuances that are MAC-specific but we won't delve into too much detail (I recommend Section 6.1, 6.2 of &lt;a href="https://toc.cryptobook.us/"&gt;Boneh and Shoup&lt;/a&gt; for an excellent rigorous description); the bottom line is that MACs must not be forgeable by a non-key holders, just like signatures.&lt;/p&gt;
 &lt;p&gt;For our use case (and some others), such a MAC will also need to have a kind of "hiding" property : &lt;em&gt;indistinguishability&lt;/em&gt; (under chosen message attack, or IND-CMA) - the tags output should not allow an attacker to guess anything about the message being tagged.&lt;/p&gt;
-&lt;p&gt;So concretely how can we use simple discrete log to build a MAC? Let's use an elliptic curve group of the type we're familiar with, generator \(G\), order \(p\). We'll try the simplest versions first and see what we need to do to make it secure:&lt;/p&gt;
+&lt;p&gt;So concretely how can we use simple discrete log to build a MAC? Let's use an elliptic curve group of the type we're familiar with, generator \(G\), order \(p\). We'll try the simplest versions first and see what we need to do to make it secure:
+&lt;a href="mac-1"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Algebraic MAC attempt 1&lt;/h5&gt;
 &lt;ul&gt;
 &lt;li&gt;Keygen: choose a scalar \(k\) at random&lt;/li&gt;
@@ -116,7 +124,8 @@ On the other hand, let's not have &lt;em&gt;too&lt;/em&gt; simple of a mental mo
 &lt;/ul&gt;
 &lt;p&gt;Note how this "determinism" is the same for familiar existing MAC functions like &lt;a href="https://en.wikipedia.org/wiki/HMAC"&gt;HMAC&lt;/a&gt;. Since it's the same information needed (the secret key \(k\)) and the same calculation, the distinction is not interesting. Shortly we'll be looking at probabilistic MACs.&lt;/p&gt;
 &lt;p&gt;Attempt 1 clearly fails, and here's one reason why: if the attacker gets to query the algorithm and ask for any MAC it likes it can choose to ask for the MAC of the message 1. That MAC is \(kG=K\). It can then take that curve point and create forgeries on any message m' it likes: \(m'K\). Secondly this kind of deterministic MAC clearly can't have the kind of hiding property we want, since it's like a commitment without any blinding factor: if you guess the value of \(m\) correctly, you can verify your guess.
-Thirdly, extend the above case of message '1' and we can see that it's non-resistant to forgery more generally: whenever you know the message that was tagged, you can take the output tag given by the signer,  \(T = mkG\) and multiplicatively tweak the message to \(m_2 = a \times m\) by just outputting \(aT\) as the new tag. So this is very insecure.&lt;/p&gt;
+Thirdly, extend the above case of message '1' and we can see that it's non-resistant to forgery more generally: whenever you know the message that was tagged, you can take the output tag given by the signer,  \(T = mkG\) and multiplicatively tweak the message to \(m_2 = a \times m\) by just outputting \(aT\) as the new tag. So this is very insecure.
+&lt;a href="mac-2"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Algebraic MAC attempt 2&lt;/h5&gt;
 &lt;ul&gt;
 &lt;li&gt;Keygen: choose a scalar \(k\) at random&lt;/li&gt;
@@ -124,7 +133,8 @@ Thirdly, extend the above case of message '1' and we can see that it's non-resis
 &lt;li&gt;Verify: Given \((U, T)\) and message \(m\), check if \(T == mkU\)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;This addresses the second part of our complaint with Attempt 1, by making the MAC "probabilistic". Each new MAC is generated with a fresh random curve point (or equivalently a scalar \(u\)).&lt;/p&gt;
-&lt;p&gt;Unfortunately, Attempt 2 fails just as Attempt 1 did, when it comes to preventing forgeries (bearing in mind the previous sentence), because we can still tweak created tags in the same way. Perhaps slightly less obvious is that we can not just tweak \(T\) but also \(U\). (But it's important to bear in mind that our security game is also concerned with whether an attacker can do something clever with re-used values of that U.)&lt;/p&gt;
+&lt;p&gt;Unfortunately, Attempt 2 fails just as Attempt 1 did, when it comes to preventing forgeries (bearing in mind the previous sentence), because we can still tweak created tags in the same way. Perhaps slightly less obvious is that we can not just tweak \(T\) but also \(U\). (But it's important to bear in mind that our security game is also concerned with whether an attacker can do something clever with re-used values of that U.)
+&lt;a href="mac-3"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Algebraic MAC attempt 3&lt;/h5&gt;
 &lt;ul&gt;
 &lt;li&gt;Keygen: choose a scalar \(k\) at random&lt;/li&gt;
@@ -133,7 +143,8 @@ Thirdly, extend the above case of message '1' and we can see that it's non-resis
 &lt;/ul&gt;
 &lt;p&gt;This prevents the multiplicative tweaking which killed our first two attempts; even supposing the attacker has a given \(T\) on a given, known message \(m\), multiplying \(T\) by any constant \(a\), will create \(T^{*} = aT = (am + ak) U\) which is not a tag on any message he can state (it is a tag on \(am + (a-1)k\) but he doesn't know \(k\), so even if he knows, or guesses, \(m\), he is stuck).
 However this construction still allows trivial forgery, (and fundamentally for the same reason: the additive homomorphism of the group). Here, because the key is "additively separate" from the message, you can just insert new messages using addition. If you happen to know \(m\) and you want a tag on \(m_2\) instead, just make \(T_2 = T + m_2 U - m U\) (see previous note : reusing \(U\) is in-scope for our attacker).&lt;/p&gt;
-&lt;p&gt;So if we review these first 3 attempts, it's fairly clear what's going on; it's a paradigm we've seen before in the Schnorr protocol. If you only &lt;em&gt;add&lt;/em&gt; a random secret, you allow additive forgery, while if you only &lt;em&gt;multiply&lt;/em&gt; a random secret, you allow multiplicative forgery, but if we add both ...&lt;/p&gt;
+&lt;p&gt;So if we review these first 3 attempts, it's fairly clear what's going on; it's a paradigm we've seen before in the Schnorr protocol. If you only &lt;em&gt;add&lt;/em&gt; a random secret, you allow additive forgery, while if you only &lt;em&gt;multiply&lt;/em&gt; a random secret, you allow multiplicative forgery, but if we add both ...
+&lt;a href="mac-4"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Algebraic MAC attempt 4&lt;/h5&gt;
 &lt;ul&gt;
 &lt;li&gt;Keygen: choose two scalars \(k_1, k_2\) at random&lt;/li&gt;
@@ -141,7 +152,8 @@ However this construction still allows trivial forgery, (and fundamentally for t
 &lt;li&gt;Verify: Given \((U, T)\) and message \(m\), check if \(T == (mk_1+k_2)U\)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;To expand on the Schnorr analogy, it's as if one of the keys were the randomizing nonce, and the other were the private key (the analogy is not exact, to be clear). Now neither the additive nor the multiplicative tweak gives the attacker a way to forge new tags on messages that the genuine key holder never created.&lt;/p&gt;
-&lt;p&gt;The construction in attempt 4 is one of several elucidated by Dodis et al in their 2012 paper &lt;a href="https://eprint.iacr.org/2012/059"&gt;"Symmetric Key Authorization, revisited"&lt;/a&gt;. They identify exponentiation in a group of prime order as an example of a "weak PRF", and moreover, specifically a &lt;em&gt;key-homomorphic weak PRF&lt;/em&gt;, and build the above construction in abstract from such a function. Then they prove by quite sophisticated arguments (see 4.3 of the full paper), that this construction has "suf-CMA" (or "suf-CMVA" with a transformation) where the "s" refers to &lt;em&gt;selective&lt;/em&gt; security. This is a weaker notion of security; the idea is that we only defend against the attacker who has to choose the message he will forge on, before he gets to query the signer/tagger to see a bunch of other messages. Their proof strategy is basically to show that with clever use of linear transformations you can reduce the security argument to that of the underlying weak PRF; its randomness gives you both the unforgeability and the hiding (indistinguishability) properties that we want.&lt;/p&gt;
+&lt;p&gt;The construction in attempt 4 is one of several elucidated by Dodis et al in their 2012 paper &lt;a href="https://eprint.iacr.org/2012/059"&gt;"Symmetric Key Authorization, revisited"&lt;/a&gt;. They identify exponentiation in a group of prime order as an example of a "weak PRF", and moreover, specifically a &lt;em&gt;key-homomorphic weak PRF&lt;/em&gt;, and build the above construction in abstract from such a function. Then they prove by quite sophisticated arguments (see 4.3 of the full paper), that this construction has "suf-CMA" (or "suf-CMVA" with a transformation) where the "s" refers to &lt;em&gt;selective&lt;/em&gt; security. This is a weaker notion of security; the idea is that we only defend against the attacker who has to choose the message he will forge on, before he gets to query the signer/tagger to see a bunch of other messages. Their proof strategy is basically to show that with clever use of linear transformations you can reduce the security argument to that of the underlying weak PRF; its randomness gives you both the unforgeability and the hiding (indistinguishability) properties that we want.
+&lt;a href="mac-ggm"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h4&gt;MAC-GGM - a vector of messages; different security arguments&lt;/h4&gt;
 &lt;p&gt;In 2013 Zaverucha, Chase and Meiklejohn described, in &lt;a href="https://eprint.iacr.org/2013/516"&gt;this paper&lt;/a&gt; (which we will sometimes abbreviate to CMZ13), a small but meaningful finesse on the above construction from 2012, which they call "MAC-GGM" (they also describe MAC-DDH in the same paper, which we won't cover here):&lt;/p&gt;
 &lt;ul&gt;
@@ -150,16 +162,19 @@ However this construction still allows trivial forgery, (and fundamentally for t
 &lt;/ul&gt;
 &lt;p&gt;As is probably obvious, in this new construction, the tag is calculated by: \(T = (U, (k_1 m_1 + k_2 m_2 + \ldots + k_n m_n + k_0)U)\); it's easy to see that the "multiplicative and additive" arguments mentioned above still apply (note the presence of \(k_0\)) (although the security argument is very different, see Appendix A of the paper). This looks superficially similar to a vector Pedersen commitment of the form seen in constructions like Bulletproofs (only superficially: here also, the vector is blinded, but at the level of scalars; we don't use different base points).&lt;/p&gt;
 &lt;p&gt;The main reason this is even interesting is how it naturally supports &lt;strong&gt;selective revelation&lt;/strong&gt; - zero knowledge proofs that certain of these messages have particular values or perhaps are in a range.
-Other previous MAC constructions couldn't do this in any reasonable way (although there was a big literature of achieving similar properties using (blind) signatures).&lt;/p&gt;
+Other previous MAC constructions couldn't do this in any reasonable way (although there was a big literature of achieving similar properties using (blind) signatures).
+&lt;a href="key-verified"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h3&gt;Key-Verified Anonymous Credentials (KVAC)&lt;/h3&gt;
 &lt;p&gt;Now we have the theoretical basis, we can construct a credential system with two of the properties we want - anonymity, and attributes. And that's what the meat of the Chase et al. paper does. It describes a credential system, using MAC-GGM as a primitive. The functionality of this credential system can be boiled down to:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Keygen: generate secret keys and public parameters for the protocol instance (called &lt;em&gt;iparams&lt;/em&gt;, short for issuer parameters). These parameters include public commitments to the secret keys.&lt;/li&gt;
 &lt;li&gt;Blind Issuance: a user can request and the issuer can provide  credentials on a set of attributes (\(m_i\)) in the above, where some of the attributes are allowed to be hidden from the issuer.&lt;/li&gt;
-&lt;li&gt;Show-Verification: a user can prove to the issuer (or, any other holder of the secret key material), in zero knowledge, that they possess a credential whose attributes satisfy a specific set of constraints.&lt;/li&gt;
+&lt;li&gt;Show-Verification: a user can prove to the issuer (or, any other holder of the secret key material), in zero knowledge, that they possess a credential whose attributes satisfy a specific set of constraints.
+&lt;a href="how-does-issuance-work"&gt;&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;How does issuance work?&lt;/h4&gt;
-&lt;p&gt;Because we've laid the foundations, this is pretty easy to &lt;em&gt;describe&lt;/em&gt;, albeit the concrete steps of mathematically creating the credential, isn't.&lt;/p&gt;
+&lt;p&gt;Because we've laid the foundations, this is pretty easy to &lt;em&gt;describe&lt;/em&gt;, albeit the concrete steps of mathematically creating the credential, isn't.
+&lt;a href="without-any-blinding"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Without any blinding:&lt;/h5&gt;
 &lt;p&gt;(From here the private key set of the issuer is denoted with \(x\) rather than \(k\).&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Issuance&lt;/strong&gt; - We issue a credential consisting of a MAC-GGM style of MAC, combined with a proof of its validity. Form, on a set of messages \(m_i\): \((U, (x_1 m_1 + x_2 m_2 + \ldots + x_n m_n + x_0)U, \pi)\) - the proof \(\pi\) exists because the credential must be accompanied by a proof that it is correctly formed with respect to the issuer parameters that were decided at the start of the protocol, but without revealing the issuer's secret key material.&lt;/p&gt;
@@ -172,9 +187,11 @@ Other previous MAC constructions couldn't do this in any reasonable way (althoug
 &lt;/ul&gt;
 &lt;p&gt;That last point is very tricky so I'm going to expand on it. What makes this credential construction special is its requirement to hide something from both sides - the user wants to hide the attributes \(m_i\) (in general if not always) from the issuer, and the issuer of course wants to hide the secret keys from the user.&lt;/p&gt;
 &lt;p&gt;This is dealt with algebraically by using something similar to ECDH keys, where \(S = pqG = pQ = qP\), i.e. both sides have their own secret they keep from each other, but still create a shared secret. The variable \(V\) represents this, but to keep the following simple we'll imagine \(n=1\), i.e. that there's only one message/attribute.&lt;/p&gt;
-&lt;p&gt;On the user side, we are summing elements of the form \(z_i X_i = z_i x_i H\), but the blinding terms in the message commitments \(C_{m_i}\) are also \(z_i H\), so that they can be converted into part of a term \(x_i C_{m_i}\) that the issuer can verify using the secret keys. The remaining term in the commitments \(C_{m_i}\) is \(m_i U\) which is converted into part of \(U'\) by the same multiplication by the secret key: \(x_i C_{m_i} = x_i m_i U = U' - x_0 U\). This equality is worked through in detail in the paper, but notice that basically, the group homomorphism can be used to allow the issuer to verify, using his own secret values, what the user constructed as message commitments, with his secret values.&lt;/p&gt;
+&lt;p&gt;On the user side, we are summing elements of the form \(z_i X_i = z_i x_i H\), but the blinding terms in the message commitments \(C_{m_i}\) are also \(z_i H\), so that they can be converted into part of a term \(x_i C_{m_i}\) that the issuer can verify using the secret keys. The remaining term in the commitments \(C_{m_i}\) is \(m_i U\) which is converted into part of \(U'\) by the same multiplication by the secret key: \(x_i C_{m_i} = x_i m_i U = U' - x_0 U\). This equality is worked through in detail in the paper, but notice that basically, the group homomorphism can be used to allow the issuer to verify, using his own secret values, what the user constructed as message commitments, with his secret values.
+&lt;a href="side-note"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;Side note: what are these mysterious "zero knowledge proofs"?&lt;/h5&gt;
-&lt;p&gt;The proof systems used for these kind of statements are all variants of the basic Schnorr protocol + Fiat-Shamir transform that I explained in great detail &lt;a href="https://github.com/AdamISZ/from0k2bp/blob/master/from0k2bp.pdf"&gt;here&lt;/a&gt; (Section 3), though I also strongly recommend &lt;a href="https://toc.cryptobook.us/"&gt;Boneh and Shoup&lt;/a&gt; Chapter 19 for more rigorous treatments. Note that very often we are using the "AND of sigma protocols" paradigm, in which multiple statements are proved concurrently, and this is achieved by committing to all the statements in the first step, including all those commitments in the hash challenge preimage before constructing the response. As well as the aforementioned links, you can see a good simple example of this paradigm in Appendix E of CMZ13, albeit there are two serious errors in the description of the verification algorithm, as I explained on stackexchange &lt;a href="https://crypto.stackexchange.com/a/85952/14985"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The proof systems used for these kind of statements are all variants of the basic Schnorr protocol + Fiat-Shamir transform that I explained in great detail &lt;a href="https://github.com/AdamISZ/from0k2bp/blob/master/from0k2bp.pdf"&gt;here&lt;/a&gt; (Section 3), though I also strongly recommend &lt;a href="https://toc.cryptobook.us/"&gt;Boneh and Shoup&lt;/a&gt; Chapter 19 for more rigorous treatments. Note that very often we are using the "AND of sigma protocols" paradigm, in which multiple statements are proved concurrently, and this is achieved by committing to all the statements in the first step, including all those commitments in the hash challenge preimage before constructing the response. As well as the aforementioned links, you can see a good simple example of this paradigm in Appendix E of CMZ13, albeit there are two serious errors in the description of the verification algorithm, as I explained on stackexchange &lt;a href="https://crypto.stackexchange.com/a/85952/14985"&gt;here&lt;/a&gt;.
+&lt;a href="with-blinding"&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;h5&gt;With blinding of attributes:&lt;/h5&gt;
 &lt;p&gt;These attributes can be encrypted using &lt;a href="https://en.wikipedia.org/wiki/ElGamal_encryption"&gt;El Gamal encryption&lt;/a&gt; in such a way that a credential can still be issued without revealing (some of) them. The mechanics of El Gamal are about as simple as an encryption scheme gets:&lt;/p&gt;
 &lt;ul&gt;
@@ -2136,7 +2153,7 @@ the blockchain, with different timestamps they could be extremely
 difficult to find.&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;*&lt;img src="../../../images/s6basic-1053x745.png" width="1053" height="745" /&gt;
 *&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;A &lt;strong&gt;very&lt;/strong&gt; simplified multiparty S6 as envisaged: note that Oscar to
+&lt;p&gt;&lt;em&gt;A &lt;/em&gt;&lt;em&gt;very&lt;/em&gt;&lt;em&gt; simplified multiparty S6 as envisaged: note that Oscar to
 Peter shows on a diagonal a simple transaction of the type used in
 CoinSwap; in fact there is one such transaction for every red arrow;
 i.e. each red arrow represents a payment from one of the group of 11 to
@@ -2206,8 +2223,8 @@ Poelstra means by his concept "adaptor signature". It looks like this:&lt;/p&gt;
 &lt;p&gt;\(\sigma' = k + \mathbb{H}(P||R+T||m) x \quad R=kG,\ T=tG \)&lt;/p&gt;
 &lt;p&gt;(from now on, note that ' indicates adaptor signatures). To repeat, it's
 not a valid signature, but: &lt;em&gt;it can be verified that adding the discrete
-log of \(T\)&lt;/em&gt; *to \(\sigma'\) will yield a valid signature on the
-message m and the public key \(P\)&lt;strong&gt;&lt;em&gt;*.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+log of \(T\)&lt;/em&gt; &lt;em&gt;to \(\sigma'\) will yield a valid signature on the
+message m and the public key \(P\)&lt;/em&gt;&lt;strong&gt;&lt;em&gt;.&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;Refer back to the &lt;a href="https://web.archive.org/web/20200429002041/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/"&gt;earlier blog
 post&lt;/a&gt;
 if you want to check the mathematical details on that.&lt;/p&gt;
@@ -3553,20 +3570,18 @@ curve.&lt;/strong&gt; That's intuitively &lt;em&gt;very&lt;/em&gt; plausible, bu
 &lt;blockquote&gt;
 &lt;p&gt;``` {.joke}
 A mathematician and a physicist were asked the following question:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;    Suppose you walked by a burning house and saw a hydrant and&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;    Suppose you walked by a burning house and saw a hydrant and&lt;/span&gt;
 &lt;span class="err"&gt;    a hose not connected to the hydrant.  What would you do?&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;P: I would attach the hose to the hydrant, turn on the water, and put out
    the fire.&lt;/p&gt;
 &lt;p&gt;M: I would attach the hose to the hydrant, turn on the water, and put out
    the fire.&lt;/p&gt;
 &lt;p&gt;Then they were asked this question:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;    Suppose you walked by a house and saw a hose connected to&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;    Suppose you walked by a house and saw a hose connected to&lt;/span&gt;
 &lt;span class="err"&gt;    a hydrant.  What would you do?&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;P: I would keep walking, as there is no problem to solve.&lt;/p&gt;
 &lt;p&gt;M: I would disconnect the hose from the hydrant and set the house on fire,
@@ -4522,13 +4537,12 @@ advance, with all of them having the funding transaction as the root.&lt;/p&gt;
 transaction, but using the above model they can do the same to a funding
 transaction, but then pre-sign a set of more than one spending
 transaction. Here's a simple schematic:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;A 1btc ---&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;A 1btc ---&amp;gt;&lt;/span&gt;
 &lt;span class="err"&gt;              F (2,2,A,B) --+&lt;/span&gt;
 &lt;span class="err"&gt;B 1btc ---&amp;gt;                 |&lt;/span&gt;
 &lt;span class="err"&gt;                            |&lt;/span&gt;
 &lt;span class="err"&gt;                            +--&amp;gt;[Proposed transaction graph (PTG) e.g. -&amp;gt;TX1-&amp;gt;TX2-&amp;gt;TX3 ..]&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;In human terms, you can envisage that: Alice and Bob would like to start
 to negotiate a set of conditional contracts about what happens to their
@@ -4571,7 +4585,7 @@ above): that an individual transaction could transfer funds to one
 party, without risks to the other. To address this problem, we call
 these additional inputs &lt;strong&gt;promise utxos&lt;/strong&gt; and make use of &lt;strong&gt;refund
 transactions&lt;/strong&gt;.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;A 1btc ---&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;A 1btc ---&amp;gt;&lt;/span&gt;
 &lt;span class="err"&gt;              F (2,2,A,B) ---&lt;/span&gt;
 &lt;span class="err"&gt;B 1btc ---&amp;gt;                 |       +--&amp;gt; external payout 0.5 btc to Bob&lt;/span&gt;
 &lt;span class="err"&gt;                            |       |&lt;/span&gt;
@@ -4582,8 +4596,7 @@ transactions&lt;/strong&gt;.&lt;/p&gt;
 &lt;span class="err"&gt;                                         |       +--- utxo A1&lt;/span&gt;
 &lt;span class="err"&gt;                                         |&lt;/span&gt;
 &lt;span class="err"&gt;                                         +--&amp;gt; refund locktime M, pay out *remaining* funds to A: 1btc, B: 0.5btc&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;In words: if, between the negotiation time and the time of broadcast of
 TX3, Alice spends A1 in some other transaction, Bob will still be safe;
@@ -4716,15 +4729,14 @@ amplification of off-chain privacy to on-chain.&lt;/strong&gt;&lt;/p&gt;
 effect from just the dual-funded Lightning channel; if you consider
 change outputs in such a single funding transaction, you see the same
 effect:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;Alice&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;Alice&lt;/span&gt;
 &lt;span class="err"&gt;2.46&lt;/span&gt;
 &lt;span class="err"&gt;       -&amp;gt; Lightning funding 0.1&lt;/span&gt;
 &lt;span class="err"&gt;       -&amp;gt; Change 2.41&lt;/span&gt;
 &lt;span class="err"&gt;       -&amp;gt; Change 2.37&lt;/span&gt;
 &lt;span class="err"&gt;2.42&lt;/span&gt;
 &lt;span class="err"&gt;Bob&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;It's easy to see that there is no delinking effect on the change-outs
 &lt;em&gt;if&lt;/em&gt; we know that the funding is equal on both sides. However, there's
@@ -5112,10 +5124,9 @@ Signatures
 &lt;a href="https://github.com/Blockstream/borromean_paper"&gt;paper&lt;/a&gt;,
 although there are of course tons of other descriptions out there. We'll
 write it in basic form as:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;s = r + e * x&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;s = r + e * x&lt;/span&gt;
 &lt;span class="err"&gt;e = H(P||R||m)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Note: we can hash, as "challenge" a la &lt;a href="https://en.wikipedia.org/wiki/Proof_of_knowledge#Sigma_protocols"&gt;sigma
 protocol&lt;/a&gt;,
@@ -5129,13 +5140,12 @@ necessary.&lt;/p&gt;
 &lt;p&gt;Apologies if people are more used to &lt;code&gt;s = r - ex&lt;/code&gt;, for some reason it's
 always &lt;code&gt;+&lt;/code&gt; to me!&lt;/p&gt;
 &lt;p&gt;Note the linearity, in hand-wavy terms we can say:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;s_1 = r_1 + e * x_1&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;s_1 = r_1 + e * x_1&lt;/span&gt;
 &lt;span class="err"&gt;s_2 = r_2 + e * x_2&lt;/span&gt;
 &lt;span class="err"&gt;e = H(P_1 + P2 || R_1 + R_2 || m)&lt;/span&gt;
 &lt;span class="err"&gt;=&amp;gt;&lt;/span&gt;
 &lt;span class="err"&gt;s_1 + s_2 is a valid signature for public key (P_1 + P_2) on m.&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;But this is &lt;strong&gt;NOT&lt;/strong&gt; a useable construction as-is: we'll discuss how
 aggregation of signatures is achieved properly later, briefly.&lt;/p&gt;
@@ -5168,9 +5178,8 @@ signing operation.&lt;/p&gt;
     rest of the document).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;Bob can verify the adaptor sig &lt;code&gt;s'&lt;/code&gt; for &lt;code&gt;T,m&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;s&amp;#39; * G ?= R + H(P || R+T || m) * P&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;s&amp;#39; * G ?= R + H(P || R+T || m) * P&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;This is not a valid sig: hashed nonce point is &lt;code&gt;R+T&lt;/code&gt; not &lt;code&gt;R&lt;/code&gt;;&lt;/p&gt;
 &lt;p&gt;Bob cannot retrieve a valid sig : to recover &lt;code&gt;s'+t&lt;/code&gt; requires ECDLP
@@ -5200,22 +5209,20 @@ the "hash challenge" is made more complex here, as was noted in the
 first section on Schnorr signatures. The two parties Alice and Bob,
 starting with pubkeys &lt;code&gt;P_A&lt;/code&gt;, &lt;code&gt;P_B&lt;/code&gt;, construct for themselves a "joint
 key" thusly:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;P_A&amp;#39; = H(H(P_A||P_B) || P_A) * P_A ,&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;P_A&amp;#39; = H(H(P_A||P_B) || P_A) * P_A ,&lt;/span&gt;
 &lt;span class="err"&gt;P_B&amp;#39; = H(H(P_A||P_B) || P_B) * P_B ,&lt;/span&gt;
 &lt;span class="err"&gt;joint_key = P_A&amp;#39; + P_B&amp;#39;&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Note that Alice possesses the private key for &lt;code&gt;P_A'&lt;/code&gt; (it's
 &lt;code&gt;H(H(P_A||P_B) || P_A) * x_A&lt;/code&gt;, we call it &lt;code&gt;x_A'&lt;/code&gt; for brevity), and
 likewise does Bob. From now on, we'll call this "joint_key" &lt;code&gt;J(A, B)&lt;/code&gt;
 to save space.&lt;/p&gt;
 &lt;p&gt;Common hash challenge:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;H(J(A, B) || R_A + R_B || m) = e&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;H(J(A, B) || R_A + R_B || m) = e&lt;/span&gt;
 &lt;span class="err"&gt;s_agg = = r_A + r_B + e(x_A&amp;#39; + x_B&amp;#39;)&lt;/span&gt;
 &lt;span class="err"&gt;-&amp;gt; s_agg * G = R_A + R_B + e * J(A, B)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Alice's sig: &lt;code&gt;s_A = r_A + e * x_A'&lt;/code&gt;, Bob's sig: &lt;code&gt;s_B = r_B + e * x_B'&lt;/code&gt;
 and of course: &lt;code&gt;s_agg = s_A + s_B&lt;/code&gt;.&lt;/p&gt;
@@ -5596,9 +5603,8 @@ counterparty's pubkey by adding a point that &lt;em&gt;you&lt;/em&gt; know the p
 for, but you still won't know the private key of the sum". Thus in
 this case, Alice, given Bob's existing pubkey &lt;code&gt;PB&lt;/code&gt;, which is the one
 she is using to encrypt the message, can construct a new pubkey:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;PB2 = PB + k*G&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;PB2 = PB + k*G&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;for some 32 byte random value &lt;code&gt;k&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Alice will include the value of &lt;code&gt;k&lt;/code&gt; in the encrypted message, so Bob can
@@ -5622,12 +5628,15 @@ he chooses), sign and broadcast the coinjoin transaction.&lt;/p&gt;
     Construct a standard formatted message; here is a simple suggestion
     although in no way definitive:&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;&lt;code&gt;{=html}
-&amp;lt;!-- --&amp;gt;&lt;/code&gt;
-        8(?) magic bytes and 2 version bytes for the message type
-        k-value 32 bytes
-        Partially signed transaction in standard Bitcoin serialization
-        (optionally padding to some fixed length)&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;&amp;lt;!-- --&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;    8(?) magic bytes and 2 version bytes for the message type&lt;/span&gt;
+&lt;span class="err"&gt;    k-value 32 bytes&lt;/span&gt;
+&lt;span class="err"&gt;    Partially signed transaction in standard Bitcoin serialization&lt;/span&gt;
+&lt;span class="err"&gt;    (optionally padding to some fixed length)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
 &lt;p&gt;We defer discussing how in practice Bob will get access to the message
 later; but note that if he has done this, he already knows the value of
 &lt;code&gt;P_B&lt;/code&gt; and will thus know also &lt;code&gt;U_B&lt;/code&gt;. He ECIES-decrypts it, and
@@ -5842,9 +5851,8 @@ signing key and the transaction. This provides us with exactly the same
 scenario as in the first version; Bob knows the private key of &lt;code&gt;R&lt;/code&gt;, so
 Alisa can send a proposal encrypted to that public key, and can derive a
 new address for Bob's destination using the same formula:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;PB2 = R + k&amp;#39;G&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;PB2 = R + k&amp;#39;G&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Here I used &lt;code&gt;k'&lt;/code&gt; to disambiguate from the signature nonce &lt;code&gt;k&lt;/code&gt;, but it's
 exactly the same as before. As before, Bob, in order to spend the output
@@ -5940,12 +5948,11 @@ the utxo.&lt;/p&gt;
 &lt;p&gt;Now, a &lt;a href="https://en.wikipedia.org/wiki/Commitment_scheme"&gt;cryptographic
 commitment&lt;/a&gt;
 is a standard kind of protocol, usually it works something like:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;Alice-&amp;gt;Bob: commit: h := hash(secret, nonce)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;Alice-&amp;gt;Bob: commit: h := hash(secret, nonce)&lt;/span&gt;
 &lt;span class="err"&gt;(do stuff)&lt;/span&gt;
 &lt;span class="err"&gt;Alice-&amp;gt;Bob: open: reveal secret, nonce&lt;/span&gt;
 &lt;span class="c"&gt;Bob: verify: h =?= hash(secret, nonce)&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;
-
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;p&gt;Hashing a secret is &lt;em&gt;not&lt;/em&gt; enough to keep it secret, at least in general:
 because the verifier might be able to guess, especially if the data is
