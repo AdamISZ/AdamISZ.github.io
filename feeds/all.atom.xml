@@ -2797,19 +2797,19 @@ actually!)), there are two obvious ways we could tweak this equation:&lt;/p&gt;
 &lt;p&gt;(1) Tweaked \(s\) values on fixed message and tweaked keys:&lt;/p&gt;
 &lt;p&gt;Choose \(\alpha \in \mathbb{Z}_N\) and set \(s' = s_0
 +\alpha\). We will not alter \(R=kG\), but we alter \(P_0
-\rightarrow P_0 + e_0\^{-1}\alpha G\). This makes the verification
+\rightarrow P_0 + e_0^{-1}\alpha G\). This makes the verification
 still work &lt;strong&gt;without altering the fixing of the nonce in the hash value
 \(e_0\):&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;\(s_0 G + \alpha G = R_0 + e_0 P_0 + \alpha G = R_0 + e_0\left(P_0 +
-e_0\^{-1}\alpha G\right)\)&lt;/p&gt;
+e_0^{-1}\alpha G\right)\)&lt;/p&gt;
 &lt;p&gt;So it's really not clear how bad this failing is; it's &lt;em&gt;kinda&lt;/em&gt; a
 failure of strong unforgeability, but that notion doesn't precisely
 capture it: we created a new, valid signature against a
 [new]{style="text-decoration: underline;"} key, but with two severe
 limitations: we weren't able to alter the message, and also, we
 weren't able to &lt;em&gt;choose&lt;/em&gt; the new key \(P'\). That last is slightly
-unobvious, but crucial : if I have a pre-prepared \(P\^{*}\), I
-cannot choose \(\alpha\) to get \(P' = P\^{*}\) as that would
+unobvious, but crucial : if I have a pre-prepared \(P^{*}\), I
+cannot choose \(\alpha\) to get \(P' = P^{*}\) as that would
 require a discrete logarithm break.&lt;/p&gt;
 &lt;p&gt;A final statement, hopefully obvious: the above can apply to any and all
 of the elements of the ring, so the forgery could consist of an entirely
@@ -2821,11 +2821,11 @@ signature&lt;/p&gt;
 allow alterations to the \(e\) values, using multiplication rather
 than addition:&lt;/p&gt;
 &lt;p&gt;Given the same starting \(s_0\) as in (1), we take a chosen new
-message \(m\^{*}\) and calculate the new \(e\^{*} =
-H(m\^{*}||R_3)\). If we likewise tweak the public key we get that
+message \(m^{*}\) and calculate the new \(e^{*} =
+H(m^{*}||R_3)\). If we likewise tweak the public key we get that
 \(s_0, R_0\) is a valid signature on the new message, with the tweaked
 key:&lt;/p&gt;
-&lt;p&gt;\(s_0 G = R_0 + e_0\^{*}\left(\frac{e_0}{e_0\^{*}} P_0\right)\)&lt;/p&gt;
+&lt;p&gt;\(s_0 G = R_0 + e_0^{*}\left(\frac{e_0}{e_0^{*}} P_0\right)\)&lt;/p&gt;
 &lt;p&gt;We can see here that this produces a forgery with the same signature
 values (but different hash values) on the new keys.&lt;/p&gt;
 &lt;p&gt;Most definitions of security against forgery require the attacker to
@@ -3081,17 +3081,17 @@ the signatures there, too:&lt;/p&gt;
 &lt;li&gt;Pick \(s_{\pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\);
     then we do as in AOS, but duplicated; we set:&lt;/li&gt;
 &lt;li&gt;\(R_{\pi+1} = s_{\pi+1}G - e_{\pi+1}P_{\pi+1}\) and
-    \(R\^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(L) - e_{\pi+1}I\)&lt;/li&gt;
+    \(R^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(L) - e_{\pi+1}I\)&lt;/li&gt;
 &lt;li&gt;I realise the last line is pretty dense, so let's clarify: the
     first half is exactly as for AOS; calculate \(R\) given the random
     \(s\) and the just-calculated hash value \(e\). The &lt;em&gt;second&lt;/em&gt;
     half is &lt;strong&gt;the same thing with the base point \(G\) replaced with
     \(\mathbb{H}(L)\), and the pubkey replaced with \(I\) at every
-    index&lt;/strong&gt;. We used a shorthand \(R\^{*}\) to mean
+    index&lt;/strong&gt;. We used a shorthand \(R^{*}\) to mean
     \(k_{\pi+1}\mathbb{H}(L)\), because of course we don't
     actually &lt;em&gt;know&lt;/em&gt; the value \(k_{\pi+1}\).&lt;/li&gt;
 &lt;li&gt;Calculate the next hash-challenge as \(e_{pi+2} =
-    H(m||L||R_{\pi+1}||R\^{*}_{\pi+1}||I)\)&lt;/li&gt;
+    H(m||L||R_{\pi+1}||R^{*}_{\pi+1}||I)\)&lt;/li&gt;
 &lt;li&gt;Etc...&lt;/li&gt;
 &lt;li&gt;As with AOS, we can now forge all the remaining indices, wrapping
     around the loop, by repeating the above operation, generating a new
@@ -3128,12 +3128,12 @@ it is slightly different than AOS:&lt;/p&gt;
 &lt;p&gt;Start with the given keyset \(L\), the message \(m\) and the
 signature \((s_0 \ldots s_{n-1}, e_0, I)\)&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Construct \(e_{1} = H(m||L||R_{0}||R\^{*}_{0}||I)\)
-    using \(R_0 = s_0G - e_0 P_0\) and \(R\^{*}_{0} = s_0
+&lt;li&gt;Construct \(e_{1} = H(m||L||R_{0}||R^{*}_{0}||I)\)
+    using \(R_0 = s_0G - e_0 P_0\) and \(R^{*}_{0} = s_0
     \mathbb{H}(L) - e_0 I \)&lt;/li&gt;
 &lt;li&gt;Repeat at each index using the new \(e_j\) until \(e_0\) is
     calculated at the last step and verify it matches: \(e_0
-    \stackrel{?}{=} H(m||L||R_{n-1}||R\^{*}_{n-1}||I)\).
+    \stackrel{?}{=} H(m||L||R_{n-1}||R^{*}_{n-1}||I)\).
     Accept if so, reject if not.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;(with the additional point mentioned: the protocol using the sig scheme
@@ -3170,7 +3170,7 @@ statistical analysis considerably, but the basic principles remain the
 same. If at some point forgery is successfully achieved twice at the
 same index, we will have something like:&lt;/p&gt;
 &lt;p&gt;\(x_{\pi} =
-\frac{s\^{*}_{\pi}-s_{\pi}}{e\^{*}_{\pi}-e_{\pi}}\)&lt;/p&gt;
+\frac{s^{*}_{\pi}-s_{\pi}}{e^{*}_{\pi}-e_{\pi}}\)&lt;/p&gt;
 &lt;p&gt;where the * superscripts indicate the second run, and the
 \(e\)-values being the patched RO responses.&lt;/p&gt;
 &lt;p&gt;And as usual, with appropriate statistical arguments, one can generate a
@@ -3236,10 +3236,10 @@ there's a difference.&lt;/p&gt;
 &lt;li&gt;Pick \(s_{\pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\);
     then:&lt;/li&gt;
 &lt;li&gt;\(R_{\pi+1} = s_{\pi+1}G - e_{\pi+1}P_{\pi+1}\) and
-    \(R\^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(P_{\pi+1}) -
+    \(R^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(P_{\pi+1}) -
     e_{\pi+1}I\)&lt;/li&gt;
 &lt;li&gt;Calculate the next hash-challenge as \(e_{pi+2} =
-    H(m||R_{\pi+1}||R\^{*}_{\pi+1})\)&lt;/li&gt;
+    H(m||R_{\pi+1}||R^{*}_{\pi+1})\)&lt;/li&gt;
 &lt;li&gt;Etc...&lt;/li&gt;
 &lt;li&gt;As with AOS and LWW, we can now forge all the remaining indices,
     wrapping around the loop, by repeating the above operation,
@@ -3309,11 +3309,11 @@ a generic \(L\) (limiting tiresome subscripting to a minimum...).&lt;/p&gt;
 &lt;li&gt;Pick \(s_{i, \pi+1} \stackrel{\$}{\leftarrow} \mathbb{Z}_N\
     \forall i \in 0 \ldots M-1\); then:&lt;/li&gt;
 &lt;li&gt;\(R_{i, \pi+1} = s_{i, \pi+1}G - e_{\pi+1}P_{i, \pi+1}\)
-    and \(R\^{*}_{i, \pi+1} = s_{i, \pi+1}\mathbb{H}(P_{i,
+    and \(R^{*}_{i, \pi+1} = s_{i, \pi+1}\mathbb{H}(P_{i,
     \pi+1}) - e_{\pi+1}I_i \ \forall i \in 0 \ldots M-1\)&lt;/li&gt;
 &lt;li&gt;Calculate the next hash-challenge as \(e_{\pi+2} =
-    H(m||L||R_{0, \pi+1}||R\^{*}_{0,\pi+1}||R_{1,
-    \pi+1}||R\^{*}_{2,\pi+1} ...)\)&lt;/li&gt;
+    H(m||L||R_{0, \pi+1}||R^{*}_{0,\pi+1}||R_{1,
+    \pi+1}||R^{*}_{2,\pi+1} ...)\)&lt;/li&gt;
 &lt;li&gt;Etc...&lt;/li&gt;
 &lt;li&gt;Logic as for AOS, LWW but duplicated at every input with single
     \(e\)-challenge, and at signing index for all inputs (\(\pi\)):
