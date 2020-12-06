@@ -57,39 +57,39 @@
 <!-- vim-markdown-toc GFM -->
 
 <ul>
-<li><a href="#preamble">Preamble - big-and-randomized</a></li>
+<li><a href="#preamble---big-and-randomized">Preamble - big-and-randomized</a></li>
 <li><a href="#wabisabi-from-the-ground-up">Wabisabi, from the ground up.</a><ul>
-<li><a href="#do-not-cover">What the Wabisabi paper, and this article, do not cover</a></li>
+<li><a href="#what-the-wabisabi-paper-and-this-article-do-not-cover">What the Wabisabi paper, and this article, do not cover</a></li>
 </ul>
 </li>
 <li><a href="#signatures-keyed-macs-and-credentials">Signatures, keyed MACs and credentials</a><ul>
 <li><a href="#creating-a-mac">Creating a MAC</a></li>
 <li><a href="#algebraic-macs">Algebraic MACs</a></li>
-<li><a href="#security-notions">Security notions needed for algebraic MACs used for anonymous credentials</a><ul>
-<li><a href="#mac-1">Algebraic MAC attempt 1</a></li>
-<li><a href="#mac-2">Algebraic MAC attempt 2</a></li>
-<li><a href="#mac-3">Algebraic MAC attempt 3</a></li>
-<li><a href="#mac-4">Algebraic MAC attempt 4</a></li>
+<li><a href="#security-notions-needed-for-algebraic-macs-used-for-anonymous-credentials">Security notions needed for algebraic MACs used for anonymous credentials</a><ul>
+<li><a href="#algebraic-mac-attempt-1">Algebraic MAC attempt 1</a></li>
+<li><a href="#algebraic-mac-attempt-2">Algebraic MAC attempt 2</a></li>
+<li><a href="#algebraic-mac-attempt-3">Algebraic MAC attempt 3</a></li>
+<li><a href="#algebraic-mac-attempt-4">Algebraic MAC attempt 4</a></li>
 </ul>
 </li>
-<li><a href="#mac-ggm">MAC-GGM - a vector of messages; different security arguments</a></li>
+<li><a href="#mac-ggm---a-vector-of-messages-different-security-arguments">MAC-GGM - a vector of messages; different security arguments</a></li>
 </ul>
 </li>
-<li><a href="#key-verified">Key-Verified Anonymous Credentials (KVAC)</a><ul>
+<li><a href="#key-verified-anonymous-credentials-kvac">Key-Verified Anonymous Credentials (KVAC)</a><ul>
 <li><a href="#how-does-issuance-work">How does issuance work?</a><ul>
-<li><a href="#without-blinding">Without any blinding:</a></li>
-<li><a href="#side-note">Side note: what are these mysterious "zero knowledge proofs"?</a></li>
-<li><a href="#with-blinding">With blinding of attributes:</a></li>
+<li><a href="#without-any-blinding">Without any blinding:</a></li>
+<li><a href="#side-note-what-are-these-mysterious-zero-knowledge-proofs">Side note: what are these mysterious "zero knowledge proofs"?</a></li>
+<li><a href="#with-blinding-of-attributes">With blinding of attributes:</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#CPZ19">Chase-Perrin-Zaverucha 2019</a></li>
-<li><a href="#wabisabi">Wabisabi: credentials on amounts with splitting</a><ul>
+<li><a href="#chase-perrin-zaverucha-2019">Chase-Perrin-Zaverucha 2019</a></li>
+<li><a href="#wabisabi-credentials-on-amounts-with-splitting">Wabisabi: credentials on amounts with splitting</a><ul>
 <li><a href="#range-proofs">Range proofs</a></li>
 </ul>
 </li>
-<li><a href="#final-thoughts">Final thoughts on the security and functionality proposed in Wabisabi</a></li>
+<li><a href="#final-thoughts-on-the-security-and-functionality-proposed-in-wabisabi">Final thoughts on the security and functionality proposed in Wabisabi</a></li>
 </ul>
 <!-- vim-markdown-toc -->
 
@@ -282,8 +282,8 @@ This encryption must then be blinded, but that's easy, by adding extra randomnes
 <p><a name="range-proofs"></a></p>
 <h4>Range proofs</h4>
 <p>Any former student of the ideas behind <a href="https://en.bitcoin.it/wiki/Confidential_transactions">Confidential Transactions</a> will find this part obvious. Simply presenting <em>commitments</em> to integer amounts (in satoshis, say) doesn't provide the intended security: since in modular arithmetic, a very large integer is mathematically equivalent to a small negative integer, it would be easy for users to cheat the amounts they get out by requesting commitments on (effectively) negative amounts. The way round this is again a ZKP, of a particular flavor known as a range proof: you prove that the integer \(a\) is between say 1 and \(2^{32}\) or whatever suits. This can be done e.g. with <a href="https://eprint.iacr.org/2017/1066">Bulletproofs</a> but also the range proof can be embedded as another statement in the overall ZKP provided by the user.</p>
-<p>A relevant question, though, and one worth pondering: are the range proofs actually necessary? As discussed in the next section, there isn't a risk of funds loss in the basic coinjoin construct, with or without this extra crypto magic of credentials. So a malicious user constructing credentials in invalid negative amounts is not going to be able to claim more money, but this does represent a DOS vector, one that is usually addressed just with the requirement of users to provide and sign off on a valid utxo.</p>
-<p>However there still may be further room for thought here; the range proof could be provided as part of a blame phase of a protocol, and avoided in the happy path of correct coinjoins being presented for signing. Apparently ZmnSCPxj has suggested this.</p>
+<p>A relevant question, though, and one worth pondering: are the range proofs actually necessary (ZmnSCPxj has raised this in review, and it occurred to me too)? As discussed in the next section, there isn't a risk of funds loss in the basic coinjoin construct, with or without this extra crypto magic of credentials. So a malicious user constructing credentials in invalid negative amounts is not going to be able to claim more money, but this does represent a DOS vector, one that is usually addressed just with the requirement of users to provide and sign off on a valid utxo.</p>
+<p>However there still may be further room for thought here; the range proof could be provided as part of a blame phase of a protocol, and avoided in the happy path of correct coinjoins being presented for signing. Apparently the authors have considered this.</p>
 <p><a name="final-thoughts"></a></p>
 <h3>Final thoughts on the security and functionality proposed in Wabisabi</h3>
 <p>This article has just been a survey of some of the technical (cryptographic) underpinnings; the paper itself is specifically more about the theoretical construct, and not a fully fleshed out system spec as would be needed for a full software instantiation.</p>
