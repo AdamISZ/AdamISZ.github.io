@@ -288,25 +288,20 @@ curve.</strong> That's intuitively <em>very</em> plausible, but can we prove it?
 <a href="https://jcdverha.home.xs4all.nl/scijokes/6_2.html">here</a>
 :))</p>
 <blockquote>
-<p>``` {.joke}
-A mathematician and a physicist were asked the following question:</p>
-<div class="highlight"><pre><span></span><code><span class="err">    Suppose you walked by a burning house and saw a hydrant and</span>
-<span class="err">    a hose not connected to the hydrant.  What would you do?</span>
-</code></pre></div>
-
+<p>A mathematician and a physicist were asked the following question:</p>
+<p>"Suppose you walked by a burning house and saw a hydrant and
+a hose not connected to the hydrant.  What would you do?"</p>
 <p>P: I would attach the hose to the hydrant, turn on the water, and put out
    the fire.</p>
 <p>M: I would attach the hose to the hydrant, turn on the water, and put out
    the fire.</p>
 <p>Then they were asked this question:</p>
-<div class="highlight"><pre><span></span><code><span class="err">    Suppose you walked by a house and saw a hose connected to</span>
-<span class="err">    a hydrant.  What would you do?</span>
-</code></pre></div>
-
+<p>"Suppose you walked by a house and saw a hose connected to
+a hydrant.  What would you do?"</p>
 <p>P: I would keep walking, as there is no problem to solve.</p>
 <p>M: I would disconnect the hose from the hydrant and set the house on fire,
    reducing the problem to a previously solved form.
-```</p>
+</p>
 </blockquote>
 <p>The general paradigm here is:</p>
 <blockquote>
@@ -523,7 +518,7 @@ out, but it's of course negligible in practice.</p>
 we must also assert that such a powerful \(\mathbb{A}\) does not
 exist, given similarly limited time (well; <em>in the random oracle model</em>,
 of course...).</p>
-<h3>Full CMA case, \(\epsilon \&lt;\&lt; 1\)</h3>
+<h3>Full CMA case, \(\epsilon &lt;&lt; 1\)</h3>
 <p>Now we give \(\mathbb{A}\) the opportunity to make \(S\) signing
 queries (as already mentioned, this is what we mean by an "adaptive
 chosen message attack"). The sequence of events will be a little longer
@@ -543,7 +538,7 @@ queries).</p>
     wrapper \(\mathbb{B}\) is to request a hash value
     \(H(m||R)\). So it's important to understand that, first
     because of the probabilistic nature of the forgery (\(\epsilon
-    \&lt;\&lt; 1\)), and second because \(\mathbb{A}\)'s algorithm is
+    &lt;&lt; 1\)), and second because \(\mathbb{A}\)'s algorithm is
     unknown, <strong>\(\mathbb{B}\) does not know which hash function query
     (and therefore which RO response) will correspond to a successful
     forgery.</strong> This isn't just important to the logic of the game; as
@@ -714,10 +709,10 @@ motives. Some of the leading cryptographers of the day tried hard to
 find weaknesses in the NIST proposal. A summary of the most important
 objections and the responses to them was published in the Crypto'92
 proceedings[17]. The opposition was unable to find any significant
-defects in the system. [In retrospect, it is amazing that none of the
+defects in the system. <strong>In retrospect, it is amazing that none of the
 DSA opponents noticed that when the Schnorr signature was modified,
 the equivalence with discrete logarithms was
-lost.]{style="text-decoration: underline;"}"</p>
+lost.</strong></p>
 </blockquote>
 <h2>More exotic constructions</h2>
 <p>In a future blog post, I hope to extend this discussion to other
