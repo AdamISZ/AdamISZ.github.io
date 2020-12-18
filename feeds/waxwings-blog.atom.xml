@@ -2858,7 +2858,7 @@ of equations instead of one. The idea is to make the commitment
 \(H(m||R)\) use the \(R\) value from the "previous"
 signer/key/equation, where "previous" is modulo \(N\), i.e. there is
 a loop of dependencies (a ring, in fact).&lt;/p&gt;
-&lt;p&gt;[Quick description:]{style="text-decoration: underline;"}&lt;/p&gt;
+&lt;p&gt;Quick description:&lt;/p&gt;
 &lt;p&gt;Our goal is a list of \(N\) correctly verifying Schnorr signature
 equations, with the tweak as mentioned that each hash-value refers to
 the "previous" commitment. We will work with \(N=4\) and index from
@@ -2947,7 +2947,7 @@ e_0^{-1}\alpha G\right)\)&lt;/p&gt;
 &lt;p&gt;So it's really not clear how bad this failing is; it's &lt;em&gt;kinda&lt;/em&gt; a
 failure of strong unforgeability, but that notion doesn't precisely
 capture it: we created a new, valid signature against a
-[new]{style="text-decoration: underline;"} key, but with two severe
+&lt;em&gt;new&lt;/em&gt; key, but with two severe
 limitations: we weren't able to alter the message, and also, we
 weren't able to &lt;em&gt;choose&lt;/em&gt; the new key \(P'\). That last is slightly
 unobvious, but crucial : if I have a pre-prepared \(P^{*}\), I
@@ -2993,8 +2993,8 @@ treating the keyset as part of the conversation transcript, rather than
 something ex-protocol-run.&lt;/p&gt;
 &lt;p&gt;Also, the discussion above (both cases (1) and (2)) show clearly that
 the same weakness exists for a single (\(n=1\)) key case.&lt;/p&gt;
-&lt;p&gt;[And yet, for the single key case, it was not a done deal historically -
-this caused real world arguments!]{style="text-decoration: underline;"}.
+&lt;p&gt;&lt;strong&gt;And yet, for the single key case, it was not a done deal historically -
+this caused real world arguments&lt;/strong&gt;.
 After all, there are many use cases where the key &lt;em&gt;is&lt;/em&gt; a given
 ex-protocol-run, plus there may be some practical disadvantage to doing
 the key-prefixing.&lt;/p&gt;
@@ -3005,35 +3005,35 @@ elucidated, showing that these theoretical concerns had very substantial
 impact on arguably the largest real world crypto usage (TLS):&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;"Key-prefixing comes with the disadvantage that the entire public-key
-has to\
+has to
 be available at the time of signing. Specifically, in a CFRG message
-from Sep-\
-tember 2015 Hamburg [32] argues "having to hold the public key along
-with\
+from September
+2015 Hamburg [32] argues "having to hold the public key along
+with
 the private key can be annoying" and "can matter for constrained
-devices".\
+devices".
 Independent of efficiency, we believe that a cryptographic protocol
-should be\
+should be
 as light as possible and prefixing (just as any other component)
-should only\
+should only
 be included if its presence is justified. Naturally, in light of the
-GMLS proof,\
+GMLS proof,
 Hamburg [32] and Struik [44] (among others) recommended against
 key prefixing\
 for Schnorr. Shortly after, Bernstein [10] identifies the error in
-the GMLS theo-\
-rem and posts a tight security proof for the key-prefixed variant of
-Schnorr signa-\
-tures. In what happens next, the participant of the CFRG mailing list
-switched\
+the GMLS theorem
+and posts a tight security proof for the key-prefixed variant of
+Schnorr signatures.
+In what happens next, the participant of the CFRG mailing list
+switched
 their minds and mutually agree that key-prefixing should be preferred,
-despite of\
+despite of
 its previously discussed disadvantages. Specifically, Brown writes
-about Schnorr\
+about Schnorr
 signatures that "this justifies a MUST for inclusion of the public key
-in the mes-\
-sage of the classic signature" [16]. As a consequence, key-prefixing
-is contained in\
+in the message
+of the classic signature" [16]. As a consequence, key-prefixing
+is contained in
 the current draft for EdDSA [33]..."&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;p&gt;&lt;em&gt;Technical note: the "GMLS proof" mentioned in the above is the proof
@@ -3232,7 +3232,7 @@ the signatures there, too:&lt;/p&gt;
     index&lt;/strong&gt;. We used a shorthand \(R^{*}\) to mean
     \(k_{\pi+1}\mathbb{H}(L)\), because of course we don't
     actually &lt;em&gt;know&lt;/em&gt; the value \(k_{\pi+1}\).&lt;/li&gt;
-&lt;li&gt;Calculate the next hash-challenge as \(e_{pi+2} =
+&lt;li&gt;Calculate the next hash-challenge as \(e_{\pi+2} =
     H(m||L||R_{\pi+1}||R^{*}_{\pi+1}||I)\)&lt;/li&gt;
 &lt;li&gt;Etc...&lt;/li&gt;
 &lt;li&gt;As with AOS, we can now forge all the remaining indices, wrapping
@@ -3260,8 +3260,8 @@ to the AOS case: you still only need to publish one hash \(e_0\) since
 the others are determined by it, but you &lt;strong&gt;must&lt;/strong&gt; publish also the key
 image \(I\); if another LWW LSAG is published using the same private
 key, it will perforce have the same key image, and be recognized as
-having come from the same key [without revealing which
-key]{style="text-decoration: underline;"}.&lt;/p&gt;
+having come from the same key &lt;em&gt;without revealing which
+key&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;The protocol using the LSAG can thus reject a "double-sign", if
 desired.&lt;/p&gt;
 &lt;p&gt;Let's sanity check that we understand the verification algorithm, since
@@ -3339,8 +3339,8 @@ different signatures which are posited to be based on the same private
 key but having different key images. Examination of the two pairs of
 transcripts allows one to deduce that the private key in the two cases
 are the same, else ECDLP is broken.&lt;/p&gt;
-&lt;p&gt;Notice that these security arguments are [much more complicated than for
-the single Schnorr signature case]{style="text-decoration: underline;"}
+&lt;p&gt;Notice that these security arguments are &lt;strong&gt;much more complicated than for
+the single Schnorr signature case&lt;/strong&gt;
 and perhaps for two distinct reasons: one, because the ring signature is
 a more complex algebraic construction, with more degrees of freedom, but
 also, because we are asking for a significantly richer set of properties
@@ -3380,7 +3380,7 @@ there's a difference.&lt;/p&gt;
 &lt;li&gt;\(R_{\pi+1} = s_{\pi+1}G - e_{\pi+1}P_{\pi+1}\) and
     \(R^{*}_{\pi+1} = s_{\pi+1}\mathbb{H}(P_{\pi+1}) -
     e_{\pi+1}I\)&lt;/li&gt;
-&lt;li&gt;Calculate the next hash-challenge as \(e_{pi+2} =
+&lt;li&gt;Calculate the next hash-challenge as \(e_{\pi+2} =
     H(m||R_{\pi+1}||R^{*}_{\pi+1})\)&lt;/li&gt;
 &lt;li&gt;Etc...&lt;/li&gt;
 &lt;li&gt;As with AOS and LWW, we can now forge all the remaining indices,
