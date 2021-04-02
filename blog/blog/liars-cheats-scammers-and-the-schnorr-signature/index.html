@@ -88,7 +88,7 @@ extractor/"forking", an "adversary" etc. etc.</em>)</p>
 <h2>Preamble: the reluctant Satoshi scammer</h2>
 <p>The material of this blog post is pretty abstract, so I decided to spice
 it up by framing it as some kind of sci-fi :)</p>
-<p><img alt="" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/cube-250082_6402.png"></p>
+<p>&lt;img src="../../../images/cube-250082_6402.png" width="436" height="436"/</p>
 <p>Imagine you have a mysterious small black cube which you were given by
 an alien that has two slots you can plug into to feed it input data and
 another to get output data, but you absolutely can't open it (so like
@@ -200,7 +200,7 @@ knower-of-the-secret-key can complete the protocol. But more on this
 shortly!</p>
 <p>What about the famous "Schnorr signature"? It's just an
 noninteractive version of the above. There is btw a brief summary in
-<a href="https://web.archive.org/web/20200428212652/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">this</a>
+<a href="https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/">this</a>
 earlier blog post, also. Basically replace \(e\) with a hash (we'll
 call our hash function \(H\)) of the commitment value \(R\) and the
 message we want to sign \(m\):</p>
@@ -339,9 +339,8 @@ probability of success does that imply in solving ECDLP, in our
 <p>No; remember the wrapper had to actually extract <strong>two</strong> successful
 impersonations in the form of valid responses \(s\) to challenge
 values \(e\). We can say that the wrapper <strong>forks</strong> \(\mathbb{A}\):</p>
-<p><img alt="Fork your sigma protocol if you want
-fork" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"></p>
-<p><em>Fork your sigma protocol if you want fork</em></p>
+<p><img src="../../../images/forking.png" width="436" height="436"/>
+<em>Fork your sigma protocol if you want fork</em></p>
 <p>Crudely, the success probability is \(\epsilon^2\); both of those
 impersonations have to be successful, so we multiply the probabilities.
 (More exact: by a subtle argument we can see that the size of the
@@ -457,9 +456,9 @@ cryptographic protocols involving hash functions require this behaviour,
 but those that do are said to be "secure in the random oracle model
 (ROM)" or similar.</p>
 <h3>Wrapping A with B</h3>
-<p><img alt="B tries to win the impersonation game against C, by wrapping the
-signature forger
-A" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"></p>
+<p><img src="../../../images/EUFCMA1.png" width="584" height="413"/></p>
+<p><em>Pictured: B tries to win the impersonation game against C, by wrapping the
+signature forger A</em></p>
 <p>So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
 And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
 "game" against a challenger \(\mathbb{C}\) .</p>

@@ -3515,7 +3515,7 @@ extractor/"forking", an "adversary" etc. etc.&lt;/em&gt;)&lt;/p&gt;
 &lt;h2&gt;Preamble: the reluctant Satoshi scammer&lt;/h2&gt;
 &lt;p&gt;The material of this blog post is pretty abstract, so I decided to spice
 it up by framing it as some kind of sci-fi :)&lt;/p&gt;
-&lt;p&gt;&lt;img alt="" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/cube-250082_6402.png"&gt;&lt;/p&gt;
+&lt;p&gt;&amp;lt;img src="../../../images/cube-250082_6402.png" width="436" height="436"/&lt;/p&gt;
 &lt;p&gt;Imagine you have a mysterious small black cube which you were given by
 an alien that has two slots you can plug into to feed it input data and
 another to get output data, but you absolutely can't open it (so like
@@ -3627,7 +3627,7 @@ knower-of-the-secret-key can complete the protocol. But more on this
 shortly!&lt;/p&gt;
 &lt;p&gt;What about the famous "Schnorr signature"? It's just an
 noninteractive version of the above. There is btw a brief summary in
-&lt;a href="https://web.archive.org/web/20200428212652/https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/"&gt;this&lt;/a&gt;
+&lt;a href="https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/"&gt;this&lt;/a&gt;
 earlier blog post, also. Basically replace \(e\) with a hash (we'll
 call our hash function \(H\)) of the commitment value \(R\) and the
 message we want to sign \(m\):&lt;/p&gt;
@@ -3766,9 +3766,8 @@ probability of success does that imply in solving ECDLP, in our
 &lt;p&gt;No; remember the wrapper had to actually extract &lt;strong&gt;two&lt;/strong&gt; successful
 impersonations in the form of valid responses \(s\) to challenge
 values \(e\). We can say that the wrapper &lt;strong&gt;forks&lt;/strong&gt; \(\mathbb{A}\):&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Fork your sigma protocol if you want
-fork" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/forking.png/forking-659x466.png"&gt;&lt;/p&gt;
-&lt;p&gt;&lt;em&gt;Fork your sigma protocol if you want fork&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/forking.png" width="436" height="436"/&gt;
+&lt;em&gt;Fork your sigma protocol if you want fork&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;Crudely, the success probability is \(\epsilon^2\); both of those
 impersonations have to be successful, so we multiply the probabilities.
 (More exact: by a subtle argument we can see that the size of the
@@ -3884,9 +3883,9 @@ cryptographic protocols involving hash functions require this behaviour,
 but those that do are said to be "secure in the random oracle model
 (ROM)" or similar.&lt;/p&gt;
 &lt;h3&gt;Wrapping A with B&lt;/h3&gt;
-&lt;p&gt;&lt;img alt="B tries to win the impersonation game against C, by wrapping the
-signature forger
-A" src="https://web.archive.org/web/20200428212652im_/https://joinmarket.me/static/media/uploads/.thumbnails/EUFCMA1.png/EUFCMA1-584x413.png"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/EUFCMA1.png" width="584" height="413"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Pictured: B tries to win the impersonation game against C, by wrapping the
+signature forger A&lt;/em&gt;&lt;/p&gt;
 &lt;p&gt;So we now wrap \(\mathbb{A}\)  with \(\mathbb{B}\).
 And \(\mathbb{B}\)'s job will be to succeed at winning the SIDP
 "game" against a challenger \(\mathbb{C}\) .&lt;/p&gt;
