@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta http-equiv="refresh" content="0;url=https://reyify.com/blog" />
+	<meta charset="utf-8">
+	<title>Blue Sky Joinmarket thoughts — Joinmarket.me archive</title>
+	<meta name="description" content="Title: Blue Sky Joinmarket thoughts; Date: 2021-04-20; Author: Adam Gibson">
+	<meta name="author" content="Adam Gibson">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="https://joinmarket.me/theme/html5.js"></script>
+		<![endif]-->
+	<link href="https://joinmarket.me/theme/css/ipython.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+	<link href="//maxcdn.bootstrapcdn.com/bootswatch/3.2.0/simplex/bootstrap.min.css" rel="stylesheet">
+	<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link href="https://joinmarket.me/theme/css/local.css" rel="stylesheet">
+	<link href="https://joinmarket.me/theme/css/pygments.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+	<div class="page-header">
+		<h1><a href="https://joinmarket.me/">Joinmarket.me archive</a>
+			<br>	</div>
+	<div class="row">
+		<div class="col-md-8 col-md-offset-2">
+<div class="article" itemscope itemtype="http://schema.org/BlogPosting">
+	<div class="text-center article-header">
+		<h1 itemprop="name headline" class="article-title">Blue Sky Joinmarket thoughts</h1>
+		<span itemprop="author" itemscope itemtype="http://schema.org/Person">
+			<h4 itemprop="name">Adam Gibson</h4>
+		</span>
+		<time datetime="2021-04-20T00:00:00+02:00" itemprop="datePublished">Tue 20 April 2021</time>
+	</div>
+	<div>
+		Category:
+		<span itemprop="articleSection">
+			<a href="https://joinmarket.me/category/waxwings-blog.html" rel="category">waxwings Blog</a>
+		</span>
+	</div>
+ 
+	<div>
+		Tags:
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/joinmarket.html" rel="tag">Joinmarket</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/bitcoin.html" rel="tag">bitcoin</a>
+		</span>
+		<span itemprop="keywords">
+			<a href="https://joinmarket.me/tag/coinjoin.html" rel="tag">coinjoin</a>
+		</span>
+	</div>
+	<div itemprop="articleBody" class="article-body"><p>The world moves forward. Joinmarket has been in operation for many years, and while a ton of work has gone into let's say the "bottom" and the "top" of the application ("bottom" example: complete refactoring of bitcoin libraries such as that in <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/536">this PR</a>, "top" example: a ton of work making a functioning Qt app for Takers and all basic features like coin control), and extra tools around the basic coinjoin primitive (coin control, payjoin etc etc), the central mechanisms have not really changed since late 2016.</p>
+<p>So obviously this raises the question of what we could and should change in those core mechanisms. I'm going to assume:</p>
+<ul>
+<li>we just wipe the slate clean and any change is on the table</li>
+<li>no limitation in developer/time resources.</li>
+</ul>
+<h3>The awards ceremony</h3>
+<p>So here is a list of some changes presented as a "award for best ..<whatever>" in each case, including links to relevant discussion or background information.</p>
+<p><u>Opinions expressed here are my own!</u> (not boilerplate language - here it really means something, as it's <em>only</em> currently what I think ... we might work as a project on having a collaborative design document where we debate these points and come to some kind of conclusion). I'm sure others would have quite different lists ...</p>
+<ul>
+<li>Best network messaging layer or "bulletin board": <strong>onions in p2p configuration</strong></li>
+</ul>
+<p>I think this is the most difficult and the most important question on how we upgrade the system, and my choice of "winner" is kinda "out-there", and, even more, it lacks detail (how exactly do we set this up? We already have code set up for every bot to start an onion service; and it's already being used, for payjoin receiving. But that's just the start!).</p>
+<p>The first thing to note here is that an extensive discussion around the topic was started by contributor undeath in <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/415">this</a> issue some time ago. That lays out a significantly ambitious architectural plan; it might be the way to go, but I'm not really sure.</p>
+<p>We want relatively low latency with anonymity; Tor satisfies this within reason, but the biggest difficulty is to get reasonable reliability and some reasonable censorship resistance.</p>
+<p>If we feel that this is not quite reliable enough, not quite low enough latency, or not quite censorship resistant enough, we can go back to a bulletin board style server, but it needs to not have the strong aversion to bursts of traffic (and they will get really quite large in case JM scales to several thousand users instead of several hundred), and we would need to somehow continue to address the censorship problem with the kind of redundancy we currently have, except preferably <em>way</em> better than just a couple of IRC servers (or 3 if you're lucky). Also whichever model we choose, we always have the inherent tension that the <em>market</em> element of Joinmarket is intrinsically public, even if everything else is "E2E-encrypted-dark".</p>
+<ul>
+<li>Best coinjoin <em>negotiation</em> mechanism: <strong>...</strong></li>
+</ul>
+<p>I feel like there are two sensible options here:</p>
+<p>(1) <a href="https://eprint.iacr.org/2016/824.pdf">Coinshuffle++</a> may well be the right tool here. It has some overhead in terms of 4 rounds of communication (which interplays with the above), and some extra number crunching, but it gets us the very clean no-central-coordinator feature.
+ (2) It is not crazy to stick with our existing negotiation mechanism; it is set up to allow a market to decide the value of being the coordinator yourself. This is a fairly unique feature.</p>
+<ul>
+<li>Best coinjoin construction type: <strong>CoinJoinXT</strong></li>
+</ul>
+<p>Before getting into this, it's worth mentioning there is a <em>huge</em> list of ideas about this topic, i.e. "how to best configure a coinjoin transaction system". So this is definitely not a "settled issue"!</p>
+<p>CJXT is described in detail <a href="https://joinmarket.me/blog/blog/coinjoinxt/">here</a>, also see video presentation from Lisbon 2018 <a href="https://www.youtube.com/watch?v=YS0MksuMl9k">here</a> .</p>
+<p>Of course it may be just my bias; but my strong sense is that within the realm of Coinjoin specifically, this is the best model, because it can be and will be (see next point) very nearly perfectly steganographic, without trading off large high-latency interaction with participants (it can be negotiated in a couple of rounds with multiple parties with almost no extra overhead compared to current Joinmarket style negotiation), with no cross-block interactivity.</p>
+<p>The biggest challenge with this approach is almost the most exciting aspect: imagine creating a graph of 10 transactions with multiple entry points that was randomly constructed from a statistical distribution of <em>existing</em> transactions on the blockchain; it could look <em>totally</em> non-distinct from what's around it, including timings. This would be some relatively difficult developer work, but it could be pretty powerful.</p>
+<p>You might think it's too expensive to create a lot of transactions, but with the steganographic element, it'll actually make sense to use fairly <em>low</em> anon sets for individual negotiations, which trades it off. Also you would be entirely free to negotiate large anon-set, small tx number configurations if you preferred to ditch the stega- aspect.</p>
+<ul>
+<li>Best scriptpubkey type: <strong>taproot (segwit v1)</strong></li>
+</ul>
+<p>There are several reasons to want to move to this anonymity set when it becomes available, the principle one being this is where most contracting will sit once people figure out how to do at least 2 of 2 MuSig2 (see previous <a href="https://joinmarket.me/blog/blog/the-soundness-of-musig/">blog post</a> for some gory details), and others will probably/hopefully join in even for single sig. Note, for CoinJoinXT, as per previous 'award', and also for LN/coinjoin shenanigans (see below), we need MuSig2 negotiation and the blending in will be a crucial part of making those technique actually effective in hiding in the crowd.</p>
+<ul>
+<li>Best anti-Sybil: <strong>fidelity bonds</strong></li>
+</ul>
+<p>Do note that we currently have weak anti-Sybil with fee choice randomization.</p>
+<p>Fidelity bonds: first, let's say that it looks like this may get merged into current Joinmarket before wider protocol upgrade.</p>
+<p>See the <a href="https://gist.github.com/chris-belcher/18ea0e6acdb885a2bfbdee43dcd6b5af">gist</a> by Chris Belcher and the first discussion in the main repo <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/371">here</a>, following up also there is wallet code merged from <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/544">here</a>, and more work is coming on this shortly.</p>
+<p>There are many nuances to consider here. We don't need all makers to provide fidelity bonds. There will be timelock and funds burn options. Also, it can be a "soft fork" style change, because it would be a new offer type which new takers can inspect but old takers can ignore.</p>
+<ul>
+<li>Best language: <strong>Python or golang</strong></li>
+</ul>
+<p>These are just two preferences from my own experience, so again - bias, although partly that's an <em>inertia</em> bias.</p>
+<p>Go has better tooling in my opinion, but both of these options may suffer a little from lacking GUI elements "out of the box". I would be entirely open to other opinions on good languages.</p>
+<p>If we stick with Python we might want to start being a lot more serious about typing, as duck-typing causes a lot of problems in a big project.</p>
+<ul>
+<li>Best additional features: <strong>(multiple winners)</strong></li>
+</ul>
+<p>(1) Payjoin </p>
+<p>This one we already have - see PRs <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/648">648</a>, <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/640">640</a>, <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/636">636</a>, several others, and the root mega-PR <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/536">536</a> (which did other stuff too). Most importantly it's a <u>full</u> (both directions) <a href="https://github.com/bitcoin/bips/blob/master/bip-0078.mediawiki">BIP78</a> implementation so <em>should</em> be compatible with all other BIP78 clients. We would certainly want to keep this feature I think.</p>
+<p>(2) LN channel open (incl. dual funding) with a JM coinjoin</p>
+<p>One of the most likely/interesting long term uses of coinjoin may well be this: in opening Lightning channels you are not very constrained about amounts (this is <em>very</em> relevant to CoinJoin!), and you are somewhat patient. If people get most of their privacy via second layer, it will be all the more important to bolster fungibility in base layer payments, and coinjoins on <em>creation</em> of LN channels (possibly also, closing, but that's a much less clear case) will be a natural focus. This somewhat merges with the issue of dual-funding (although it is separate of course); in the most general case we could have 2N participants <em>all</em> contributing inputs to N channel openings all at once. There are many avenues to explore here, but it's something I think should be strongly borne in mind by anybody implementing Coinjoin today.</p>
+<p>(3) Hardware wallet support</p>
+<p>See <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/663">663</a>; should be practically possible for maker side at least. The ckBunker initiative looks like a promising angle. This sort of thing does require a lot of care and attention in creating testing setups though.</p>
+<p>Finally, not an award but things to pay attention to:</p>
+<ul>
+<li>General coding and architecture issues:</li>
+</ul>
+<p>(1) Single overarching API, accessible via <em>one</em> command line tool (so like a joinmarket-cli) or via json-rpc style RPC. See https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/670 which is really more of a project than just a PR, I have also coded up a basic Javascript (Angular) example of using that RPC <a href="https://github.com/JoinMarket-Org/jmcontrolcenter">here</a>, and <a href="https://x0f.org/web/statuses/104711347757245854">here</a> are a couple of screenshots. This can also encompass other cleanups like that suggested in <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/681">this</a> issue.</p>
+<p>(2) Better use of asynchronous coding (if still Python, <a href="https://docs.python.org/3/library/asyncio.html">asyncio</a> vs <a href="https://pypi.org/project/Twisted/">Twisted</a>).</p>
+<p>(3) It's worth thinking about how well partitioned the various functions are. The <a href="https://github.com/JoinMarket-Org/joinmarket-clientserver">current repo</a> was called the rather dumb name "joinmarket-clientserver" specifically because it separated out the network communications and protected that "side" of processing from knowing anything about bitcoin. I think we could push this general principle way further, having multiple separate modules only communicating (blockchain &lt;--&gt; wallet-service &lt;--&gt; business-logic client &lt;--&gt; protocol &lt;--&gt; network .. something like that) in very fixed ways (which is only half-true today), with an API plugged in. Also the first glimmer of a "plugin" architecture started when I implemented SNICKER, but that might also be useful going forwards.</p></div>
+	<hr>
+	<h2>Comments</h2>
+</div>
+		</div>
+	</div> 	<!-- <hr> -->
+</div> <!-- /container -->
+<footer class="aw-footer bg-danger">
+	<div class="container"> <!-- footer -->
+		<div class="row">
+			<div class="col-md-10 col-md-offset-1">
+				<div class="row">
+					<div class="col-md-3">
+						<h4>Navigation</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me">Joinmarket.me archive</a></li>
+							<li><a href="https://joinmarket.me/about-me/"><i class="fa fa-About Me "></i> About Me</a></li>
+							<li><a href="https://joinmarket.me/blog/"><i class="fa fa-Blog "></i> Blog</a></li>
+							<li><a href="https://joinmarket.me/donations/"><i class="fa fa-Donations "></i> Donations</a></li>
+							<li><a href="https://joinmarket.me/main-page/"><i class="fa fa-Main Page "></i> Main Page</a></li>
+							<li><a href="https://joinmarket.me/feeds/all.atom.xml" type="application/atom+xml"><i class="fa fa-rss "></i> atom</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Author</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://x0f.org/web/accounts/41381">waxwing on mastodon</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Categories</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://joinmarket.me/category/waxwings-blog.html">waxwings Blog (18)</a></li>
+						</ul>
+					</div>
+					<div class="col-md-3">
+						<h4>Links</h4>
+						<ul class="list-unstyled my-list-style">
+							<li><a href="https://en.bitcoin.it/wiki/Privacy">Bitcoin Wiki Privacy article</a></li>
+							<li><a href="https://old.reddit.com/r/joinmarket">Joinmarket reddit</a></li>
+							<li><a href="https://bitcointalk.org/index.php?topic=279249.620">Original description of Coinjoin</a></li>
+							<li><a href="https://github.com/AdamISZ/JMPrivacyAnalysis/blob/master/tumbler_privacy.md">My analysis of privacy in Joinmarket's (old) tumbler algorithm</a></li>
+							<li><a href="https://www.ndss-symposium.org/wp-content/uploads/2017/09/ndss201701-4RuffingPaper.pdf">Coinshuffle++ and DiceMix paper</a></li>
+							<li><a href="https://eprint.iacr.org/2016/575">Tumblebit paper</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</footer>
+<div class="container">
+	<div class="row">
+		<div class="col-md-12 text-center center-block aw-bottom">
+			<p>&copy; Adam Gibson 2016</p>
+			<p>Powered by Pelican</p>
+		</div>
+	</div>
+</div>
+<!-- JavaScript -->
+<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+	$("div.collapseheader").click(function () {
+		$header = $(this).children("span").first();
+		$codearea = $(this).children(".input_area");
+		$codearea.slideToggle(500, function () {
+			$header.text(function () {
+				return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+			});
+		});
+	});
+});
+</script>
+</body>
+</html>

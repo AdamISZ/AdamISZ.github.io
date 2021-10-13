@@ -1,5 +1,345 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive - waxwings Blog</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/waxwings-blog.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2020-12-07T00:00:00+01:00</updated><entry><title>Proof of Work, a pictorial essay</title><link href="https://joinmarket.me/blog/blog/pow-a-pictorial-essay/" rel="alternate"></link><published>2020-12-07T00:00:00+01:00</published><updated>2020-12-07T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-12-07:/blog/blog/pow-a-pictorial-essay/</id><summary type="html">&lt;p&gt;an investigation of proof of work&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Proof of Work, a pictorial essay&lt;/h2&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Joinmarket.me archive - waxwings Blog</title><link href="https://joinmarket.me/" rel="alternate"></link><link href="https://joinmarket.me/feeds/waxwings-blog.atom.xml" rel="self"></link><id>https://joinmarket.me/</id><updated>2021-04-20T00:00:00+02:00</updated><entry><title>Blue Sky Joinmarket thoughts</title><link href="https://joinmarket.me/blog/blog/blue-sky-joinmarket-thoughts/" rel="alternate"></link><published>2021-04-20T00:00:00+02:00</published><updated>2021-04-20T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2021-04-20:/blog/blog/blue-sky-joinmarket-thoughts/</id><summary type="html">&lt;p&gt;Ideas about future changes to Joinmarket&lt;/p&gt;</summary><content type="html">&lt;p&gt;The world moves forward. Joinmarket has been in operation for many years, and while a ton of work has gone into let's say the "bottom" and the "top" of the application ("bottom" example: complete refactoring of bitcoin libraries such as that in &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/536"&gt;this PR&lt;/a&gt;, "top" example: a ton of work making a functioning Qt app for Takers and all basic features like coin control), and extra tools around the basic coinjoin primitive (coin control, payjoin etc etc), the central mechanisms have not really changed since late 2016.&lt;/p&gt;
+&lt;p&gt;So obviously this raises the question of what we could and should change in those core mechanisms. I'm going to assume:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;we just wipe the slate clean and any change is on the table&lt;/li&gt;
+&lt;li&gt;no limitation in developer/time resources.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;The awards ceremony&lt;/h3&gt;
+&lt;p&gt;So here is a list of some changes presented as a "award for best ..&lt;whatever&gt;" in each case, including links to relevant discussion or background information.&lt;/p&gt;
+&lt;p&gt;&lt;u&gt;Opinions expressed here are my own!&lt;/u&gt; (not boilerplate language - here it really means something, as it's &lt;em&gt;only&lt;/em&gt; currently what I think ... we might work as a project on having a collaborative design document where we debate these points and come to some kind of conclusion). I'm sure others would have quite different lists ...&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best network messaging layer or "bulletin board": &lt;strong&gt;onions in p2p configuration&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I think this is the most difficult and the most important question on how we upgrade the system, and my choice of "winner" is kinda "out-there", and, even more, it lacks detail (how exactly do we set this up? We already have code set up for every bot to start an onion service; and it's already being used, for payjoin receiving. But that's just the start!).&lt;/p&gt;
+&lt;p&gt;The first thing to note here is that an extensive discussion around the topic was started by contributor undeath in &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/415"&gt;this&lt;/a&gt; issue some time ago. That lays out a significantly ambitious architectural plan; it might be the way to go, but I'm not really sure.&lt;/p&gt;
+&lt;p&gt;We want relatively low latency with anonymity; Tor satisfies this within reason, but the biggest difficulty is to get reasonable reliability and some reasonable censorship resistance.&lt;/p&gt;
+&lt;p&gt;If we feel that this is not quite reliable enough, not quite low enough latency, or not quite censorship resistant enough, we can go back to a bulletin board style server, but it needs to not have the strong aversion to bursts of traffic (and they will get really quite large in case JM scales to several thousand users instead of several hundred), and we would need to somehow continue to address the censorship problem with the kind of redundancy we currently have, except preferably &lt;em&gt;way&lt;/em&gt; better than just a couple of IRC servers (or 3 if you're lucky). Also whichever model we choose, we always have the inherent tension that the &lt;em&gt;market&lt;/em&gt; element of Joinmarket is intrinsically public, even if everything else is "E2E-encrypted-dark".&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best coinjoin &lt;em&gt;negotiation&lt;/em&gt; mechanism: &lt;strong&gt;...&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I feel like there are two sensible options here:&lt;/p&gt;
+&lt;p&gt;(1) &lt;a href="https://eprint.iacr.org/2016/824.pdf"&gt;Coinshuffle++&lt;/a&gt; may well be the right tool here. It has some overhead in terms of 4 rounds of communication (which interplays with the above), and some extra number crunching, but it gets us the very clean no-central-coordinator feature.
+ (2) It is not crazy to stick with our existing negotiation mechanism; it is set up to allow a market to decide the value of being the coordinator yourself. This is a fairly unique feature.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best coinjoin construction type: &lt;strong&gt;CoinJoinXT&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Before getting into this, it's worth mentioning there is a &lt;em&gt;huge&lt;/em&gt; list of ideas about this topic, i.e. "how to best configure a coinjoin transaction system". So this is definitely not a "settled issue"!&lt;/p&gt;
+&lt;p&gt;CJXT is described in detail &lt;a href="https://joinmarket.me/blog/blog/coinjoinxt/"&gt;here&lt;/a&gt;, also see video presentation from Lisbon 2018 &lt;a href="https://www.youtube.com/watch?v=YS0MksuMl9k"&gt;here&lt;/a&gt; .&lt;/p&gt;
+&lt;p&gt;Of course it may be just my bias; but my strong sense is that within the realm of Coinjoin specifically, this is the best model, because it can be and will be (see next point) very nearly perfectly steganographic, without trading off large high-latency interaction with participants (it can be negotiated in a couple of rounds with multiple parties with almost no extra overhead compared to current Joinmarket style negotiation), with no cross-block interactivity.&lt;/p&gt;
+&lt;p&gt;The biggest challenge with this approach is almost the most exciting aspect: imagine creating a graph of 10 transactions with multiple entry points that was randomly constructed from a statistical distribution of &lt;em&gt;existing&lt;/em&gt; transactions on the blockchain; it could look &lt;em&gt;totally&lt;/em&gt; non-distinct from what's around it, including timings. This would be some relatively difficult developer work, but it could be pretty powerful.&lt;/p&gt;
+&lt;p&gt;You might think it's too expensive to create a lot of transactions, but with the steganographic element, it'll actually make sense to use fairly &lt;em&gt;low&lt;/em&gt; anon sets for individual negotiations, which trades it off. Also you would be entirely free to negotiate large anon-set, small tx number configurations if you preferred to ditch the stega- aspect.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best scriptpubkey type: &lt;strong&gt;taproot (segwit v1)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;There are several reasons to want to move to this anonymity set when it becomes available, the principle one being this is where most contracting will sit once people figure out how to do at least 2 of 2 MuSig2 (see previous &lt;a href="https://joinmarket.me/blog/blog/the-soundness-of-musig/"&gt;blog post&lt;/a&gt; for some gory details), and others will probably/hopefully join in even for single sig. Note, for CoinJoinXT, as per previous 'award', and also for LN/coinjoin shenanigans (see below), we need MuSig2 negotiation and the blending in will be a crucial part of making those technique actually effective in hiding in the crowd.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best anti-Sybil: &lt;strong&gt;fidelity bonds&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Do note that we currently have weak anti-Sybil with fee choice randomization.&lt;/p&gt;
+&lt;p&gt;Fidelity bonds: first, let's say that it looks like this may get merged into current Joinmarket before wider protocol upgrade.&lt;/p&gt;
+&lt;p&gt;See the &lt;a href="https://gist.github.com/chris-belcher/18ea0e6acdb885a2bfbdee43dcd6b5af"&gt;gist&lt;/a&gt; by Chris Belcher and the first discussion in the main repo &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/371"&gt;here&lt;/a&gt;, following up also there is wallet code merged from &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/544"&gt;here&lt;/a&gt;, and more work is coming on this shortly.&lt;/p&gt;
+&lt;p&gt;There are many nuances to consider here. We don't need all makers to provide fidelity bonds. There will be timelock and funds burn options. Also, it can be a "soft fork" style change, because it would be a new offer type which new takers can inspect but old takers can ignore.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best language: &lt;strong&gt;Python or golang&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;These are just two preferences from my own experience, so again - bias, although partly that's an &lt;em&gt;inertia&lt;/em&gt; bias.&lt;/p&gt;
+&lt;p&gt;Go has better tooling in my opinion, but both of these options may suffer a little from lacking GUI elements "out of the box". I would be entirely open to other opinions on good languages.&lt;/p&gt;
+&lt;p&gt;If we stick with Python we might want to start being a lot more serious about typing, as duck-typing causes a lot of problems in a big project.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Best additional features: &lt;strong&gt;(multiple winners)&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;(1) Payjoin &lt;/p&gt;
+&lt;p&gt;This one we already have - see PRs &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/648"&gt;648&lt;/a&gt;, &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/640"&gt;640&lt;/a&gt;, &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/636"&gt;636&lt;/a&gt;, several others, and the root mega-PR &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/536"&gt;536&lt;/a&gt; (which did other stuff too). Most importantly it's a &lt;u&gt;full&lt;/u&gt; (both directions) &lt;a href="https://github.com/bitcoin/bips/blob/master/bip-0078.mediawiki"&gt;BIP78&lt;/a&gt; implementation so &lt;em&gt;should&lt;/em&gt; be compatible with all other BIP78 clients. We would certainly want to keep this feature I think.&lt;/p&gt;
+&lt;p&gt;(2) LN channel open (incl. dual funding) with a JM coinjoin&lt;/p&gt;
+&lt;p&gt;One of the most likely/interesting long term uses of coinjoin may well be this: in opening Lightning channels you are not very constrained about amounts (this is &lt;em&gt;very&lt;/em&gt; relevant to CoinJoin!), and you are somewhat patient. If people get most of their privacy via second layer, it will be all the more important to bolster fungibility in base layer payments, and coinjoins on &lt;em&gt;creation&lt;/em&gt; of LN channels (possibly also, closing, but that's a much less clear case) will be a natural focus. This somewhat merges with the issue of dual-funding (although it is separate of course); in the most general case we could have 2N participants &lt;em&gt;all&lt;/em&gt; contributing inputs to N channel openings all at once. There are many avenues to explore here, but it's something I think should be strongly borne in mind by anybody implementing Coinjoin today.&lt;/p&gt;
+&lt;p&gt;(3) Hardware wallet support&lt;/p&gt;
+&lt;p&gt;See &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/663"&gt;663&lt;/a&gt;; should be practically possible for maker side at least. The ckBunker initiative looks like a promising angle. This sort of thing does require a lot of care and attention in creating testing setups though.&lt;/p&gt;
+&lt;p&gt;Finally, not an award but things to pay attention to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;General coding and architecture issues:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;(1) Single overarching API, accessible via &lt;em&gt;one&lt;/em&gt; command line tool (so like a joinmarket-cli) or via json-rpc style RPC. See https://github.com/JoinMarket-Org/joinmarket-clientserver/pull/670 which is really more of a project than just a PR, I have also coded up a basic Javascript (Angular) example of using that RPC &lt;a href="https://github.com/JoinMarket-Org/jmcontrolcenter"&gt;here&lt;/a&gt;, and &lt;a href="https://x0f.org/web/statuses/104711347757245854"&gt;here&lt;/a&gt; are a couple of screenshots. This can also encompass other cleanups like that suggested in &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver/issues/681"&gt;this&lt;/a&gt; issue.&lt;/p&gt;
+&lt;p&gt;(2) Better use of asynchronous coding (if still Python, &lt;a href="https://docs.python.org/3/library/asyncio.html"&gt;asyncio&lt;/a&gt; vs &lt;a href="https://pypi.org/project/Twisted/"&gt;Twisted&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;(3) It's worth thinking about how well partitioned the various functions are. The &lt;a href="https://github.com/JoinMarket-Org/joinmarket-clientserver"&gt;current repo&lt;/a&gt; was called the rather dumb name "joinmarket-clientserver" specifically because it separated out the network communications and protected that "side" of processing from knowing anything about bitcoin. I think we could push this general principle way further, having multiple separate modules only communicating (blockchain &amp;lt;--&amp;gt; wallet-service &amp;lt;--&amp;gt; business-logic client &amp;lt;--&amp;gt; protocol &amp;lt;--&amp;gt; network .. something like that) in very fixed ways (which is only half-true today), with an API plugged in. Also the first glimmer of a "plugin" architecture started when I implemented SNICKER, but that might also be useful going forwards.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="Joinmarket"></category><category term="bitcoin"></category><category term="coinjoin"></category></entry><entry><title>The Soundness of MuSig</title><link href="https://joinmarket.me/blog/blog/the-soundness-of-musig/" rel="alternate"></link><published>2021-04-10T00:00:00+02:00</published><updated>2021-04-10T00:00:00+02:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2021-04-10:/blog/blog/the-soundness-of-musig/</id><summary type="html">&lt;p&gt;The security proof of MuSig2 and its precursors&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Contents&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="#preamble"&gt;Preamble&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#science-fiction-schnorr"&gt;Science fiction Schnorr, again&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#schnorr-multisignature"&gt;Schnorr Multisignature&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#fixing-problem-1"&gt;Fixing Problem 1&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#fixing-problem-2"&gt;Fixing Problem 2&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#2-round-multisig-in-insecuremusig"&gt;2 round multisig in InsecureMuSig&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-4way-fork"&gt;The 4-way fork&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-security-proof-of-insecuremusig"&gt;The security proof of InsecureMuSig&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-omdl-as-a-variant-of-the-dl-problem"&gt;The OMDL as a variant of the DL problem&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#why-insecure-musig-doesnt-work"&gt;Why InsecureMuSig doesn't work - Drijvers et al 2018&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#the-attack-on-insecure-musig"&gt;The attack on InsecureMuSig: the return of Wagner&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#steps-of-the-attack"&gt;Steps of the attack&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#how-did-the-security-proof-hole"&gt;How did the security proof hole lead to an attack?&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href="#musig2"&gt;MuSig2: 2 rounds, many nonces&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#algebraic-group-model"&gt;The AGM - a more powerful proof&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#why-a-single"&gt;Why a single multiplier on the nonce doesn't work: Wagner redux redux&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#some-final-thoughts"&gt;Some final thoughts on security proofs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="#practical-achievement"&gt;Practical achievement of MuSig2&lt;/a&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href="#preprocessing"&gt;Preprocessing&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src="../../../images/soundofmusic.jpg"/&gt;
+&lt;em&gt;Pictured: a MuSig honest signer oblivious to the Wagner attack going on around it&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a name="preamble"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Preamble&lt;/h2&gt;
+&lt;p&gt;If you just want to know the practical significance of MuSig2, you're in the wrong place. I'd suggest &lt;a href="https://medium.com/blockstream/musig2-simple-two-round-schnorr-multisignatures-bf9582e99295"&gt;this&lt;/a&gt; short blog post by two of the authors; for more detail read the introduction of the &lt;a href="https://eprint.iacr.org/2020/1261"&gt;paper&lt;/a&gt; itself (MuSig2). Those who prefer a summary via video might like to watch Ruffing's &lt;a href="https://www.youtube.com/watch?v=DRzDDFetS3E"&gt;presentation&lt;/a&gt; at RWC2021.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;A note about the current status of the MuSig2 paper: it is going to be updated shortly with some optimisations and changes to aspects of the security proofs (and presumably typo fixes), but those changes won't really affect what's discussed here. Still, the motivated reader will want to look out for that update. And I remove this comment after that time. (2021-04-13)&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Those code-inclined might also find &lt;a href="https://gist.github.com/AdamISZ/3c09bc235654b28ca1192aa1f21fe3ce"&gt;this gist&lt;/a&gt; I wrote, which goes through the steps of the MuSig2 algorithm, of interest.&lt;/p&gt;
+&lt;p&gt;But &lt;strong&gt;this&lt;/strong&gt; post is an investigation of the security argument, i.e. how we can (or can't) be sure of the security of these type of Schnorr-based multisig constructions, as we intend to use them in Bitcoin.&lt;/p&gt;
+&lt;p&gt;Technically speaking it's about the &lt;em&gt;unforgeability&lt;/em&gt; of MuSig(2) signatures, not about &lt;em&gt;soundness&lt;/em&gt;, so forgive the title, but who can resist a good pun ;)&lt;/p&gt;
+&lt;p&gt;The story of the attempt to create a provably secure version of this is fairly long and complicated, as you are about to see (if you haven't already stopped reading. Seriously, consider it).&lt;/p&gt;
+&lt;p&gt;It will relate back to at least 2 earlier blog posts, &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;this&lt;/a&gt; on the Schnorr signature reduction to ECDLP and &lt;a href="https://joinmarket.me/blog/blog/avoiding-wagnerian-tragedies/"&gt;this&lt;/a&gt; to Wagner's attack.&lt;/p&gt;
+&lt;p&gt;&lt;a name="science-fiction-schnorr"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Science fiction Schnorr, again&lt;/h3&gt;
+&lt;p&gt;(You didn't read that first blog post? Oh well, it's your funeral!)&lt;/p&gt;
+&lt;p&gt;The TLDR on Schnorr signature security:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;EUF-CMA : it means we want to prove the digital signature succeeds in defending itself against all-out assault: the attacker can force us to spit out valid signatures on a bunch of messages that &lt;em&gt;he&lt;/em&gt; chooses, before having to forge a signature on a new one (these are called "signing oracle queries"); and &lt;em&gt;he&lt;/em&gt; gets to choose also the message that he's going to make a forgery one. ("Existential Unforgeability under Chosen Message Attack").&lt;/li&gt;
+&lt;li&gt;Reduction to ECDLP: we control the attacker's environment and try to force him to emit a signature forgery, but we fork his execution (he's an algorithm, not a person), so he emits it twice, and we extract the private key and that counts as an ECDLP break (crudely) - this technically allows us to reduce to Schnorr Identity Protocol (as in previous posts, heretofore SIDP), and from there to ECDLP, but, details.&lt;/li&gt;
+&lt;li&gt;Random oracle queries - the key idea is to program the random oracle in such a way as to make signature queries verify, but as the attacker is a black box, we have to kind of "guess" which of the attacker's random oracle queries correspond to the successful forgery and fork there, which leads to a kind of 1/(number of hash queries) probability of success factor (and corresponding tightness loss, see next); see "r-impersonation eavesdropping attack" in &lt;a href="https://toc.cryptobook.us/book.pdf"&gt;Boneh and Shoup&lt;/a&gt; (Section 19.2.1) for details.&lt;/li&gt;
+&lt;li&gt;Non-tight reduction: it just means that because you fork (and because of the previous bullet point), your chance of success in cracking ECDLP is &lt;em&gt;not&lt;/em&gt; the same as the attacker's chance of success in forging a signature; so the difficulty of the two tasks is not directly equivalent (like ... at all. But it's still a very meaningful result). Again, see &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;here&lt;/a&gt; for kinda-sorta-quantitative details.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr style="border:2px solid blue"&gt;
+&lt;/hr&gt;
+&lt;p&gt;&lt;em&gt;The downfall of Freddy the Forger&lt;/em&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;In Forklandia, those arrested by police are not required to give up the password to their laptop, but they &lt;em&gt;are&lt;/em&gt; required to give an encryption of their password (and/or any other data) when police request it. If in future it is decrypted and found to be invalid, the punishment is to be cut cleanly in half.&lt;/p&gt;
+&lt;p&gt;Freddy the Forger is in the interrogation room and the detective makes a slightly strange request: he asks for the password to the laptop (which Freddy cleverly switched off before police grabbed it), multiplied by the current date and time ...&lt;/p&gt;
+&lt;p&gt;Freddy - a Rain-Man-style arithmetic savant by the way - before continuing, comes up with an encryption key: a 256 bit integer that he easily memorizes.&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;p&gt;Consulting his lawyer (but not his calculator perhaps), after some thought, Freddy responds: "here is the &lt;em&gt;encrypted&lt;/em&gt; value of (password-as-256-bit-integer)x(current-unix-time-in-seconds): 123....", smiling smugly since he remembers from his Cryptography 101 that the one time pad is uncrackable (well, he &lt;em&gt;added&lt;/em&gt; the encryption key, mod a prime, not xor-ed it, but let's go with it) - so since the encryption key he used for this is something he just made up on the spot, there is no way they can figure out the password for the laptop right now.&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;p&gt;Suddenly the detective thrusts a weird object into his eyes and a light flashes ...&lt;/p&gt;
+&lt;p&gt;Unbeknownst to Freddy, the police in Forklandia have advanced neuralyzer tech which allows them to switch victims' brain states back to a point some 60 seconds ago.&lt;/p&gt;
+&lt;p&gt;...&lt;/p&gt;
+&lt;p&gt;Consulting his lawyer (but not his calculator perhaps) ...&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;hr style="border:2px solid blue"&gt;
+&lt;/hr&gt;
+&lt;p&gt;&lt;img src="../../../images/men_in_black_3_still.jpg" width="436" height="436"/&gt;&lt;/p&gt;
+&lt;p&gt;The ending of this story isn't too hard to figure out. If the detective's neuralyzer tech was precise enough to switch Freddy's brain back to &lt;em&gt;exactly&lt;/em&gt; the right moment, then in his brain he already has the 256 bit encryption key, i.e. it's the same as the last time.&lt;/p&gt;
+&lt;p&gt;So when he does (encryption key + (password x date)), &lt;em&gt;IF&lt;/em&gt; the date is different even by 1 second, the output that he gives to the detective will also be different. And that will reveal the password:&lt;/p&gt;
+&lt;p&gt;Output2 - Output 1 = (key + (date2 * pass)) - ( key + (date1 * pass))
+                     = (date2 - date1) * pass&lt;/p&gt;
+&lt;p&gt;... and Freddy is undone, the detective now has all his (uh .. forged?) bitcoin! Or NFTs perhaps.&lt;/p&gt;
+&lt;hr style="border:1px solid"&gt;
+&lt;/hr&gt;
+&lt;p&gt;The simplest way to hide a secret while using it is to "blind". If you secret is \(x\) mod m and you add \(r\) mod m, \((r+x)\) mod m is completely disconnected (I mean, kinda .. let's ignore details here).&lt;/p&gt;
+&lt;p&gt;If my secret is 43 mod 101 and I add a random value in (0..100) - let's say, 76, then i output (76 + 43 mod 101 = 119 mod 101 = 18 mod 101). The number 18 is as random as the number 76 was - this would be true even if my secret value \(x=43\) was not random (even though they usually are).&lt;/p&gt;
+&lt;p&gt;In the SIDP, we don't of course &lt;em&gt;just&lt;/em&gt; add a random value to blind - we first commit to it (\(R\)), then do the blinding using it (\(r\)), in the response to the challenge.&lt;/p&gt;
+&lt;p&gt;The great strength of this simple method is, paradoxically, its fragility: the reason it's so easy to prove that this is &lt;em&gt;sound&lt;/em&gt; (that is to say, only a real owner of the secret can answer the challenge), is exactly because even one single reuse of the blinding value (\(r\)) is enough to create a total break of the protocol (here total break is actually a technical term: it means recovery of the private key).&lt;/p&gt;
+&lt;p&gt;Proving it to be sound here means exactly the method that was the topic of &lt;a href="https://joinmarket.me/blog/blog/liars-cheats-scammers-and-the-schnorr-signature/"&gt;this&lt;/a&gt; post - the security of the protocol is "reduced" to that of the Elliptic Curve Discrete Logarithm Problem, and reduced &lt;em&gt;directly&lt;/em&gt;, in "one extra step", by forking the hypothetical adversary to create two protocol runs with the same randomness \(r\).&lt;/p&gt;
+&lt;p&gt;If you have only one extra unknown, \(r\), in your equations for the secret \(x\) (the other unknown), then it only requires two of them to solve it.&lt;/p&gt;
+&lt;p&gt;We could say that the protocol is very "close" to ECDLP because the level of manipulation required on the adversary who can break the protocol is so small in order to achieve the goal of ECDLP cracking.&lt;/p&gt;
+&lt;p&gt;Similar to this fictional adversary who can break ECDLP, our fictional (anti?)hero only had to be neuralyzed once and convinced to re-run his protocol with any different date.&lt;/p&gt;
+&lt;p&gt;In contrast take for example the protocol described in my Bulletproofs &lt;a href="https://github.com/AdamISZ/from0k2bp/blob/master/from0k2bp.pdf"&gt;writeup&lt;/a&gt; section 3.3 where we need a whole set of transcripts, retrieved by a whole set of forking of the protocol at the same point - not to mention a more complex construct, where the forking might be in multiple branches, see e.g. the &lt;a href="https://eprint.iacr.org/2018/068"&gt;original MuSig paper&lt;/a&gt; (which we will talk more about shortly).&lt;/p&gt;
+&lt;p&gt;Imagine the idea of a SIDP without the first step - i.e. imagine that the Prover wants to prove that he knows the secret key x, but doesn't bother to actually &lt;em&gt;commit&lt;/em&gt; to his "blinding factor" \(r\), i.e. he doesn't send \(R = rG\), or \(H(R)\) or anything similar. Instead, he just sends \((R, s)\) where \(sG = R + eP\).&lt;/p&gt;
+&lt;p&gt;The problem is obvious, i.e. that this protocol does not force him to know the corresponding \(x\). He can just choose \(s\) at random and calculate \(R = sG - eP\), since all the values on the RHS of that equation are public. He will never even know \(r\), let alone \(x\), but still "verify" in this broken protocol.&lt;/p&gt;
+&lt;p&gt;From the point of view of forking this also makes sense - if there is no commitment step in the protocol, we cannot fork immediately after it and get the prover to generate two transcripts with the same \(R\), in this case that much is trivial, but of course it's a giant hole in any "proof of soundness" of such a protocol. The "back-solvability" of \(R\) for any given \(s\) hides in that giant hole.&lt;/p&gt;
+&lt;p&gt;&lt;a name="schnorr-multisignature"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Schnorr Multisignature&lt;/h2&gt;
+&lt;p&gt;Let's quickly set the stage for thinking about the same issues in a multisig context. First remember we are talking about Schnorr signatures:&lt;/p&gt;
+&lt;p&gt;\(s = r + ex; \quad e = H(P||R||m)\), signature published as: \((R, s), \quad R = rG\)&lt;/p&gt;
+&lt;p&gt;and remember that the Fiat Shamir heuristic was used to convert the SIDP to a signature scheme (setting the challenge to the hash of the conversation up to that point).&lt;/p&gt;
+&lt;p&gt;Next, remember Schnorr aggregatability leads to an intuitive, but wrong idea of Schnorr multisig:&lt;/p&gt;
+&lt;p&gt;\(s_k = r_k + e x_k\) ; aggregate signature: \(s = \sum s_k\) with nonce \(\sum r_k\) and private key \(\sum x_k\)&lt;/p&gt;
+&lt;p&gt;Before racing ahead and just glibly saying "that's susceptible to key subtraction", we want to frame &lt;em&gt;why&lt;/em&gt; this attempt fails, in terms of our security discussions above.&lt;/p&gt;
+&lt;p&gt;The problem for multisig is that it introduces a whole new dimension to the discussion, on two fronts, if we &lt;strong&gt;aggregate or simply add curve points&lt;/strong&gt;. If you don't understand anything else in these technical arguments, at least understand these two cornerstone points:&lt;/p&gt;
+&lt;p&gt;&lt;u&gt;Problem 1&lt;/u&gt;. If the signing is on the &lt;strong&gt;sum&lt;/strong&gt; of the public keys, then it doesn't commit to the public keys individually. Concretely if you use the hash challenge \(H(P_{agg} || R_{agg} || \textrm{message})\), then a rogue signer doesn't have to decide his public key upfront (at least, one of them), which is a bit of an oopsie. The attacker just sets their public key to some key you know, minus all the other keys, and voilà, they have the private key to control the entire multisig.
+But wait, you say, that's silly, you can easily commit to &lt;em&gt;each&lt;/em&gt; public key individually, with \(H(P_1 || P_2 || R || m)\), disabling this attack. This is where you have to remember the special goal of MuSig, rather than just any old aggregated signature: &lt;strong&gt;we're trying to create signatures indistinguishable from single key (Schnorr) signatures&lt;/strong&gt;, because:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;it makes verification way better&lt;/li&gt;
+&lt;li&gt;it scales way better on the blockchain, and&lt;/li&gt;
+&lt;li&gt;it's more private.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This was our real goal. &lt;strong&gt;So we want to preserve a verification equation like this: &lt;/strong&gt; \(sG \stackrel{?}{=} R + H(P|R|m)P\). We &lt;em&gt;need&lt;/em&gt; \(P\) to be aggregated.&lt;/p&gt;
+&lt;p&gt;So Problem 1 is a big problem, and the first one MuSig addressed.&lt;/p&gt;
+&lt;p&gt;&lt;u&gt;Problem 2&lt;/u&gt;. If the signing uses the &lt;strong&gt;sum&lt;/strong&gt; of the nonces of each party (so \(R_1 + R_2\)) as its nonce \(R\), there is a similar but slightly different problem to Problem 1. There is effectively a kind of race condition - who yields up their commitment first? The attack scenario usually considered is, naturally, the most pessimistic one: let's assume that &lt;em&gt;all&lt;/em&gt; of the \(N\) participants are controlled by the attacker, except one - the one we're trying to attack. This honest participant will have index 1, and the attacker controls the participants \(2 \ldots N\). (We will mostly just use \(N=2\) here because it's easier to write, but occasionally generalise to any number).&lt;/p&gt;
+&lt;p&gt;Since, in an ordering of revelation of commitments, one has to be last, we pessimistically assume that the last one is .. &lt;em&gt;not&lt;/em&gt; 1.&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/BasicMulti.png"/&gt;
+&lt;em&gt;Pictured: In the simplest concept of Schnorr aggregated signatures, if Alice is first, Bob (uh, Roberta) gets an advantage.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;And that means the attacker definitely has the honest signer's commitment before choosing (at least the last of) his own.&lt;/p&gt;
+&lt;p&gt;So, then .. where exactly do we fork? If we fork after the honest signer committed, it fixes &lt;em&gt;her&lt;/em&gt; nonce (\(R_1\)) but it doesn't fix the total nonce (\(R_{agg} = R_1 + R_2\); say 2 keys for simplicity), because the dishonest signer might not make the same choice of random \(r_2\) twice. So you would have:&lt;/p&gt;
+&lt;p&gt;\(s = r_{agg} + e * x_{agg}\)&lt;/p&gt;
+&lt;p&gt;\(s' = r_{agg}' + e' * x_{agg}\)&lt;/p&gt;
+&lt;p&gt;... since the \(r_{agg}\) values are not the same, there are three secret values (the other being the \(x_{agg}\)), and two equations, so we're stuck.&lt;/p&gt;
+&lt;p&gt;Since we can't extract the private key from a fork, we can't prove security is "reducible" to ECDLP here (this is a GROSS oversimplification, but we'll be expounding more on this theme as we go).&lt;/p&gt;
+&lt;p&gt;&lt;a name="fixing-problem-1"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Fixing Problem 1&lt;/h2&gt;
+&lt;p&gt;MuSig did this in a way that is almost (but not really!) obvious: force a fixing of the individual participants' pubkeys using a hash, by creating a "meta-pubkey" (I just made that up but I think it's OK).
+This is really no different from applying the Fiat Shamir transform to the basic Sigma protocol in SIDP and similar; you can't send a challenge because it's not interactive, so you just hash the "starting conditions": the full set of keys and the specific key that the participant is claiming, and throw that into the output.&lt;/p&gt;
+&lt;p&gt;So, if Alice has key \(P_1\) then she'll create a meta-pubkey: \(H(\{P_1, P_2\}||P_1) P_1\). Here \(\{\}\) is just handwavy, the point is we put the whole set of keys, even if there are 15 and not 2, into the hash input, as &lt;em&gt;well&lt;/em&gt; as specifically committing to &lt;em&gt;her&lt;/em&gt; individual starting key \(P_1\). Now if she knows the private key \(x_1\) (hopefully she does!), then she still knows the private key of the meta-pubkey: it's \(H(L||P_1)x_1\) (from now on, we'll call the set of keys \(L\)).
+By this fancy footwork we arrive at a situation where the &lt;em&gt;verification&lt;/em&gt; key will be the &lt;em&gt;sum of the meta pubkeys&lt;/em&gt;, so it'll be a single pubkey as a normal verification, let's call it \(\widetilde{P}\) . But each participant will still (a) control their share of the private key and (b) be forced to commit their key upfront, solving Problem 1.&lt;/p&gt;
+&lt;p&gt;There is a detail I glossed over, but I felt somewhat entitled, as I'd already described it &lt;a href="https://joinmarket.me/blog/blog/avoiding-wagnerian-tragedies/"&gt;here&lt;/a&gt;. If you're &lt;em&gt;slightly&lt;/em&gt; sloppy here and only commit to &lt;em&gt;your&lt;/em&gt; key, not the whole set, i.e. you use this for the meta-pubkey: \(H(P_1)P_1\), you're still vulnerable to Wagner's attack, as detailed in that link. That's because you didn't fix the "rules of the game" (the starting condition) for your adversary. We'll see this coming up several times, here, again.&lt;/p&gt;
+&lt;p&gt;&lt;a name="fixing-problem-2"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;Fixing Problem 2&lt;/h2&gt;
+&lt;p&gt;Here's where we start diving into the weeds.&lt;/p&gt;
+&lt;p&gt;I will not attempt to describe the details of the original conception of a 2-round multisig as was first published in the &lt;a href="https://eprint.iacr.org/eprint-bin/getfile.pl?entry=2018/068&amp;amp;version=20180118:124757&amp;amp;file=068.pdf"&gt;first version&lt;/a&gt; of the MuSig paper; note that the &lt;em&gt;existing&lt;/em&gt; &lt;a href="https://eprint.iacr.org/2018/068"&gt;version&lt;/a&gt; of that paper already patched up the original error, using commitments to nonces and reverting to a 3-round protocol. But to see the flow of reasoning, we need to start from that beginning. Following the terminology of the &lt;a href="https://eprint.iacr.org/2020/1261"&gt;MuSig2 paper&lt;/a&gt;, we'll call this earlier idea &lt;strong&gt;InsecureMusig&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;a name="2-round-multisig-in-insecuremusig"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;2-round multisig in InsecureMuSig&lt;/h3&gt;
+&lt;p&gt;The idea was to follow a flow just as in Fig 1, except the partial signature Alice returns is now:&lt;/p&gt;
+&lt;p&gt;\(s_1 = r_1 + H(\widetilde{P}||R||m)H(L||P_1)x_1\)&lt;/p&gt;
+&lt;p&gt;i.e. she's signed on her meta-key, while the challenge \(e\) in the usual Schnorr sig) is of course, "over" the combined key \(\widetilde{P}\). The problem here is, as mentioned, how do you use a forking based proof to extract a discrete log, if you can't fork at the value of \(R\), because Bob (the notional attacker) hasn't committed to &lt;em&gt;his share of it&lt;/em&gt; at the time Alice sends her \(R_1\) value?&lt;/p&gt;
+&lt;p&gt;The solution in this paper (and indeed in the following MuSig2) is to fork &lt;strong&gt;twice&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;We fork the execution of the adversary at the random oracle query on \(H(L, P_1)\) and then on the query to \(H(\widetilde{P}||R||m)\) (which we sometimes call \(c\) for brevity). This makes four, instead of two, versions of the adversary, each of which outputs a complete forged signature which differ in the ways required to extract the secret key \(x_1\). There are four unknowns: the two &lt;em&gt;different&lt;/em&gt; \(r\) values (each a sum of \(r_1\) and \(r_2\)), and the secret keys \(x_1, x_2\) (if \(N&amp;gt;2\) just think of \(x_2\) as the other keys, which we don't try to get), and four equations:&lt;/p&gt;
+&lt;p&gt;&lt;a name="the-4way-fork"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;The 4-way fork&lt;/h3&gt;
+&lt;p&gt;(1) \(s = r + c(a_1 x_1 + a_2 x_2)\)&lt;/p&gt;
+&lt;p&gt;(2) \(s' = r + c'(a_1 x_1 + a_2 x_2)\)&lt;/p&gt;
+&lt;p&gt;(3) \(s'' = r' + c''(a_1' x_1 + a_2 x_2)\)&lt;/p&gt;
+&lt;p&gt;(4) \(s''' = r' + c'''(a_1' x_1 + a_2 x_2)\)&lt;/p&gt;
+&lt;p&gt;The reader can verify that:&lt;/p&gt;
+&lt;p&gt;\(x_1 = \frac{\frac{(s''' - s'')(c'-c)}{(s' -s)(c'''-c'')}}{(a_1' - a_1)}\)&lt;/p&gt;
+&lt;p&gt;... noting that all values on the RHS have been shared indirectly by the forger, or are publically calculable).&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/4wayfork.png"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Fig 4 reproduced directly from &lt;a href="https://eprint.iacr.org/2020/1261"&gt;MuSig2&lt;/a&gt; - note, \(X\) is used in place of \(P\), the \(s\) values are output on the extreme RHS, the \(T\) queries are the random oracle queries (we use just \(H\) in this document).&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;This whole process looks pretty out-there at first glance.&lt;/p&gt;
+&lt;p&gt;Notice: we can't just fork at the second point, the random oracle query to \(H(\widetilde{P}, R, m)\): that would allow us to extract the &lt;em&gt;combined&lt;/em&gt; private key: \(a_1 x_1 + a_2 x_2 = \widetilde{x}\), which is all well and good, but it's &lt;em&gt;not&lt;/em&gt; what we're asking the adversary to do: if he gives \(\widetilde{x}\), the private key to \(\widetilde{P}\), we cannot get from that the goal, the value \(x_1\), which is the discrete log of \(P_1\), Alice's pubkey (notice the subtlety: the &lt;em&gt;attacker&lt;/em&gt;, if he knew \(x_2\), could get \(x_1\); but the \(s\) values he reveals to us (that's all we ask of him, provide a signature forgery), are not enough for &lt;em&gt;us&lt;/em&gt; to extract it). Meanwhile the problem with only forking at the first query, the query to \(H(L, P_1)\) is what we already described: that doesn't force \(r\) to be a single value, so we don't get to extract anything at all. We unfortunately need both forks.&lt;/p&gt;
+&lt;p&gt;&lt;a name="the-security-proof-of-insecuremusig"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;The security proof of InsecureMusig&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;What the signing oracle looks like for such proofs&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;As a refresher, in the proof of security of the single Schnorr signature, we allow (see: EUF-CMA above) the forging adversary to query a "signing oracle" a fixed number of times, on arbitrary message/key pairs that are of course not the same one that it finally spits out as forgery. This will involve querying the hash function used for signing. This is pretty simple - "here's a message (the key is implicit; there's only one), return me an \(\)(R, s) pair".&lt;/p&gt;
+&lt;p&gt;Clearly it's a lot messier in multisig. The signing oracle (henceforth SO) is something provided to the adversary, who has to &lt;em&gt;interact&lt;/em&gt; with it (note of course that our "reduction" (playing the role of Alice), is going to &lt;em&gt;simulate&lt;/em&gt; SO, not actually be it, since it doesn't have the key).&lt;/p&gt;
+&lt;p&gt;The adversary wants to be given an \(s_1\) (a partial signature for Alice as per our convention), but he must follow protocol: first send \((L, m)\) to SO; SO does its simulation trick - choose \(s_1\) at random, but patch the RO to make it work: set \(R_1 = s_1G - c a_1 P_1\), where \(c\) is the patched RO value for \(H(\widetilde{P}||R||m)\) ... but wait, we don't know what \(R = R_1 + R_2\) will be yet! So SO can't complete the process of sending \(R_1\) to the adversary, who then figures out his \(R_2\) and sends that back, and then the oracle would spit out \(s_1\) to satisfy the query.&lt;/p&gt;
+&lt;p&gt;We're stuck.&lt;/p&gt;
+&lt;p&gt;&lt;a name="the-omdl-as-a-variant-of-the-dl-problem"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;The OMDL as a variant of the (EC) Discrete Logarithm Problem.&lt;/h3&gt;
+&lt;p&gt;InsecureMusig tried to get round this problem by moving up one rung in the ladder of hardness assumptions. Put simply, the One More Discrete Logarithm Problem (OMDL for short), defined I think initially &lt;a href="https://eprint.iacr.org/2001/002.pdf"&gt;here&lt;/a&gt; in Section 7, asserts that it is computationally hard to provide, as output, \(x+1\) discrete logarithms if you are given, as input, access to an oracle that'll hand out \(x\) discrete logarithms.&lt;/p&gt;
+&lt;p&gt;A little more precisely: an adversary \(A\), given as input \(q+1\) &lt;em&gt;randomly chosen&lt;/em&gt; group elements, and also given access to a "discrete log oracle" that will always give you the discrete log of any group element (for EC, that means, curve point or pubkey) that you query - any at all, not only the ones provided you in the challenge, mind - and being told you can query it precisely \(q\) times, and no more, is said to solve OMDLP if it can still solve &lt;em&gt;all&lt;/em&gt; \(q+1\) challenges.&lt;/p&gt;
+&lt;p&gt;So that's what our simulated SO must do. It starts out being given \(Q+1\) random challenge points, as the setup of the OMDL "security game" (which it intends to win), with one of them being considered the \(P_1\) pubkey of Alice, and the other \(Q\) being the \(R_1\) values that will be used Alice-side as the nonce.&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/OMDLgame.png"/&gt;
+&lt;em&gt;Pictured: the steps of the OMDL challenge and response game; note the player is called "simulated SO", SO meaning signing oracle, and simulated because it's not a proper signing oracle, using the OMDL challenger to let it fake knowledge of the key, as explained here.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Every time there's a signing query, \(Q\) of them according to this framing, we'll ask the OMDL's defined DLOG oracle to &lt;em&gt;give us&lt;/em&gt; the \(s_1\) value, after the adversary returned \(R_2\). Notice that since \(s_1 G = R_1 + H(\widetilde{P}||R||m)H(L||P_1)P_1\), then the SO can just ask for the discrete log of the right hand side. That counts as 1 of the \(Q\) DLOG queries we're allowed, and our task is to output \(Q+1\) discrete logs at the end; \(Q\) for each signing query (we'll be able to get \(r_1\) by doing \(r_1 = s_1 - c a_1 x_1\) because we got \(x_1\) from the forger) and +1 (the \(x_1\) itself) for the forgery output by the forger.&lt;/p&gt;
+&lt;p&gt;So it looks like we have what we need; use these OMDL challenges as nonces, construct the 4 way fork of the adversary as per the above, get 4 equations and 4 unknowns and solve for \(x_1\), sending that back, along with the \(r_1\) values, to the OMDL challenger to win the game. All we had to do was trade off slightly, reducing the security of the scheme to that of the (EC)OMDL problem, instead of the (EC)DL problem.&lt;/p&gt;
+&lt;p&gt;Unfortunately (but no - fortunately!), in a paper published shortly after the original MuSig, Drijvers et al (but not only them - see below) showed not just that this security proof doesn't work, but that &lt;u&gt;&lt;em&gt;any&lt;/em&gt; reduction of this type for this two round multisig scheme to either DL or OMDL cannot possibly work&lt;/u&gt; (and also applied the reasoning to other schemes such as CoSi). So let's examine that, and even see the &lt;strong&gt;concrete attack&lt;/strong&gt; they (and others) came up with because of this hole in the security proof.&lt;/p&gt;
+&lt;p&gt;&lt;a name="why-insecure-musig-doesnt-work"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Why Insecure MuSig doesn't work - Drijvers et al 2018.&lt;/h3&gt;
+&lt;p&gt;&lt;em&gt;Though this section focuses on the &lt;a href="https://eprint.iacr.org/2018/417.pdf"&gt;paper&lt;/a&gt; "On The Security of Two-Round Multisignatures", it's important to note that the issue discussed was already documented years earlier by Nicolosi et al. in "Proactive Two-Party Signatures for User Authentication" 2003 (&lt;a href="https://www.scs.stanford.edu/~dm/home/papers/nicolosi:2schnorr.pdf"&gt;paper link&lt;/a&gt;, see p. 10); this is noted by the MuSig2 authors. We focus on the later paper since it goes into much more detail.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;To quote probably the most relevant text from the paper:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;"Unfortunately, this intuitive argument conveys a subtle flaw. Namely, the forking lemma may rewind the adversary to a point where it has an “open” signing query, meaning, a signing query where the simulator already output its \(t_i\) value but did not yet receive the final \(\overline{t}\) value. The problem is that the adversary may choose a different \(\overline{t}\) value in its second execution than it did in its first execution, thereby forcing the simulator to make a second DL query for the same signing query and ruining the simulator’s chances to solve the OMDL problem."&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;(Context: the "forking lemma" is just the formalized algorithm that does the forking we're discussing, \(t_i\) and \(\overline{t}\) correspond to \(R_i\) and \(R\).)&lt;/p&gt;
+&lt;p&gt;That this point is confusing and non-obvious is, I believe, a direct consequence of the interactivity. We must keep the correct model in our head: the &lt;em&gt;forking&lt;/em&gt; events exist to force the adversary to emit the signature forgeries that will give us \(x_1\), but the SO queries (that we allow the adversary as part of our game), being multi-step, can be "spread out" &lt;em&gt;through&lt;/em&gt; these forks.&lt;/p&gt;
+&lt;p&gt;We know that to get the \(s_1\)-values, SO has to query the OMDL challenger to give it the dlogs for those. We also know that it's only allowed effectively one such query per nonce \(R_1\); we can't do more than that, else we'll fail to win the OMDL game as described.&lt;/p&gt;
+&lt;p&gt;But that's precisely what could happen - to get \(s_1 = r_1 + c a_1 x_1\), Alice needs \(c\) which is \(H(P~||R||m)\), which includes \(R\), which means that if the fork happens &lt;em&gt;before&lt;/em&gt; \(R\) is determined, the adversary might choose different \(R\)-values in each fork, and so the value of \(c\) won't be the same in the two cases. So in fact Alice may need to do 2 OMDL queries (for \(s_1\) and \(s_1'\), say), not 1, in general, for her \(R_1\) challenges. And that means the OMDL game cannot be won in this way.&lt;/p&gt;
+&lt;p&gt;For a more detailed explanation, see end of p. 16 of the MuSig2 paper.&lt;/p&gt;
+&lt;p&gt;&lt;a name="the-attack-on-insecure-musig"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;The attack on Insecure MuSig: the return of Wagner.&lt;/h3&gt;
+&lt;p&gt;Here's how you can turn the adversary's "R wiggle room" into a concrete break of the multisignature scheme, using exactly Wagner's attack as earlier discussed &lt;a href="https://joinmarket.me/blog/blog/avoiding-wagnerian-tragedies/"&gt;here&lt;/a&gt;. This time we are not grinding public keys, but nonces.&lt;/p&gt;
+&lt;p&gt;Consider what happens if there are \(\)k signing sessions going on in parallel. The actual number \(k\) will be relevant to the security break, as we will see. It will need to be large for the attack to be feasible, but not impractically large.&lt;/p&gt;
+&lt;p&gt;As before we assume that all but one of the participants are colluding to attack the participant at index 1 (Alice), but for simplicity of writing equations we will again stick with \(N=2\). Everything generalizes to larger \(N\).&lt;/p&gt;
+&lt;p&gt;&lt;a name="steps-of-the-attack"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4&gt;Steps of the attack&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Attacker receives \(R_1^{(k)}\) (we use superscript \((k)\) to indicate that there are \(k\) values involved from parallelisation)&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Attacker sets \(R^{*} = \sum R_1^{(k)}\).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Attacker sets message \(m^{*}\) to anything he wishes to forge a signature for.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Attacker sets \(c^{*} = H(\widetilde{P}||R^{*}||m^{*})\) - &lt;em&gt;this is a constant integer target&lt;/em&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;At this point, the attacker wants to receive from Alice (index 1), a value:&lt;/p&gt;
+&lt;p&gt;\(s_1^{*} = \left(\sum_k r_1^{(k)}\right) + c^{*}a_1 x_1\)&lt;/p&gt;
+&lt;p&gt;; from that he could construct a full signature as it's easy for him to make \(s_{2}^{*}\)&lt;/p&gt;
+&lt;p&gt;However that is not, of course, what Alice sends him in the parallel signing sessions:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Alice sends \(s_1^{(k)} = r_1^{(k)} + H(\widetilde{P}||R_1^{(k)}+R_2^{(k)}||m^{(k)})a_1 x_1\)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;If we sum these \(k\) signatures, do we get the \(c^{*}\) (see (4)) that we need for \(s^{*}\) ? No, unless:&lt;/p&gt;
+&lt;p&gt;\(\sum_k H(\widetilde{P}||R_1^{(k)}+R_2^{(k)}||m^{(k)}) = c^{*} = H(\widetilde{P}||R^{*}||m^{*}) (+)\)&lt;/p&gt;
+&lt;p&gt;... but this is exactly a Wagner attack problem statement. See the earlier blog post if you don't know how that works. The crucial advantage of the attacker in this process is implicit: &lt;strong&gt;they can grind out \(R_2\) values as much as they like to make the equation (+) be true, before sending back \(R_2\) values and getting \(s_1\) values in return that allow the forgery to work.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;For feasible values such as \(k=128\) this can lead to an effectively complete break. To quote the MuSig2 paper:&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;For example, for a group size of \(p \equiv 2^{256}\) as common for elliptic curves, a value of \(k = 128\) brings the complexity of the attack down to approximately \(2^{39}\) operations, which is practical even on off-the-shelf hardware.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Even though \(k=128\) might be seen as large, (a) it depends on details of how the signing process might be automated and (b) even if you bring the figure down to a few 10s, there is still a basically catastrophic loss of bits of entropy under this attack.&lt;/p&gt;
+&lt;p&gt;&lt;a name="how-did-the-security-proof-hole"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;How did the security proof hole lead to an attack?&lt;/h3&gt;
+&lt;p&gt;Remember what the security proof tries to do: it tries to "reduce" the security to that of the (EC)DLP and where that fails (as here), to the (EC)OMDL which is hoped to be nearly as hard (i.e. computationally infeasible). If we can't extract an OMDL win (or a dlog) from a forgery, then it &lt;em&gt;might&lt;/em&gt; be possible to forge without solving that thought-to-be-practically-impossible problem.&lt;/p&gt;
+&lt;p&gt;That absolutely &lt;em&gt;doesn't&lt;/em&gt; mean that we can find any strategy for creating a forgery ... but it turns out the strategy for creating one is partially based on the "location" of that security hole.&lt;/p&gt;
+&lt;p&gt;The hole in the security proof centered on the fact that the signing oracle queries here are interactive, and the fact that you can't force the adversary to do the steps at any specific points mean that those steps (like, the returning of the \(R\) value) can end up, uncontrollably from the point of view of the reduction, in different &lt;em&gt;versions&lt;/em&gt; of the adversary (in different execution forks), adding extra difficulty to the extraction of the secret key from the forged signatures which lead to a collapse in the ability to win the (OMDL) game and spit out a reduction to the OMDL (or DL) hardness problem.&lt;/p&gt;
+&lt;p&gt;The real attack is essentially narrowing in on the same weakness: if you do signing sessions in parallel, it's as if you have \(k-1\) signing oracle queries from the point of view of 1 of those \(k\) sessions (this is a handwave, but let's say). The ability to control the ordering of these signing query events means the ability to modulate, bias, or grind the nonce value that ends up being agreed on.&lt;/p&gt;
+&lt;p&gt;In itself, giving the attacker the ability to control one input to the hash function isn't enough to break the scheme. But in this parallel case, we move from "here's a hash output, give me another input that spits out the same hash output" (this isn't possible if the hash function has &lt;a href="https://en.wikipedia.org/wiki/Cryptographic_hash_function#Properties"&gt;second-preimage resistance&lt;/a&gt;, which we expect it does), to "here's a hash output, find a way to reproduce it from a &lt;em&gt;sum&lt;/em&gt; of other hash outputs you can grind", and that's Wagner, and that works.&lt;/p&gt;
+&lt;p&gt;&lt;a name="musig2"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;MuSig2: 2 rounds, many nonces.&lt;/h2&gt;
+&lt;p&gt;The above attack was exploiting, as we called it, the "R wiggle room". As noted in the MuSig2 paper, it's not really the case that you can remove that wiggle room in a 2 round protocol. It's intrinsic: one side gets information before the other.&lt;/p&gt;
+&lt;p&gt;The insight in the paper is that, however, you can make it so that .. uh .. wiggling the \(R_2\), say, as adversary, &lt;u&gt;doesn't allow you to &lt;em&gt;control&lt;/em&gt; the outcome&lt;/u&gt;.&lt;/p&gt;
+&lt;p&gt;To motivate this, consider the Wagner general case as:&lt;/p&gt;
+&lt;p&gt;\(H(a) + H(b) + H(c) + H(d) + .. = x\)&lt;/p&gt;
+&lt;p&gt;... the insight mentioned is that, even if you cannot prevent an attacker from being able to malleate the \(a, b, c, d \ldots\) to attempt to solve a Wagner type problem, you can stop him by making \(x\) vary with the values \(a, b, c, d \ldots\), pulling it outside the definition/framing of Wagner's attack.&lt;/p&gt;
+&lt;p&gt;Now a critical reader may say "well just because you proved Wagner's algorithm doesn't apply here, doesn't mean there isn't another fancier algorithm!", and that's true, but: if we manage to patch up the security proof, then we have no further need to examine algorithms (that's the point of reduction-style proofs).&lt;/p&gt;
+&lt;p&gt;How is this achieved? By having &lt;em&gt;more than one nonce point per participant&lt;/em&gt; and by &lt;em&gt;having each participant's effective nonce be dependent on the other participants' nonces&lt;/em&gt;. This idea will help us win the OMDL game, as we'll see shortly (note how the second element of the idea is needed to properly "separate" the multiple nonces, a simple sum would not represent multiple commitments).&lt;/p&gt;
+&lt;p&gt;The general idea in its simplest form, for just \(\nu = 2\) (where \( \nu\) is the number of nonces in general), looks like:&lt;/p&gt;
+&lt;p&gt;\(R_1 = r_{1,1} + b_2 r_{1,2}\) (*)&lt;/p&gt;
+&lt;p&gt;(here, we are assuming that one can set \(b_1\) to 1 without losing anything security wise; a not-completely-obvious assertion which is covered in the paper).&lt;/p&gt;
+&lt;p&gt;The definition of \(b_j\) is:&lt;/p&gt;
+&lt;p&gt;\(b_j = H(j||\widetilde{P}||R_{i,j} \forall i,j || m)\)&lt;/p&gt;
+&lt;p&gt;The \(R_{i,j}\) values are meant to indicate &lt;em&gt;all&lt;/em&gt; the starting nonce values chosen by all the participants (so with \(\nu=2\) and 2 participants, there would be 4 such).&lt;/p&gt;
+&lt;p&gt;The equation (*) is itself rather suggestive; note the resemblance to any SIDP or similar Sigma protocol based scheme; the \(b_2\) term acts as a kind of commitment, forcing the &lt;em&gt;effective&lt;/em&gt; nonce of a single participant to be only deducible after the entire nonce-set is determined, but using this hash-based commitment (like Fiat-Shamir) means that we don't need an extra round, as we did in earlier schemes such as fixed-up MuSig1.
+Another similarly vague perspective might be: we are forcing a kind of \(\nu\)-dimensional nonce instead of a single dimension/free variable; of course something like \(R_{1,1}+R_{1,2}\) doesn't do that, but using a hash coefficient does .. kinda.
+Of course one cannot just hand-wave with thoughts like this, but it's interesting :)&lt;/p&gt;
+&lt;p&gt;(&lt;em&gt;In the following it's very important to remember that we are analyzing how the signing oracle query plays out &lt;/em&gt;&lt;em&gt;during&lt;/em&gt;&lt;em&gt; the forking procedure, the latter being needed, remember, to actually effect the extraction of \(x_1\) from the forging adversary; the SO-adversary interaction has steps, and the playing out of those steps can interleave the double-forking process we described above&lt;/em&gt;).
+Now, the use of \(\nu = 2\) addresses the signing oracle queries issue, &lt;em&gt;if&lt;/em&gt; we assume that the calculation of \(b_j\) (i.e. the hash query, or RO query, that creates it) happens &lt;em&gt;after&lt;/em&gt; the fork at the query for \(H(\widetilde{P}||R||m)\); because in this case, we can extract both our \(r_{1,1}\) and \(r_{1,2}\) as required in our OMDL game from the two &lt;em&gt;different&lt;/em&gt; outputs:&lt;/p&gt;
+&lt;p&gt;\(s_1 = r_{1,1} + b_2 r_{1,2} + c a_1 x_1\) (1)&lt;/p&gt;
+&lt;p&gt;\(s_1' = r_{1,1} + b_2' r_{1,2} + c' a_1' x_1\) (2)&lt;/p&gt;
+&lt;p&gt;The reader can see that, as in earlier discussions, since \(c\), \(c'\), \(a_1\), \(a_1'\), and now \(b_2, b_2'\) values are all known or calculable (note: the reduction can, and indeed &lt;em&gt;must&lt;/em&gt;, enforce that \(b_2 \ne b_2'\) - because it outputs this as a response to a random oracle query), we can use this system of two equations to find \(r_{1,1}\) and \(r_{1,2}\), once the forger has revealed \(x_1\).&lt;/p&gt;
+&lt;p&gt;If the calculation of \(b_j\) occurs before that \(H(\widetilde{P}||R||m)\) fork, then it can be shown (details in the paper) that actually the two above equations become identical, such that we now only need one DLOG query to get the \(s_1\) and so we have a free one left over for \(r_{2,2}\) (say).&lt;/p&gt;
+&lt;p&gt;But in the most general case, the signing query might happen before the first fork (the one on \(H(L||P_1)\)); then we are going to complete the signing oracle query in the four different executions that arise out of the 4-way fork which is used for forgery. That can give rise to 4 different \(s_1\) values, and to apply the same reasoning as above, we may need therefore \(\nu = 4\). This will give us 4 linearly independent equations (if, as we ensure, the \(b_1 \ldots b_4\) values are all distinct, with \(b_1=1\)) that, as before, allow us to take use 4 OMDL DLOG queries (for \(s_1, s_1', s_1'', s_1'''\), let's say), corresponding to 4 OMDL challenges (\(R_{1,1}, \ldots R_{1,4}\)), which lets us output the corresponding 4 DLOGs (\(r_{1,1} \ldots r_{1,4}\)) as well as the forged \(x_1\). (There are some mathematical details explained which might make \(\nu=5\), even, make sense). Hence you can still win OMDL with \(Q=4\).&lt;/p&gt;
+&lt;p&gt;&lt;a name="algebraic-group-model"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4&gt;The AGM - a more powerful proof&lt;/h4&gt;
+&lt;p&gt;There is an entire additional section in the paper proving that the MuSig2 scheme is in fact secure with even \(\nu=2\), in what's called the &lt;a href="https://eprint.iacr.org/2017/620.pdf"&gt;Algebraic Group Model&lt;/a&gt; (note that this is distinct and not as strong an assumption as the also often used &lt;a href="https://en.wikipedia.org/wiki/Generic_group_model"&gt;Generic Group Model&lt;/a&gt; (GGM)); combined still with the ROM of course. This makes a requirement on the adversary that any group element they use in the algorithm is a "linear combination" of group elements that have already been defined. This alternative proof of security occupies 12 pages in the MuSig2 paper. I will omit this for now, for brevity, albeit it may be a very significant/important practical result (the authors of the paper certainly seem to see it as such). After all if we can glean that \(\nu=4\) is enough, it serves the goal of proving that MuSig2 works, in general.&lt;/p&gt;
+&lt;p&gt;&lt;a name="why-a-single"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Why a single multiplier on the nonce doesn't work : Wagner redux redux.&lt;/h3&gt;
+&lt;p&gt;Stepping back a bit: did we really need these multiple values represented by \(\nu\), or, in fact is all that matters that we can control the effective nonce with the \(b_j\) multipliers?&lt;/p&gt;
+&lt;p&gt;Yes. If we paid attention only to the basic point that we should make the nonce dependent on other nonces, and thus set \(\nu=1\), in effect, then we would get something like:&lt;/p&gt;
+&lt;p&gt;\(s_1 = b_1 r_1 + H(\widetilde{P}||b_1(R_1 + R_2)||m)a_1 x_1\)&lt;/p&gt;
+&lt;p&gt;where \(b_1\) is the hash of the nonces and the keys and the index (here just '1'), as described previously. That this doesn't work is interesting and revealing; since \(b_1\) is a calculable common factor, it can just be removed. Again, consider \(k\) parallel signing sessions shown in superscript, and note how we can still forge using Wagner:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;We note: \(\sum_k \frac{s_1^{(k)}}{b_1^{(k)}} = \sum_k r_1^{(k)} + \sum_k \frac{H(\widetilde{P}||b_1^{(k)}(R_1^{(k)}+R_2^{(k)})||m^{(k)})}{b_1^{(k)}}a_1 x_1\)&lt;/li&gt;
+&lt;li&gt;As before the attacker can just set a target hash output: \(c^{*} = H(\widetilde{P}||R^{*}||m^{*})\), where he chose \(R^{*} = \sum_k r_1^{(k)} G\)&lt;/li&gt;
+&lt;li&gt;then \(s_1^{*} = \sum_k \frac{s_1^{(k)}}{b_1^{(k)}} + c^{*} a_1 x_1\) will be a valid forgery&lt;/li&gt;
+&lt;li&gt;so apply Wagner to : \(\sum_k \frac{H(\widetilde{P}||b_1^{(k)}(R_1^{(k)}+R_2^{(k)})||m^{(k)})}{b_1^{(k)}} = c^{*}\)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I would argue that this is analogous to the fact that just &lt;em&gt;committing&lt;/em&gt; to the secret key in a SIDP with \(s = e * x\) is not enough because you can simply divide out the public challenge \(e\), to get the private key \(x\). You also have to blind it, effectively adding another unknown to the equation. Having \(\nu &amp;gt;= 2\) does that.&lt;/p&gt;
+&lt;p&gt;&lt;a name="some-final-thoughts"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Some final thoughts on security proofs.&lt;/h3&gt;
+&lt;p&gt;MuSig2 weighs in at 48 pages in the latest version that I see, which is certainly not a criticism, as the extensive analysis from various angles makes this deeply difficult material at least &lt;em&gt;possible&lt;/em&gt; to understand, but note that Sections 5 and 6, the two different security proofs (reductions to OMDL more precisely) under ROM and (AGM, ROM) as mentioned above, take up about 22 pages.&lt;/p&gt;
+&lt;p&gt;Why so much complexity? I somehow am reminded of making up the quip "interactivity is the death of protocols" a couple of years ago .. which is partly a silly comment, as many of the most useful protocols are interactive, with a few exceptions (ironically the biggest one being .. signatures!), but on the other hand it was my reflection on just how &lt;em&gt;deeply&lt;/em&gt; difficult it is to build cryptographic protocols, soundly, in interactive environments when there is no trust.&lt;/p&gt;
+&lt;p&gt;So crudely, a multisignature, being intrinsically interactive in setup and signing, just has this &lt;em&gt;huge&lt;/em&gt; extra layer of attack surface compared with a single signer. Even the single signer Schnorr signature case is pretty tricky to reduce to (EC)DLP, when you consider an arbitrary enough attacker (see: EUF-CMA). It at least requires a sophisticated model of thought.&lt;/p&gt;
+&lt;p&gt;But there's a very big other element of the explanation for why this is complicated: remember, the goal of MuSig from the beginning was to create multisignatures that are &lt;strong&gt;fully aggregated&lt;/strong&gt;: the keys are combined into one key, the nonce is combined into one nonce, and &lt;em&gt;nothing&lt;/em&gt; (including extra nonces or funky extra side-proofs) distinguishes the public verification from a single signature case. That is a big part of what made building this protocol a lot harder, with a lot more "gotchas", than similar protocols that happily send out the whole set of participant keys in public.&lt;/p&gt;
+&lt;p&gt;And so this kind of scheme (MuSig2) requires a bunch more apparatus to get a security reduction. We considered: a forging adversary, an OMDL challenge game, a signing oracle (built in a much more sophisticated way), and a 4-way (or better I guess "double") forking of the adversary. And we didn't even mention the mind-bending "meta-reduction" concept used in Drijvers et al, which is a thing that controls the execution of a reduction, forcing it to produce the target secret that the reduction thought it was extracting from the adversary (yes, really).&lt;/p&gt;
+&lt;p&gt;In retrospect it is not at all surprising, really, that building this machine &lt;em&gt;soundly&lt;/em&gt; was really quite complicated.&lt;/p&gt;
+&lt;p&gt;&lt;a name="practical-achievement"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3&gt;Practical achievement of MuSig2.&lt;/h3&gt;
+&lt;p&gt;To the extent that we have proved MuSig2 reducible to the OMDL problem (under the ROM), we have a 2-round multisig protocol, and that's a pretty substantial improvement on how such multisignatures could be used in practice. But there's more.&lt;/p&gt;
+&lt;p&gt;Right at the start I mentioned a &lt;a href="https://medium.com/blockstream/musig2-simple-two-round-schnorr-multisignatures-bf9582e99295"&gt;blog post&lt;/a&gt; in which two of the authors expound on these practical points in detail, and their most important observation is this:&lt;/p&gt;
+&lt;p&gt;&lt;a name="preprocessing"&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4&gt;Preprocessing&lt;/h4&gt;
+&lt;p&gt;While MuSig1 (once the original InsecureMuSig error was fixed) used a hash commitment to nonces \(R_i\) before continuing with the sharing of nonces and then signatures, making for three rounds of communcation, MuSig2 ditches that initial commitment (or perhaps folds it in!), so we are at two rounds. But! The good news is that the first round (the sharing of \(R_{i,j},\ j=1\ldots\nu\)) can be &lt;em&gt;pre-processed&lt;/em&gt; since it &lt;em&gt;does not depend on the message to be signed&lt;/em&gt;. That means in effect that multisignature signing can be (more or less) non-interactive, in the same way that Bitcoin multisig is today (that is: when you have a message to sign, you can just sign it and share with peer(s), although, here, slightly more pre-coordination, in advance at some point, is required due to the nonce setup).&lt;/p&gt;
+&lt;p&gt;And all this is achieved while maintaining the properties mentioned at the start as desirable: we use a single aggregate key on-chain, making verification indistinguishable from single sig, so better privacy and better scaling (since we achieve the goal without changing the compact nature of the single Schnorr sig).&lt;/p&gt;
+&lt;p&gt;It's pretty impressive, really.&lt;/p&gt;</content><category term="waxwings Blog"></category><category term="cryptography"></category><category term="bitcoin"></category></entry><entry><title>Proof of Work, a pictorial essay</title><link href="https://joinmarket.me/blog/blog/pow-a-pictorial-essay/" rel="alternate"></link><published>2020-12-07T00:00:00+01:00</published><updated>2020-12-07T00:00:00+01:00</updated><author><name>Adam Gibson</name></author><id>tag:joinmarket.me,2020-12-07:/blog/blog/pow-a-pictorial-essay/</id><summary type="html">&lt;p&gt;an investigation of proof of work&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Proof of Work, a pictorial essay&lt;/h2&gt;
 &lt;p&gt;In the modern nation state, courts ("justice") operate with the threat of violence. The exact way a dispute is settled varies (jury, single judge, etc.), but the "finality" of the resolution they provide is based on the fact that the state asserts the final say, and if you don't agree, it doesn't matter, because they have men with guns. Importantly, they don't just have &lt;em&gt;some&lt;/em&gt; men with guns (that's something &lt;em&gt;you&lt;/em&gt; might have, too), they have an overwhelming number of men and increasingly large guns depending on how much you don't want to accept their say.&lt;/p&gt;
 &lt;p&gt;If you are thinking "that's a stupidly over-simplified way of thinking about modern justice systems", then that's fine; a lot of what follows is precisely about the &lt;em&gt;finesse&lt;/em&gt; around this simplified view of the world.&lt;/p&gt;
 &lt;h3&gt;The threat is stronger than its execution&lt;/h3&gt;
@@ -3515,7 +3855,7 @@ extractor/"forking", an "adversary" etc. etc.&lt;/em&gt;)&lt;/p&gt;
 &lt;h2&gt;Preamble: the reluctant Satoshi scammer&lt;/h2&gt;
 &lt;p&gt;The material of this blog post is pretty abstract, so I decided to spice
 it up by framing it as some kind of sci-fi :)&lt;/p&gt;
-&lt;p&gt;&amp;lt;img src="../../../images/cube-250082_6402.png" width="436" height="436"/&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/cube-250082_6402.png" width="436" height="436"/&gt;&lt;/p&gt;
 &lt;p&gt;Imagine you have a mysterious small black cube which you were given by
 an alien that has two slots you can plug into to feed it input data and
 another to get output data, but you absolutely can't open it (so like
@@ -4366,7 +4706,7 @@ the same output&lt;/strong&gt;.&lt;/p&gt;
 moreover, there's a very concrete reason &lt;em&gt;why&lt;/em&gt; the Pedersen commitment
 has that property of having multiple inputs for the same output - it
 logically has to! Consider this diagram:&lt;/p&gt;
-&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428225915im_/https://joinmarket.me/static/media/uploads/.thumbnails/InputOutput1.png/InputOutput1-689x487.png" width="689" height="487" alt="Input space larger than output space" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/InputOutput1.png" width="689" height="487" alt="Input space larger than output space" /&gt;&lt;/p&gt;
 &lt;p&gt;By the &lt;a href="https://en.wikipedia.org/wiki/Pigeonhole_principle"&gt;pigeonhole
 principle&lt;/a&gt;,
 because there are more inputs than outputs, it's impossible for it &lt;em&gt;not&lt;/em&gt;
@@ -4408,7 +4748,7 @@ curve points or 5 triangles, whatever - but each of them is a single
 output). So a function with 10 inputs can't have more than 10 outputs.
 Which means we have one case remaining:&lt;/p&gt;
 &lt;p&gt;What if the input space is &lt;em&gt;the same size as &lt;/em&gt;the output space?&lt;/p&gt;
-&lt;p&gt;&lt;img src="https://web.archive.org/web/20200428225915im_/https://joinmarket.me/static/media/uploads/.thumbnails/InputOutput2.png/InputOutput2-688x487.png" width="688" height="487" alt="Input and output space equal size" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/InputOutput2.png" width="688" height="487" alt="Input and output space equal size" /&gt;&lt;/p&gt;
 &lt;p&gt;In this case we must have a one-one mapping - again by the pigeonhole
 principle (Remember, we are defining the output space as the space of
 actual possible outputs, not some larger set; this will usually require
@@ -4813,7 +5153,7 @@ we &lt;em&gt;do&lt;/em&gt; have another angle of attack.&lt;/p&gt;
 &lt;h2&gt;Hiding in a much bigger crowd ... ?&lt;/h2&gt;
 &lt;p&gt;[One angle is to make your behaviour look more like other, non-coinjoin
 transactions]{style="text-decoration: underline;"}. (For the
-philosophically/abstract inclined people, &lt;a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;this post might be of
+philosophically/abstract inclined people, &lt;a href="https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;this post might be of
 interest&lt;/a&gt;,
 but it sidetracks us here, so - later!). Let's think of the naive way
 to do that. Suppose just Alice and Bob make a 2 party CoinJoin:&lt;/p&gt;
@@ -4829,7 +5169,7 @@ of that failure, illustrated here:&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;0.03 BTC ---&amp;gt;|&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;0.03 BTC ---&amp;gt;|&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;This at least is &lt;em&gt;more&lt;/em&gt; plausible as a payment, but it shows the
-&lt;strong&gt;subset sum&lt;/strong&gt; problem that I was describing in my &lt;a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/coinjoinxt/"&gt;CoinJoinXT
+&lt;strong&gt;subset sum&lt;/strong&gt; problem that I was describing in my &lt;a href="https://joinmarket.me/blog/blog/coinjoinxt/"&gt;CoinJoinXT
 post&lt;/a&gt;
 - and trying to solve with CoinJoinUnlimited (i.e. using a Lightning
 channel to break the subset sum problem and feed-back the LN privacy
@@ -4847,7 +5187,7 @@ and it would anyway break the idea of "looking like a normal payment"
 &lt;p&gt;After you think about this problem for a while you come to the
 conclusion - only if there's actually a transfer of coins from one
 party to the other is it solved. Hence
-&lt;a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/coinjoinxt/"&gt;CoinJoinXT&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="https://joinmarket.me/blog/blog/coinjoinxt/"&gt;CoinJoinXT&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;But also, hence &lt;strong&gt;PayJoin&lt;/strong&gt; - why not actually do a CoinJoin [while you
 are making a payment?]{style="text-decoration: underline;"}&lt;/p&gt;
 &lt;p&gt;[]{style="text-decoration: underline;"}&lt;/p&gt;
@@ -5040,7 +5380,7 @@ not something for large scale merchant automation (as per discussion in
 previous section).&lt;/p&gt;
 &lt;p&gt;It requires communication between parties, as does any CoinJoin, except
 arguably
-&lt;a href="https://web.archive.org/web/20200803124759/https://joinmarket.me/blog/blog/snicker/"&gt;SNICKER&lt;/a&gt;.&lt;/p&gt;
+&lt;a href="https://joinmarket.me/blog/blog/snicker/"&gt;SNICKER&lt;/a&gt;.&lt;/p&gt;
 &lt;p&gt;The sender of the payment always sends a non-CoinJoin payment
 transaction to start with; it's a convenient/sane thing to do, because
 if connection problems occur, or software problems, the receiver can
@@ -5131,7 +5471,7 @@ other part of the reasoning is the actual data, as we see next:&lt;/p&gt;
 &lt;h1&gt;CoinJoinXT - a more flexible, extended approach to CoinJoin&lt;/h1&gt;
 &lt;p&gt;*Ideas were first discussed
 &lt;a href="https://gist.github.com/AdamISZ/a5b3fcdd8de4575dbb8e5fba8a9bd88c"&gt;here&lt;/a&gt;.
-Thanks again to arubi on IRC for helping me flesh them out.\
+Thanks again to arubi on IRC for helping me flesh them out.
 *&lt;/p&gt;
 &lt;h2&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;We assume that the reader is familiar with CoinJoin as a basic idea -
@@ -5144,7 +5484,7 @@ transactions with multiple outputs of exactly the same amount. This can
 be called an "intrinsic fungibility" model - since, although the
 transactions created are unambiguously recognizable as CoinJoins, the
 indistinguishability of said equal outputs is kind of "absolute".&lt;/p&gt;
-&lt;p&gt;However, as partially discussed in the earlier blog post &lt;a href="https://web.archive.org/web/20200603010653/https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;"the
+&lt;p&gt;However, as partially discussed in the earlier blog post &lt;a href="https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;"the
 steganographic
 principle"&lt;/a&gt;,
 there's at least an argument for creating fungibility in a less
@@ -5167,7 +5507,7 @@ information, exchange records etc, network info etc. In practice, it's
 probably the most important. The second is stuff recorded directly on
 the blockchain - pseudonyms (scriptPubKeys/addresses) and amount
 information (on non-amount-blinded blockchains as Bitcoin's is
-currently; for a discussion about that see this earlier &lt;a href="https://web.archive.org/web/20200603010653/https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;blog
+currently; for a discussion about that see this earlier &lt;a href="https://joinmarket.me/blog/blog/the-steganographic-principle/"&gt;blog
 post&lt;/a&gt;);
 note that amount information includes the implicit amount - network fee.&lt;/p&gt;
 &lt;p&gt;Timing information perhaps straddles the two categories, because while
@@ -5382,8 +5722,7 @@ this model, will not necessarily be able to easily see on the blockchain
 where the start and end points of this flow of transactions was. To the
 extent that this is true, it's an enormous win, but more on this later.&lt;/p&gt;
 &lt;h2&gt;Example&lt;/h2&gt;
-&lt;p&gt;&lt;img alt="ExampleCJXT" src="../../../../../../20200603010653im_/https:/joinmarket.me/static/media/uploads/.thumbnails/onchaincontract3.png/onchaincontract3-614x422.png"&gt;{width="614"
-height="422"}&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/onchaincontract3.png" width="614" height="422" alt="Example CJXT" /&gt;&lt;/p&gt;
 &lt;p&gt;Here we are still restricting to 2 parties for simplicity of the
 diagram. There is still a chain of 4 TXs, but here we flesh out the
 inputs and outputs. About colors:&lt;/p&gt;
@@ -5393,7 +5732,7 @@ that each transaction is signed by both parties).&lt;/p&gt;
 &lt;p&gt;Red inputs are &lt;strong&gt;promise utxos&lt;/strong&gt; as described in the earlier section.&lt;/p&gt;
 &lt;p&gt;Each promise has a corresponding backout transaction pre-signed as
 output consuming the bitcoins of the
-[previous]{style="text-decoration: underline;"} transaction to the one
+&lt;strong&gt;previous&lt;/strong&gt; transaction to the one
 consuming that promise.&lt;/p&gt;
 &lt;p&gt;Notice that this example contains two possible setups for each
 individual transaction in the chain; it can pay out only to one party
@@ -5797,8 +6136,8 @@ keys you're using (while ECDSA is not).&lt;/p&gt;
 signatures may matter is to do with, in a sense, the &lt;strong&gt;opposite&lt;/strong&gt; of
 Schnorr aggregation - Schnorr subtraction. The rest of this very long
 blog post is intended to lead you through the steps to showing how
-clever use of signature subtraction can lead to &lt;span
-style="text-decoration: underline;"&gt;one&lt;/span&gt; very excellent outcome
+clever use of signature subtraction can lead to
+&lt;strong&gt;one&lt;/strong&gt; very excellent outcome
 (there are others!) - a private Coinswap that's simpler and better than
 the private Coinswap outlined in my &lt;a href="https://web.archive.org/web/20200506162002/https://joinmarket.me/blog/blog/coinswaps"&gt;previous blog
 post&lt;/a&gt;.&lt;/p&gt;
@@ -5988,7 +6327,7 @@ section, though.&lt;/p&gt;
 because he holds &lt;code&gt;t&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Since this is the most important part of the construction, we'll
 summarize it with a schematic diagram:&lt;/p&gt;
-&lt;p&gt;&lt;img src="/web/20200506162002im_/https://joinmarket.me/static/media/uploads/.thumbnails/22AS.jpg/22AS-1056x816.jpg" width="1056" height="816" alt="22AS protocol" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/22AS.png" width="1056" height="816" alt="22AS protocol" /&gt;&lt;/p&gt;
 &lt;p&gt;So this &lt;code&gt;22AS&lt;/code&gt; was a protocol to swap a coin for a secret, to do atomic
 swaps we need to extend it slightly: have two transactions atomic via
 the same secret &lt;code&gt;t&lt;/code&gt;.&lt;/p&gt;
@@ -6161,7 +6500,7 @@ the same elliptic curve group for the construction to work.&lt;/p&gt;</content><
 experience, and then work backwards to the technical design. This way,
 those not wanting to get lost in technical details can still get the
 gist.&lt;/p&gt;
-&lt;h3&gt;&lt;img alt="Me misusing a meme as a symbol and not adding any text." height="330" src="../../../../../../20200510162733im_/https:/joinmarket.me/static/media/uploads/.thumbnails/evilplanbaby.jpg/evilplanbaby-400x330.jpg" width="400"&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;img src="../../../images/evilplanbaby.jpg" width="400" height="330" /&gt;&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Pictured above: me misusing a meme as a symbol and deliberately not
 adding any text to it.&lt;/em&gt;&lt;/p&gt;
 &lt;h3&gt;&lt;strong&gt;Scenario&lt;/strong&gt;&lt;/h3&gt;
@@ -6653,7 +6992,7 @@ speak of watermarking. Hopefully the idea expressed here is better.&lt;/p&gt;</c
 &lt;/blockquote&gt;
 &lt;p&gt;- &lt;a href="https://en.wikipedia.org/wiki/Bells_(Blackadder)"&gt;Edmund
 Blackadder&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;&lt;img src="/web/20200712194227im_/https://joinmarket.me/static/media/uploads/.thumbnails/poodle.jpeg/poodle-225x308.jpeg" width="225" height="308" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src="../../../images/poodle.jpeg" width="225" height="308" /&gt;&lt;/p&gt;
 &lt;h3&gt;P(o)ODLE, not POODLE&lt;/h3&gt;
 &lt;p&gt;This post, fortunately, has nothing to do with faintly ridiculous &lt;a href="https://en.wikipedia.org/wiki/POODLE"&gt;SSL 3
 downgrade
